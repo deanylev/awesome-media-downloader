@@ -24,6 +24,7 @@ $(document).ready(() => {
         setTimeout(() => {
           inFlight = false;
           status('Video downloading complete.');
+          $('.progress-bar').removeClass('bg-danger').empty().css('width', '0%');
         }, 1500);
 
         return;
