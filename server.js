@@ -31,7 +31,8 @@ app.post('/download', (req, res) => {
     console.log('downloading video', fileName);
     res.send({
       fileName,
-      fileSize: info.size
+      fileSize: info.size,
+      tempFile
     });
   });
 
@@ -62,9 +63,17 @@ app.get('/download_file', (req, res) => {
 });
 
 app.get('/download_status', (req, res) => {
-  let totalSize = req.query.fileSize;
-  let actualSize = fs.statSync(`videos/${decodeURIComponent(req.query.fileName)}`).size;
-  let status = actualSize === parseInt(totalSize) ? 'complete' : 'downloading';
+  let totalSize = parseInt(req.query.fileSize);
+  let tempFile = decodeURIComponent(req.query.tempFile);
+  let actualSize = totalSize;
+  let status;
+
+  if (fs.existsSync(tempFile)) {
+    actualSize = fs.statSync(tempFile).size;
+    status = 'downloading';
+  } else {
+    status = 'complete';
+  }
 
   res.send({
     status,
@@ -72,7 +81,7 @@ app.get('/download_status', (req, res) => {
   });
 });
 
-setTimeout(() => {
+setInterval(() => {
   console.log('deleting unused videos');
   fs.readdir('videos', (err, files) => {
     for (const file of files) {

@@ -23,17 +23,18 @@
         success: (response) => {
           let fileSize = response.fileSize;
           let fileName = encodeURIComponent(response.fileName);
+          let tempFile = response.tempFile;
           $('#status').text(`Downloading "${response.fileName}"`);
-          let checkStatus = setTimeout(() => {
+          let checkStatus = setInterval(() => {
             $.getJSON('/download_status', {
-              fileName,
+              tempFile,
               fileSize
             }).done((response) => {
-              let progress = `${response.progress * 100}%`;
+              let progress = `${(response.progress * 100).toFixed(2)}%`;
               $('.progress-bar').text(progress).css('width', progress);
 
-              if (response.progress === 1) {
-                clearTimeout(checkStatus);
+              if (response.status === 'complete') {
+                clearInterval(checkStatus);
                 $('#download').attr('href', `/download_file?video=${fileName}`).removeClass('d-none');
               }
             });
