@@ -24,7 +24,7 @@ app.post('/download', (req, res) => {
   let fileName;
   let filePath;
 
-  video.on('info', function(info) {
+  video.on('info', (info) => {
     fileName = info._filename;
     filePath = `videos/${fileName}`;
     console.log('downloading video', fileName);
@@ -34,7 +34,7 @@ app.post('/download', (req, res) => {
     });
   });
 
-  video.on('error', function error(err) {
+  video.on('error', (err) => {
     console.log('error while downloading video', err);
     fs.unlink(tempFile);
     res.sendStatus(500);
