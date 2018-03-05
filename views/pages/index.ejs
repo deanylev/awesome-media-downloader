@@ -18,6 +18,11 @@
         return false;
       }
 
+      $('#error').empty();
+      $('#status').empty();
+      $('.progress-bar').removeClass('bg-danger').empty().css('width', '0%');
+      $('#download').addClass('d-none');
+
       $.ajax({
         dataType: 'json',
         method: 'POST',
