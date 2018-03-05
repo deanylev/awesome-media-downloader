@@ -11,6 +11,7 @@ const app = express();
 app.listen(port);
 console.log('started server on port', port)
 app.set('view engine', 'ejs');
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({
   extended: true
 }));
@@ -65,13 +66,14 @@ app.get('/download_file', (req, res) => {
 app.get('/download_status', (req, res) => {
   let totalSize = parseInt(req.query.fileSize);
   let tempFile = decodeURIComponent(req.query.tempFile);
-  let actualSize = totalSize;
+  let actualSize;
   let status;
 
   if (fs.existsSync(tempFile)) {
     actualSize = fs.statSync(tempFile).size;
     status = 'downloading';
   } else {
+    actualSize = totalSize;
     status = 'complete';
   }
 
