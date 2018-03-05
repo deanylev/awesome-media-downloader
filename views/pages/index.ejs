@@ -1,0 +1,52 @@
+<% let title = 'Media Downloader'; %>
+<% include ../partials/header %>
+  <form action="/download" method="POST">
+    <input id="url" type="text" name="url" placeholder="Enter URL">
+    <input class="btn btn-primary" type="submit" value="Submit">
+  </form>
+  <p id="error" class="text-danger"></p>
+  <p id="status"></p>
+  <div class="progress">
+    <div class="progress-bar"></div>
+  </div>
+  <br>
+  <a id="download" class="btn btn-success d-none" href="">Download</a>
+  <script>
+    $('form').submit(() => {
+      $.ajax({
+        dataType: 'json',
+        method: 'POST',
+        url: '/download',
+        data: {
+          url: $('#url').val()
+        },
+        success: (response) => {
+          let fileSize = response.fileSize;
+          let fileName = encodeURIComponent(response.fileName);
+          $('#status').text(`Downloading "${response.fileName}"`);
+          let checkStatus = setTimeout(() => {
+            $.getJSON('/download_status', {
+              fileName,
+              fileSize
+            }).done((response) => {
+              let progress = `${response.progress * 100}%`;
+              $('.progress-bar').text(progress).css('width', progress);
+
+              if (response.progress === 1) {
+                clearTimeout(checkStatus);
+                $('#download').attr('href', `/download_file?video=${fileName}`).removeClass('d-none');
+              }
+            });
+          }, 500);
+        },
+        error: (response) => {
+          if (response.status === 500) {
+            $('#error').text('An error occured.');
+          }
+        }
+      });
+
+      return false;
+    });
+  </script>
+  <% include ../partials/footer %>
