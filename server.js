@@ -29,7 +29,7 @@ app.post('/download', (req, res) => {
     fileName = info._filename;
     filePath = `videos/${fileName}`;
     console.log('downloading video', fileName);
-    res.send({
+    res.json({
       fileName,
       fileSize: info.size,
       tempFile
@@ -75,7 +75,7 @@ app.get('/download_status', (req, res) => {
     status = 'complete';
   }
 
-  res.send({
+  res.json({
     status,
     progress: actualSize / totalSize
   });

@@ -1,7 +1,7 @@
 <% let title = 'Media Downloader'; %>
 <% include ../partials/header %>
   <form action="/download" method="POST">
-    <input id="url" type="text" name="url" placeholder="Enter URL">
+    <input id="url" type="url" name="url" placeholder="Enter URL">
     <input class="btn btn-primary" type="submit" value="Submit">
   </form>
   <p id="error" class="text-danger"></p>
@@ -49,9 +49,13 @@
           }, 1000);
         },
         error: (response) => {
+          let error;
           if (response.status === 500) {
-            $('#error').text('An error occured.');
+            error = 'Sorry, looks like that URL isn\'t supported.';
+          } else {
+            error = 'An error occured.';
           }
+          $('#error').text(error);
         }
       });
 
