@@ -91,3 +91,14 @@ setInterval(() => {
     }
   });
 }, 3600000);
+
+setInterval(() => {
+  console.log('deleting tmp files');
+  fs.readdir('videos', (err, files) => {
+    for (const file of files) {
+      if (file.endsWith('.tmp')) {
+        fs.unlink(`videos/${file}`);
+      }
+    }
+  });
+}, 86400000);
