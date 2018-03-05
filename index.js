@@ -27,6 +27,7 @@ app.post('/download', (req, res) => {
   video.on('info', function(info) {
     fileName = info._filename;
     filePath = `videos/${fileName}`;
+    console.log('downloading video', fileName);
     res.send({
       fileName,
       fileSize: info.size
@@ -34,13 +35,15 @@ app.post('/download', (req, res) => {
   });
 
   video.on('error', function error(err) {
+    console.log('error while downloading video', err);
     fs.unlink(tempFile);
     res.sendStatus(500);
   });
 
   video.pipe(fs.createWriteStream(tempFile));
 
-  video.on('end', (info) => {
+  video.on('end', () => {
+    console.log('video finished downloading', fileName)
     fs.rename(tempFile, filePath);
   });
 });
@@ -50,6 +53,7 @@ app.get('/download_file', (req, res) => {
   let path = `videos/${video}`;
   let file = fs.createReadStream(path);
   let stat = fs.statSync(path);
+  console.log('providing video to browser for download', req.query.video);
   res.setHeader('Content-Length', stat.size);
   res.setHeader('Content-Type', 'video/webm');
   res.setHeader('Content-Disposition', `attachment; filename=${video}`);
@@ -66,3 +70,14 @@ app.get('/download_status', (req, res) => {
     progress: actualSize / totalSize
   });
 });
+
+setTimeout(() => {
+  console.log('deleting unused videos');
+  fs.readdir('videos', (err, files) => {
+    for (const file of files) {
+      if (!(file.endsWith('.tmp') && file === '.gitkeep')) {
+        fs.unlink(`videos/${file}`);
+      }
+    }
+  });
+}, 3600000);
