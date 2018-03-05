@@ -85,7 +85,7 @@ setInterval(() => {
   console.log('deleting unused videos');
   fs.readdir('videos', (err, files) => {
     for (const file of files) {
-      if (!(file.endsWith('.tmp') && file === '.gitkeep')) {
+      if (!(file.endsWith('.tmp') || file === '.gitkeep')) {
         fs.unlink(`videos/${file}`);
       }
     }
