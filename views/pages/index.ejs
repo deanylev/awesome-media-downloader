@@ -13,6 +13,11 @@
   <a id="download" class="btn btn-success d-none" href="">Download</a>
   <script>
     $('form').submit(() => {
+      if (!$('#url').val()) {
+        $('#error').text('Please enter a URL.');
+        return false;
+      }
+
       $.ajax({
         dataType: 'json',
         method: 'POST',
@@ -37,8 +42,11 @@
                 clearInterval(checkStatus);
                 $('#download').attr('href', `/download_file?video=${fileName}`).removeClass('d-none');
               }
+            }).fail(() => {
+              clearInterval(checkStatus);
+              $('.progress-bar').addClass('bg-danger').text('Error');
             });
-          }, 500);
+          }, 1000);
         },
         error: (response) => {
           if (response.status === 500) {
