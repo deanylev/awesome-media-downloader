@@ -16,6 +16,7 @@ $(document).ready(() => {
     }
 
     let urls = $('#urls').val().split('\n');
+    let format = $('#format').val()
     let totalVideos = urls.length;
     let videoNumber = 1;
 
@@ -40,7 +41,8 @@ $(document).ready(() => {
         method: 'POST',
         url: '/download',
         data: {
-          url
+          url,
+          format
         },
         complete: () => {
           $('.fa-spinner').addClass('d-none');

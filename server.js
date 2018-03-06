@@ -26,13 +26,12 @@ app.post('/download', (req, res) => {
   let tempFile = `videos/${Math.random().toString(36).substring(2)}.tmp`;
   let fileName;
   let filePath;
-  let transcode = false;
+  let transcode = req.body.format;
 
   video.on('info', (info) => {
     fileName = info._filename;
-    if (!fileName.endsWith('.mp4')) {
-      transcode = true;
-      fileName += '.mp4';
+    if (transcode) {
+      fileName += `.${transcode}`;
     }
     filePath = `videos/${fileName}`;
     console.log('downloading video', fileName);
@@ -55,8 +54,16 @@ app.post('/download', (req, res) => {
   video.on('end', () => {
     console.log('video finished downloading', fileName);
     if (transcode) {
-      console.log('transcoding to mp4');
-      childProcess.exec(`ffmpeg -y -i "${tempFile}" -strict -2 "${filePath}"`, () => {
+      console.log(`transcoding to ${transcode}`);
+      let command;
+      switch (transcode) {
+        case 'mp3':
+          command = `ffmpeg -y -i "${tempFile}" -f mp3 -ab 192000 -vn -strict -2 "${filePath}"`;
+          break;
+        default:
+          command = `ffmpeg -y -i "${tempFile}" -strict -2 "${filePath}"`;
+      }
+      childProcess.exec(command, () => {
         fs.unlink(tempFile);
         console.log('transcoding finished');
       });

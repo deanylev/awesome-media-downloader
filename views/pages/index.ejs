@@ -4,6 +4,17 @@
     <div class="form-group">
       <textarea id="urls" class="form-control" placeholder="Enter URLs (one per line)"></textarea>
     </div>
+    <label for="format">Format</label>
+    <select id="format" class="custom-select">
+      <option value="" selected>Original</option>
+      <optgroup label="Video">
+        <option value="mp4">MP4</option>
+      </optgroup>
+      <optgroup label="Audio">
+        <option value="mp3">MP3</option>
+      </optgroup>
+    </select>
+    <br><br>
     <button class="btn btn-primary">Submit&nbsp;<i class="fas fa-spinner fa-pulse d-none"></i></button>
   </form>
   <br>
