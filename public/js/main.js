@@ -59,13 +59,18 @@ $(document).ready(() => {
               tempFile,
               fileSize
             }).done((response) => {
-              let progress = `${(response.progress * 100).toFixed(2)}%`;
-              $('.progress-bar').text(progress).css('width', progress);
-
-              if (response.status === 'complete') {
-                clearInterval(checkStatus);
-                window.location.href = `/download_file?video=${fileName}`;
-                downloadVideo();
+              switch (response.status) {
+                case 'transcoding':
+                  $('.progress-bar').text('Converting...');
+                  break;
+                case 'complete':
+                  clearInterval(checkStatus);
+                  window.location.href = `/download_file?video=${fileName}`;
+                  downloadVideo();
+                  break;
+                default:
+                  let progress = `${(response.progress * 100).toFixed(2)}%`;
+                  $('.progress-bar').text(progress).css('width', progress);
               }
             }).fail(() => {
               clearInterval(checkStatus);
