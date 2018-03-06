@@ -4,6 +4,7 @@ const youtubedl = require('youtube-dl');
 const request = require('request');
 const fs = require('fs');
 const path = require('path');
+const childProcess = require('child_process');
 
 const port = process.env.PORT || 8080;
 const app = express();
@@ -25,15 +26,21 @@ app.post('/download', (req, res) => {
   let tempFile = `videos/${Math.random().toString(36).substring(2)}.tmp`;
   let fileName;
   let filePath;
+  let transcode = false;
 
   video.on('info', (info) => {
     fileName = info._filename;
+    if (!fileName.endsWith('.mp4')) {
+      transcode = true;
+      fileName += '.mp4';
+    }
     filePath = `videos/${fileName}`;
     console.log('downloading video', fileName);
     res.json({
       fileName,
       fileSize: info.size,
-      tempFile
+      tempFile,
+      transcode
     });
   });
 
@@ -46,8 +53,16 @@ app.post('/download', (req, res) => {
   video.pipe(fs.createWriteStream(tempFile));
 
   video.on('end', () => {
-    console.log('video finished downloading', fileName)
-    fs.rename(tempFile, filePath);
+    console.log('video finished downloading', fileName);
+    if (transcode) {
+      console.log('transcoding to mp4');
+      childProcess.exec(`ffmpeg -y -i "${tempFile}" -strict -2 "${filePath}"`, () => {
+        fs.unlink(tempFile);
+        console.log('transcoding finished');
+      });
+    } else {
+      fs.rename(tempFile, filePath);
+    }
   });
 });
 
@@ -71,7 +86,11 @@ app.get('/download_status', (req, res) => {
 
   if (fs.existsSync(tempFile)) {
     actualSize = fs.statSync(tempFile).size;
-    status = 'downloading';
+    if (actualSize === totalSize) {
+      status = 'transcoding'
+    } else {
+      status = 'downloading';
+    }
   } else {
     actualSize = totalSize;
     status = 'complete';
