@@ -61,7 +61,7 @@ $(document).ready(() => {
             }).done((response) => {
               switch (response.status) {
                 case 'transcoding':
-                  $('.progress-bar').text('Converting...');
+                  $('.progress-bar').text('Converting...').css('width', '100%');
                   break;
                 case 'complete':
                   clearInterval(checkStatus);
