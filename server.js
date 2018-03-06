@@ -26,15 +26,16 @@ app.post('/download', (req, res) => {
   let tempFile = `videos/${Math.random().toString(36).substring(2)}.tmp`;
   let fileName;
   let filePath;
-  let transcode = req.body.format;
+  let format = req.body.format;
 
   video.on('info', (info) => {
     fileName = info._filename;
-    if (transcode) {
-      if (fileName.endsWith(`.${transcode}`)) {
-        transcode = '';
+    if (format) {
+      if (info.ext === format) {
+        format = '';
       } else {
-        fileName += `.${transcode}`;  
+        fileName = fileName.slice(0, -(info.ext.length + 1));
+        fileName += `.${format}`;
       }
     }
     filePath = `videos/${fileName}`;
@@ -43,7 +44,7 @@ app.post('/download', (req, res) => {
       fileName,
       fileSize: info.size,
       tempFile,
-      transcode
+      format
     });
   });
 
@@ -57,10 +58,10 @@ app.post('/download', (req, res) => {
 
   video.on('end', () => {
     console.log('video finished downloading', fileName);
-    if (transcode) {
-      console.log(`transcoding to ${transcode}`);
+    if (format) {
+      console.log(`transcoding to ${format}`);
       let command;
-      switch (transcode) {
+      switch (format) {
         case 'mp3':
           command = `ffmpeg -y -i "${tempFile}" -f mp3 -ab 192000 -vn -strict -2 "${filePath}"`;
           break;
