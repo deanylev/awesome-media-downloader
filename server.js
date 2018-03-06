@@ -31,7 +31,11 @@ app.post('/download', (req, res) => {
   video.on('info', (info) => {
     fileName = info._filename;
     if (transcode) {
-      fileName += `.${transcode}`;
+      if (fileName.endsWith(`.${transcode}`)) {
+        transcode = '';
+      } else {
+        fileName += `.${transcode}`;  
+      }
     }
     filePath = `videos/${fileName}`;
     console.log('downloading video', fileName);
