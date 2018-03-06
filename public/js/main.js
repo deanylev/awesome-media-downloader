@@ -33,6 +33,7 @@ $(document).ready(() => {
       inFlight = true;
 
       let url = urls.shift();
+      $('.fa-spinner').removeClass('d-none');
 
       $.ajax({
         dataType: 'json',
@@ -42,6 +43,7 @@ $(document).ready(() => {
           url
         },
         complete: () => {
+          $('.fa-spinner').addClass('d-none');
           $('.progress-bar').removeClass('bg-danger').empty().css('width', '0%');
           videoNumber++;
         },
@@ -72,7 +74,7 @@ $(document).ready(() => {
         error: (response) => {
           let error;
           if (response.status === 500) {
-            error = `Sorry, looks like that URL isn\'t supported.`;
+            error = `Sorry, looks like that URL isn't supported.`;
           } else {
             error = 'An error occured.';
           }
