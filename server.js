@@ -69,6 +69,8 @@ app.use(bodyParser.urlencoded({
           case 'mp3':
             ffmpeg(tempFile).noVideo().audioBitrate('192k').audioChannels(2).audioCodec('libmp3lame').on('progress', (progress) => {
               transcodingProgress = progress.percent / 100;
+            }).on('error', () => {
+              transcodingError = true;
             }).on('end', () => {
               fs.unlink(tempFile);
               console.log('transcoding finished');
@@ -78,6 +80,8 @@ app.use(bodyParser.urlencoded({
           case 'mkv':
             ffmpeg(tempFile).videoCodec('libx264').on('progress', (progress) => {
               transcodingProgress = progress.percent / 100;
+            }).on('error', () => {
+              transcodingError = true;
             }).on('end', () => {
               fs.unlink(tempFile);
               console.log('transcoding finished');
