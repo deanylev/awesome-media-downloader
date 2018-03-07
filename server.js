@@ -31,15 +31,15 @@ app.use(bodyParser.urlencoded({
     let fileName;
     let filePath;
     let format = req.body.format;
+    let x264Formats = ['mp4', 'mkv'];
 
     video.on('info', (info) => {
       fileName = info._filename;
       if (format) {
-        if (info.ext === format) {
+        fileName = fileName.slice(0, -(info.ext.length));
+        fileName += format;
+        if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {
           format = '';
-        } else {
-          fileName = fileName.slice(0, -(info.ext.length + 1));
-          fileName += `.${format}`;
         }
       }
       filePath = `videos/${fileName}`;
