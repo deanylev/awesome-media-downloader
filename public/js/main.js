@@ -74,7 +74,7 @@ $(document).ready(() => {
               }
             }).fail(() => {
               clearInterval(checkStatus);
-              $('.progress-bar').addClass('bg-danger').text('Error');
+              $('.progress-bar').addClass('bg-danger').text('Error').css('width', '100%');
             });
           }, 1000);
         },
