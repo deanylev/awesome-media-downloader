@@ -19,6 +19,7 @@ app.use(bodyParser.urlencoded({
 
 (() => {
   let transcodingProgress;
+  let transcodingError;
 
   app.get('/', (req, res) => {
     res.render('pages/index');
@@ -74,12 +75,16 @@ app.use(bodyParser.urlencoded({
             }).save(filePath);
             break;
           case 'mp4':
+          case 'mkv':
             ffmpeg(tempFile).videoCodec('libx264').on('progress', (progress) => {
               transcodingProgress = progress.percent / 100;
             }).on('end', () => {
               fs.unlink(tempFile);
               console.log('transcoding finished');
             }).save(filePath);
+            break;
+          default:
+            transcodingError = true;
         }
       } else {
         fs.rename(tempFile, filePath);
@@ -119,10 +124,14 @@ app.use(bodyParser.urlencoded({
 
     let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
 
-    res.json({
-      status,
-      progress
-    });
+    if (transcodingError) {
+      res.sendStatus(500);
+    } else {
+      res.json({
+        status,
+        progress
+      });
+    }
   });
 })();
 
