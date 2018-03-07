@@ -4,10 +4,12 @@ const youtubedl = require('youtube-dl');
 const request = require('request');
 const fs = require('fs');
 const path = require('path');
-const childProcess = require('child_process');
+const ffmpeg = require('fluent-ffmpeg');
 
 const port = process.env.PORT || 8080;
 const app = express();
+
+let transcodingProgress;
 
 app.listen(port);
 console.log('started server on port', port)
@@ -63,15 +65,21 @@ app.post('/download', (req, res) => {
       let command;
       switch (format) {
         case 'mp3':
-          command = `ffmpeg -y -i "${tempFile}" -f mp3 -ab 192000 -vn -strict -2 "${filePath}"`;
+          ffmpeg(tempFile).noVideo().audioBitrate('192k').audioChannels(2).audioCodec('libmp3lame').on('progress', (progress) => {
+            transcodingProgress = progress.percent / 100;
+          }).on('end', () => {
+            fs.unlink(tempFile);
+            console.log('transcoding finished');
+          }).save(filePath);
           break;
-        default:
-          command = `ffmpeg -y -i "${tempFile}" -strict -2 "${filePath}"`;
+        case 'mp4':
+          ffmpeg(tempFile).videoCodec('libx264').on('progress', (progress) => {
+            transcodingProgress = progress.percent / 100;
+          }).on('end', () => {
+            fs.unlink(tempFile);
+            console.log('transcoding finished');
+          }).save(filePath);
       }
-      childProcess.exec(command, () => {
-        fs.unlink(tempFile);
-        console.log('transcoding finished');
-      });
     } else {
       fs.rename(tempFile, filePath);
     }
@@ -108,9 +116,11 @@ app.get('/download_status', (req, res) => {
     status = 'complete';
   }
 
+  let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
+
   res.json({
     status,
-    progress: actualSize / totalSize
+    progress
   });
 });
 

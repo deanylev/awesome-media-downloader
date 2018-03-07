@@ -53,21 +53,21 @@ $(document).ready(() => {
           let fileSize = response.fileSize;
           let fileName = encodeURIComponent(response.fileName);
           let tempFile = response.tempFile;
-          status(`Downloading "${response.fileName}" (Video ${videoNumber}/${totalVideos})`);
+          let fileStatus = `"${response.fileName}" (Video ${videoNumber}/${totalVideos})`;
+          status(`Downloading ${fileStatus}`);
           let checkStatus = setInterval(() => {
             $.getJSON('/download_status', {
               tempFile,
               fileSize
             }).done((response) => {
               switch (response.status) {
-                case 'transcoding':
-                  $('.progress-bar').text('Converting...').css('width', '100%');
-                  break;
                 case 'complete':
                   clearInterval(checkStatus);
                   window.location.href = `/download_file?video=${fileName}`;
                   downloadVideo();
                   break;
+                case 'transcoding':
+                  status(`Converting ${fileStatus}`);
                 default:
                   let progress = `${(response.progress * 100).toFixed(2)}%`;
                   $('.progress-bar').text(progress).css('width', progress);
