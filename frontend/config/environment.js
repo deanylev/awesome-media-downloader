@@ -2,7 +2,7 @@
 
 module.exports = function(environment) {
   let ENV = {
-    modulePrefix: 'video-downloader-frontend',
+    modulePrefix: 'awesome-media-downloader',
     environment,
     rootURL: '/',
     locationType: 'auto',

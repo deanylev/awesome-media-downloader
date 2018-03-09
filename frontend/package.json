@@ -1,8 +1,8 @@
 {
-  "name": "video-downloader-frontend",
-  "version": "0.0.0",
+  "name": "awesome-media-downloader",
+  "version": "1.0.0",
   "private": true,
-  "description": "Small description for video-downloader-frontend goes here",
+  "description": "Frontend for Awesome Media Downloader.",
   "license": "MIT",
   "author": "",
   "directories": {
