@@ -68,7 +68,7 @@ export default Component.extend({
             let fileSize = response.fileSize;
             let fileName = encodeURIComponent(response.fileName);
             let tempFile = response.tempFile;
-            let fileStatus = `"${response.fileName}" (Video ${videoNumber}/${totalVideos})`;
+            let fileStatus = `"${response.fileName.slice(0, -(response.extension.length + 1))}" (Video ${videoNumber}/${totalVideos})`;
             this.set('status', `Downloading ${fileStatus}`);
             this.set('statusClass', 'dark');
             let checkStatus = setInterval(() => {

@@ -56,7 +56,7 @@ if (process.env.ENVIRONMENT === 'development') {
         fileName,
         fileSize: info.size,
         tempFile,
-        format
+        extension: req.body.format || info.ext
       });
     });
 
