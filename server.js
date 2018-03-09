@@ -7,13 +7,16 @@ const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
+const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
+const VIDEO_DELETION_INTERVAL = process.env.VIDEO_DELETION_INTERVAL || 3600000;
+const TEMP_DELETION_INTERVAL = process.env.TEMP_DELETION_INTERVAL || 86400000;
 
 const app = express();
 
-app.listen(port);
-console.log('started server on port', port)
+app.listen(PORT);
+console.log('started server on port', PORT)
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({
@@ -41,6 +44,7 @@ if (ENV === 'development') {
     commandExists('ffmpeg', (err, commandExists) => {
       environment = {
         environment: ENV,
+        statusInterval: STATUS_INTERVAL,
         ffmpeg: commandExists
       };
       res.json(environment);
@@ -180,7 +184,7 @@ setInterval(() => {
       }
     }
   });
-}, 3600000);
+}, VIDEO_DELETION_INTERVAL);
 
 setInterval(() => {
   console.log('deleting tmp files');
@@ -191,4 +195,4 @@ setInterval(() => {
       }
     }
   });
-}, 86400000);
+}, TEMP_DELETION_INTERVAL);

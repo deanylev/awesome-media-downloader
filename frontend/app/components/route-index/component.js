@@ -105,7 +105,7 @@ export default Component.extend({
                 this.set('progress', 100);
                 this.set('inFlight', false);
               });
-            }, 1000);
+            }, this.get('environment').statusInterval);
           },
           error: (response) => {
             let error;
