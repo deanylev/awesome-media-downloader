@@ -1,27 +1,26 @@
-<% let title = 'Media Downloader'; %>
-<% include ../partials/header %>
-  <form action="/download" method="POST">
-    <div class="form-group">
-      <textarea id="urls" class="form-control" placeholder="Enter URLs (one per line)"></textarea>
-    </div>
-    <label for="format">Format</label>
-    <select id="format" class="custom-select">
-      <option value="" selected>Original</option>
-      <optgroup label="Video">
-        <option value="mp4">MP4</option>
-        <option value="mkv">MKV</option>
-      </optgroup>
-      <optgroup label="Audio">
-        <option value="mp3">MP3</option>
-        <option value="wav">WAV</option>
-      </optgroup>
-    </select>
-    <br><br>
-    <button class="btn btn-primary">Submit&nbsp;<i class="fas fa-spinner fa-pulse d-none"></i></button>
-  </form>
-  <br>
-  <p id="status"></p>
-  <div class="progress">
-    <div class="progress-bar progress-bar-striped progress-bar-animated"></div>
-  </div>
-<% include ../partials/footer %>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Video Downloader</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+<meta name="video-downloader-frontend/config/environment" content="%7B%22modulePrefix%22%3A%22video-downloader-frontend%22%2C%22environment%22%3A%22development%22%2C%22rootURL%22%3A%22/%22%2C%22locationType%22%3A%22auto%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%7D%2C%22APP%22%3A%7B%22name%22%3A%22video-downloader-frontend%22%2C%22version%22%3A%220.0.0+e0b2c41c%22%7D%2C%22exportApplicationGlobal%22%3Atrue%7D" />
+
+    <link integrity="" rel="stylesheet" href="/assets/vendor.css">
+    <link integrity="" rel="stylesheet" href="/assets/video-downloader-frontend.css">
+
+    
+  </head>
+  <body>
+    
+
+    <script src="/assets/vendor.js"></script>
+    <script src="/assets/video-downloader-frontend.js"></script>
+
+    
+  </body>
+</html>

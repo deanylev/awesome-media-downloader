@@ -17,6 +17,14 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
+if (process.env.ENVIRONMENT === 'development') {
+  console.log('dev mode, allowing any origin to access API');
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+  });
+}
+
 (() => {
   let transcodingProgress;
   let transcodingError;
@@ -25,7 +33,7 @@ app.use(bodyParser.urlencoded({
     res.render('pages/index');
   });
 
-  app.post('/download', (req, res) => {
+  app.post('/api/download', (req, res) => {
     let video = youtubedl(req.body.url);
     let tempFile = `videos/${Math.random().toString(36).substring(2)}.tmp`;
     let fileName;
@@ -106,7 +114,7 @@ app.use(bodyParser.urlencoded({
     });
   });
 
-  app.get('/download_file', (req, res) => {
+  app.get('/api/download_file', (req, res) => {
     let video = decodeURIComponent(req.query.video);
     let path = `videos/${video}`;
     let file = fs.createReadStream(path);
@@ -118,7 +126,7 @@ app.use(bodyParser.urlencoded({
     file.pipe(res);
   });
 
-  app.get('/download_status', (req, res) => {
+  app.get('/api/download_status', (req, res) => {
     let totalSize = parseInt(req.query.fileSize);
     let tempFile = decodeURIComponent(req.query.tempFile);
     let actualSize;
