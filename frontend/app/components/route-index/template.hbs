@@ -1,4 +1,3 @@
-<br>
 <div class="container">
   <div class="card">
     <div class="card-body">
@@ -18,11 +17,9 @@
             </optgroup>
           {{/each-in}}
         </select>
-        <br><br>
         <button type="submit" class="btn btn-primary" disabled={{inFlight}}>Submit&nbsp;{{#if responseWaiting}}{{fa-icon "spinner" pulse=true}}{{/if}}</button>
       </form>
-      <br>
-      <p class="text-{{statusClass}}">{{status}}</p>
+      <p class="status text-{{statusClass}}">{{status}}</p>
       <div class="progress">
         <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger"}}" style="width: {{progress}}%;">
           {{#if downloadError}}
