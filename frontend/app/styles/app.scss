@@ -1,0 +1,21 @@
+@import "ember-cli-bootstrap-4/bootstrap";
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 120px;
+  line-height: 9px;
+}
+
+body {
+  @extend .bg-primary;
+}
+
+.custom-select {
+  background: white;
+}
