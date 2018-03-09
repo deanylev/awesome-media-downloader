@@ -5,8 +5,11 @@ const request = require('request');
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
+const commandExists = require('command-exists');
 
 const port = process.env.PORT || 8080;
+const ENV = process.env.ENV || 'production';
+
 const app = express();
 
 app.listen(port);
@@ -17,7 +20,7 @@ app.use(bodyParser.urlencoded({
   extended: true
 }));
 
-if (process.env.ENVIRONMENT === 'development') {
+if (ENV === 'development') {
   console.log('dev mode, allowing any origin to access API');
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -28,9 +31,20 @@ if (process.env.ENVIRONMENT === 'development') {
 (() => {
   let transcodingProgress;
   let transcodingError;
+  let environment;
 
   app.get('/', (req, res) => {
     res.render('pages/index');
+  });
+
+  app.get('/api/environment', (req, res) => {
+    commandExists('ffmpeg', (err, commandExists) => {
+      environment = {
+        environment: ENV,
+        ffmpeg: commandExists
+      };
+      res.json(environment);
+    });
   });
 
   app.post('/api/download', (req, res) => {
@@ -38,7 +52,7 @@ if (process.env.ENVIRONMENT === 'development') {
     let tempFile = `videos/${Math.random().toString(36).substring(2)}.tmp`;
     let fileName;
     let filePath;
-    let format = req.body.format;
+    let format = environment.ffmpeg ? req.body.format : '';
     let x264Formats = ['mp4', 'mkv'];
 
     video.on('info', (info) => {

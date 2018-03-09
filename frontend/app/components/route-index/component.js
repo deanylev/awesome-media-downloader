@@ -1,4 +1,5 @@
 import Component from '@ember/component';
+import config from '../../config/environment';
 import $ from 'jquery';
 
 export default Component.extend({
@@ -13,6 +14,15 @@ export default Component.extend({
   statusClass: 'dark',
   urls: '',
   downloadError: false,
+  apiHost: config.APP.API_HOST,
+  environment: null,
+
+  init() {
+    this._super(...arguments);
+    $.getJSON(`${this.get('apiHost')}/api/environment`, (response) => {
+      this.set('environment', response);
+    });
+  },
 
   actions: {
     downloadVideo() {
@@ -53,7 +63,7 @@ export default Component.extend({
         $.ajax({
           dataType: 'json',
           method: 'POST',
-          url: '/api/download',
+          url: `${this.get('apiHost')}/api/download`,
           data: {
             url,
             format
@@ -72,7 +82,7 @@ export default Component.extend({
             this.set('status', `Downloading ${fileStatus}`);
             this.set('statusClass', 'dark');
             let checkStatus = setInterval(() => {
-              $.getJSON('/api/download_status', {
+              $.getJSON(`${this.get('apiHost')}/api/download_status`, {
                 tempFile,
                 fileSize
               }).done((response) => {
@@ -80,7 +90,7 @@ export default Component.extend({
                   case 'complete':
                     this.set('progress', 100);
                     clearInterval(checkStatus);
-                    window.location.href = `/api/download_file?video=${fileName}`;
+                    window.location.href = `${this.get('apiHost')}/api/download_file?video=${fileName}`;
                     downloadVideo();
                     break;
                   case 'transcoding':
