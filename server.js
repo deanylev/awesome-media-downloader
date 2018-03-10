@@ -82,6 +82,8 @@ http.listen(PORT, () => {
           }
         }
         guids[id] = {
+          url,
+          originalFormat: info.ext,
           fileName,
           fileSize: info.size
         };
@@ -112,6 +114,9 @@ http.listen(PORT, () => {
           }
 
           let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
+
+          guids[id].status = status;
+          guids[id].progress = progress;
 
           if (transcodingError) {
             socket.emit('transcoding error');
@@ -188,6 +193,18 @@ http.listen(PORT, () => {
     res.setHeader('Content-Length', stat.size);
     res.setHeader('Content-Disposition', `attachment; filename=${video}`);
     file.pipe(res);
+  });
+
+  app.get('/api/admin', (req, res) => {
+    let ip = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(', ')[0] : req.connection.remoteAddress;
+
+    if (ENV === 'development' || ip === process.env.ADMIN_IP) {
+      res.json({
+        videos: guids
+      });
+    } else {
+      res.sendStatus(401);
+    }
   });
 })();
 
