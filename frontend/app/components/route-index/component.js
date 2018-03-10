@@ -2,6 +2,8 @@ import Component from '@ember/component';
 import config from '../../config/environment';
 import $ from 'jquery';
 
+const apiHost = config.APP.API_HOST;
+
 export default Component.extend({
   formats: {
     Video: ['mp4', 'mkv'],
@@ -14,13 +16,15 @@ export default Component.extend({
   statusClass: 'dark',
   urls: '',
   downloadError: false,
-  apiHost: config.APP.API_HOST,
   environment: null,
 
   init() {
     this._super(...arguments);
-    $.getJSON(`${this.get('apiHost')}/api/environment`, (response) => {
+    $.getJSON(`${apiHost}/environment`).done((response) => {
       this.set('environment', response);
+    }).fail((response) => {
+      this.set('status', 'Failed to establish a backend connection.');
+      this.set('statusClass', 'danger');
     });
   },
 
@@ -63,7 +67,7 @@ export default Component.extend({
         $.ajax({
           dataType: 'json',
           method: 'POST',
-          url: `${this.get('apiHost')}/api/download`,
+          url: `${apiHost}/download`,
           data: {
             url,
             format
@@ -82,7 +86,7 @@ export default Component.extend({
             this.set('status', `Downloading ${fileStatus}`);
             this.set('statusClass', 'dark');
             let checkStatus = setInterval(() => {
-              $.getJSON(`${this.get('apiHost')}/api/download_status`, {
+              $.getJSON(`${apiHost}/download_status`, {
                 tempFile,
                 fileSize
               }).done((response) => {
@@ -90,7 +94,7 @@ export default Component.extend({
                   case 'complete':
                     this.set('progress', 100);
                     clearInterval(checkStatus);
-                    window.location.href = `${this.get('apiHost')}/api/download_file?video=${fileName}`;
+                    window.location.href = `${apiHost}/download_file?video=${fileName}`;
                     downloadVideo();
                     break;
                   case 'transcoding':
