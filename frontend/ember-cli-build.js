@@ -8,6 +8,7 @@ module.exports = function(defaults) {
   });
 
   app.import('vendor/jquery.textarea_autosize.min.js');
+  app.import('vendor/socket.io.slim.js');
 
   // Use `app.import` to add additional libraries to the generated
   // output files.

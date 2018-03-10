@@ -15,9 +15,9 @@ const VIDEO_DELETION_INTERVAL = process.env.VIDEO_DELETION_INTERVAL || 3600000;
 const TEMP_DELETION_INTERVAL = process.env.TEMP_DELETION_INTERVAL || 86400000;
 
 const app = express();
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
 
-app.listen(PORT);
-console.log('started server on port', PORT)
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({
@@ -32,6 +32,10 @@ if (ENV === 'development') {
   });
 }
 
+http.listen(PORT, () => {
+  console.log('started server on port', PORT);
+});
+
 (() => {
   let transcodingProgress;
   let transcodingError;
@@ -41,7 +45,6 @@ if (ENV === 'development') {
   commandExists('ffmpeg', (err, commandExists) => {
     environment = {
       environment: ENV,
-      statusInterval: STATUS_INTERVAL,
       ffmpeg: commandExists
     };
   });
@@ -50,91 +53,129 @@ if (ENV === 'development') {
     res.render('pages/index');
   });
 
-  app.get('/api/environment', (req, res) => {
-    res.json(environment);
-  });
+  io.on('connection', (socket) => {
+    console.log('client connected');
 
-  app.post('/api/download', (req, res) => {
-    let video = youtubedl(req.body.url);
-    let id = uuidv4();
-    let tempFile = `videos/${id}.tmp`;
-    let fileName;
-    let filePath;
-    let format = environment.ffmpeg ? req.body.format : '';
-    let x264Formats = ['mp4', 'mkv'];
+    let id;
 
-    video.on('info', (info) => {
-      fileName = info._filename;
-      if (format) {
-        fileName = fileName.slice(0, -(info.ext.length));
-        fileName += format;
-        if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {
-          format = '';
+    socket.on('environment check', () => {
+      io.emit('environment details', environment);
+    });
+
+    socket.on('download video', (url, requestedFormat) => {
+      let video = youtubedl(url);
+      let fileName;
+      let filePath;
+      let format = environment.ffmpeg ? requestedFormat : '';
+      let x264Formats = ['mp4', 'mkv'];
+
+      id = uuidv4();
+      let tempFile = `videos/${id}.tmp`;
+
+      video.on('info', (info) => {
+        fileName = info._filename;
+        if (format) {
+          fileName = fileName.slice(0, -(info.ext.length));
+          fileName += format;
+          if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {
+            format = '';
+          }
         }
-      }
-      guids[id] = {
-        fileName,
-        fileSize: info.size
-      };
-      filePath = `videos/${fileName}`;
-      console.log('downloading video', fileName);
-      res.json({
-        fileName: fileName.slice(0, -((req.body.format || info.ext).length + 1)),
-        id
+        guids[id] = {
+          fileName,
+          fileSize: info.size
+        };
+        filePath = `videos/${fileName}`;
+        console.log('downloading video', fileName);
+        io.emit('video details', {
+          fileName: fileName.slice(0, -((requestedFormat || info.ext).length + 1)),
+          id
+        });
+
+        let statusCheck = setInterval(() => {
+          let totalSize = guids[id].fileSize;
+          let tempFile = `videos/${id}.tmp`;
+          let actualSize;
+          let status;
+
+          if (fs.existsSync(tempFile)) {
+            actualSize = fs.statSync(tempFile).size;
+            if (actualSize === totalSize) {
+              status = 'transcoding'
+            } else {
+              status = 'downloading';
+            }
+          } else {
+            actualSize = totalSize;
+            status = 'complete';
+            clearInterval(statusCheck);
+          }
+
+          let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
+
+          if (transcodingError) {
+            socket.emit('transcoding error');
+          } else {
+            socket.emit('download progress', {
+              progress,
+              status
+            });
+          }
+        }, STATUS_INTERVAL);
       });
-    });
 
-    video.on('error', (err) => {
-      console.log('error while downloading video', err);
-      fs.unlink(tempFile);
-      res.sendStatus(500);
-    });
+      video.on('error', (err) => {
+        console.log('error while downloading video', err);
+        fs.unlink(tempFile);
+        io.emit('download error');
+      });
 
-    video.pipe(fs.createWriteStream(tempFile));
+      video.pipe(fs.createWriteStream(tempFile));
 
-    video.on('end', () => {
-      console.log('video finished downloading', fileName);
-      if (format) {
-        console.log(`transcoding to ${format}`);
-        let command;
-        switch (format) {
-          case 'mp4':
-          case 'mkv':
-            ffmpeg(tempFile).videoCodec('libx264').on('progress', (progress) => {
-              transcodingProgress = progress.percent / 100;
-            }).on('error', () => {
+      video.on('end', () => {
+        console.log('video finished downloading', fileName);
+        if (format) {
+          console.log(`transcoding to ${format}`);
+          let command;
+          switch (format) {
+            case 'mp4':
+            case 'mkv':
+              ffmpeg(tempFile).videoCodec('libx264').on('progress', (progress) => {
+                transcodingProgress = progress.percent / 100;
+              }).on('error', () => {
+                transcodingError = true;
+              }).on('end', () => {
+                fs.unlink(tempFile);
+                console.log('transcoding finished');
+              }).save(filePath);
+              break;
+            case 'mp3':
+              ffmpeg(tempFile).noVideo().audioBitrate('192k').audioChannels(2).audioCodec('libmp3lame').on('progress', (progress) => {
+                transcodingProgress = progress.percent / 100;
+              }).on('error', () => {
+                transcodingError = true;
+              }).on('end', () => {
+                fs.unlink(tempFile);
+                console.log('transcoding finished');
+              }).save(filePath);
+              break;
+            case 'wav':
+              ffmpeg(tempFile).noVideo().audioFrequency(44100).audioChannels(2).audioCodec('pcm_s16le').on('progress', (progress) => {
+                transcodingProgress = progress.percent / 100;
+              }).on('error', () => {
+                transcodingError = true;
+              }).on('end', () => {
+                fs.unlink(tempFile);
+                console.log('transcoding finished');
+              }).save(filePath);
+              break;
+            default:
               transcodingError = true;
-            }).on('end', () => {
-              fs.unlink(tempFile);
-              console.log('transcoding finished');
-            }).save(filePath);
-            break;
-          case 'mp3':
-            ffmpeg(tempFile).noVideo().audioBitrate('192k').audioChannels(2).audioCodec('libmp3lame').on('progress', (progress) => {
-              transcodingProgress = progress.percent / 100;
-            }).on('error', () => {
-              transcodingError = true;
-            }).on('end', () => {
-              fs.unlink(tempFile);
-              console.log('transcoding finished');
-            }).save(filePath);
-            break;
-          case 'wav':
-            ffmpeg(tempFile).noVideo().audioFrequency(44100).audioChannels(2).audioCodec('pcm_s16le').on('progress', (progress) => {
-              transcodingProgress = progress.percent / 100;
-            }).on('error', () => {
-              transcodingError = true;
-            }).on('end', () => {
-              fs.unlink(tempFile);
-              console.log('transcoding finished');
-            }).save(filePath);
-            break;
-          default:
-            transcodingError = true;
+          }
+        } else {
+          fs.rename(tempFile, filePath);
         }
-      } else {
-        fs.rename(tempFile, filePath);
-      }
+      });
     });
   });
 
@@ -147,36 +188,6 @@ if (ENV === 'development') {
     res.setHeader('Content-Length', stat.size);
     res.setHeader('Content-Disposition', `attachment; filename=${video}`);
     file.pipe(res);
-  });
-
-  app.get('/api/download_status', (req, res) => {
-    let totalSize = guids[req.query.id].fileSize;
-    let tempFile = `videos/${req.query.id}.tmp`;
-    let actualSize;
-    let status;
-
-    if (fs.existsSync(tempFile)) {
-      actualSize = fs.statSync(tempFile).size;
-      if (actualSize === totalSize) {
-        status = 'transcoding'
-      } else {
-        status = 'downloading';
-      }
-    } else {
-      actualSize = totalSize;
-      status = 'complete';
-    }
-
-    let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
-
-    if (transcodingError) {
-      res.sendStatus(500);
-    } else {
-      res.json({
-        status,
-        progress
-      });
-    }
   });
 })();
 

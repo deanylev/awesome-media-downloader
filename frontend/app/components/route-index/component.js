@@ -3,6 +3,7 @@ import config from '../../config/environment';
 import $ from 'jquery';
 
 const apiHost = config.APP.API_HOST;
+const socket = io(config.APP.SOCKET_HOST);
 
 export default Component.extend({
   formats: {
@@ -17,15 +18,35 @@ export default Component.extend({
   urls: '',
   downloadError: false,
   environment: null,
+  socketConnected: false,
+  socketDisconnected: Ember.computed.not('socketConnected'),
 
   init() {
     this._super(...arguments);
 
-    $.getJSON(`${apiHost}/environment`).done((response) => {
-      this.set('environment', response);
-    }).fail((response) => {
-      this.set('status', 'Failed to establish a backend connection.');
+    socket.on('connect', () => {
+      this.set('socketConnected', true);
+      this.set('status', '');
+
+      socket.emit('environment check');
+
+      socket.on('environment details', (details) => {
+        this.set('environment', details);
+      });
+
+      this.set('downloadError', false);
+      this.set('progress', 0);
+    });
+
+    socket.on('connect_error', (error) => {
+      this.set('socketConnected', false);
+      this.set('status', `Couldn't establish connection to backend socket. ${error}.`);
       this.set('statusClass', 'danger');
+      if (this.get('inFlight')) {
+        this.set('downloadError', true);
+      }
+      this.set('inFlight', false);
+      this.set('responseWaiting', false);
     });
   },
 
@@ -53,6 +74,48 @@ export default Component.extend({
 
       this.set('status', '');
 
+      socket.on('download error', () => {
+        this.set('status', `Sorry, looks like that URL isn't supported. (Video ${videoNumber}/${totalVideos})`);
+        this.set('statusClass', 'danger');
+        this.set('responseWaiting', false);
+        videoNumber++;
+        fails++;
+        downloadVideo();
+      });
+
+      socket.on('video details', (details) => {
+        this.set('downloadError', false);
+        this.set('progress', 0);
+        this.set('responseWaiting', false);
+
+        let id = details.id;
+        let fileStatus = `"${details.fileName}" (Video ${videoNumber}/${totalVideos})`;
+        this.set('status', `Downloading ${fileStatus}`);
+        this.set('statusClass', 'dark');
+
+        videoNumber++;
+
+        socket.on('download progress', (response) => {
+          switch (response.status) {
+            case 'complete':
+              this.set('progress', 100);
+              window.location.href = `${apiHost}/download_file?id=${id}`;
+              downloadVideo();
+              break;
+            case 'transcoding':
+              this.set('status', `Converting ${fileStatus}`);
+              this.set('statusClass', 'dark');
+            default:
+              this.set('progress', (response.progress * 100).toFixed(2));
+          }
+        });
+      });
+
+      socket.on('transcoding error', () => {
+        this.set('downloadError', true);
+        this.set('inFlight', false);
+      });
+
       let downloadVideo = () => {
         if (!urls.length) {
           setTimeout(() => {
@@ -61,6 +124,10 @@ export default Component.extend({
             this.set('statusClass', 'dark');
             this.set('downloadError', false);
             this.set('progress', 0);
+
+            ['download error', 'video details', 'download progress', 'transcoding error'].forEach((listener) => {
+              socket.off(listener);
+            });
           }, 1500);
 
           return;
@@ -70,63 +137,7 @@ export default Component.extend({
         this.set('inFlight', true);
         this.set('responseWaiting', true);
 
-        $.ajax({
-          dataType: 'json',
-          method: 'POST',
-          url: `${apiHost}/download`,
-          data: {
-            url,
-            format
-          },
-          complete: () => {
-            this.set('downloadError', false);
-            this.set('progress', 0);
-            this.set('responseWaiting', false);
-            videoNumber++;
-          },
-          success: (response) => {
-            let id = response.id;
-            let fileStatus = `"${response.fileName}" (Video ${videoNumber}/${totalVideos})`;
-            this.set('status', `Downloading ${fileStatus}`);
-            this.set('statusClass', 'dark');
-            let checkStatus = setInterval(() => {
-              $.getJSON(`${apiHost}/download_status`, {
-                id
-              }).done((response) => {
-                switch (response.status) {
-                  case 'complete':
-                    this.set('progress', 100);
-                    clearInterval(checkStatus);
-                    window.location.href = `${apiHost}/download_file?id=${id}`;
-                    downloadVideo();
-                    break;
-                  case 'transcoding':
-                    this.set('status', `Converting ${fileStatus}`);
-                    this.set('statusClass', 'dark');
-                  default:
-                    this.set('progress', (response.progress * 100).toFixed(2));
-                }
-              }).fail(() => {
-                clearInterval(checkStatus);
-                this.set('downloadError', true);
-                this.set('progress', 100);
-                this.set('inFlight', false);
-              });
-            }, this.get('environment').statusInterval);
-          },
-          error: (response) => {
-            let error;
-            if (response.status === 500) {
-              error = `Sorry, looks like that URL isn't supported.`;
-            } else {
-              error = 'An error occured.';
-            }
-            this.set('status', `${error} (Video ${videoNumber}/${totalVideos})`);
-            this.set('statusClass', 'danger');
-            fails++;
-            downloadVideo();
-          }
-        });
+        socket.emit('download video', url, format);
       }
 
       downloadVideo();
