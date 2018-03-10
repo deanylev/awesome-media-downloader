@@ -24,11 +24,7 @@
       <p class="status text-{{statusClass}}">{{status}}</p>
       <div class="progress">
         <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger"}}" style="width: {{if downloadError 100 progress}}%;">
-          {{#if downloadError}}
-            Error
-          {{else if progress}}
-            {{progress}}%
-          {{/if}}
+          <span title="{{displayedProgress}}">{{displayedProgress}}</span>
         </div>
       </div>
     </div>

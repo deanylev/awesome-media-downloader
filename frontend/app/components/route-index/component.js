@@ -11,6 +11,13 @@ export default Component.extend({
     Audio: ['mp3', 'wav']
   },
   progress: 0,
+  displayedProgress: Ember.computed('progress', 'downloadError', function() {
+    if (this.get('downloadError')) {
+      return 'Error';
+    } else if (this.get('progress')) {
+      return `${this.get('progress')}%`;
+    }
+  }),
   inFlight: false,
   responseWaiting: false,
   status: '',
