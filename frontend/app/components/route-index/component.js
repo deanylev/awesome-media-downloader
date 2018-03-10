@@ -46,6 +46,8 @@ export default Component.extend({
       let videoNumber = 1;
       let fails = 0;
 
+      this.set('status', '');
+
       let downloadVideo = () => {
         if (!urls.length) {
           setTimeout(() => {
@@ -62,7 +64,6 @@ export default Component.extend({
         let url = urls.shift();
         this.set('inFlight', true);
         this.set('responseWaiting', true);
-        this.set('status', '');
 
         $.ajax({
           dataType: 'json',
