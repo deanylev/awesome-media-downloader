@@ -31,8 +31,8 @@ module.exports = function(environment) {
     // ENV.APP.LOG_TRANSITIONS = true;
     // ENV.APP.LOG_TRANSITIONS_INTERNAL = true;
     // ENV.APP.LOG_VIEW_LOOKUPS = true;
-    ENV.APP.API_HOST = 'http://localhost:8080/api';
-    ENV.APP.SOCKET_HOST = 'http://localhost:8080';
+    ENV.APP.API_HOST = `http://localhost:${process.env.SERVER_PORT || 8080}/api`;
+    ENV.APP.SOCKET_HOST = `http://localhost:${process.env.SERVER_PORT || 8080}`;
   }
 
   if (environment === 'test') {
