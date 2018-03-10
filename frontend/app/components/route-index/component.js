@@ -29,6 +29,12 @@ export default Component.extend({
   socketConnected: false,
   socketDisconnected: Ember.computed.not('socketConnected'),
 
+  setStatus(text, bsClass) {
+    bsClass = bsClass || 'dark';
+    this.set('status', text);
+    this.set('statusClass', bsClass);
+  },
+
   init() {
     this._super(...arguments);
 
@@ -50,8 +56,7 @@ export default Component.extend({
     socket.on('connect_error', (error) => {
       this.set('initialSocketConnection', true);
       this.set('socketConnected', false);
-      this.set('status', `Couldn't establish connection to backend socket. ${error}.`);
-      this.set('statusClass', 'danger');
+      this.setStatus(`Couldn't establish connection to backend socket. ${error}.`, 'danger');
       if (this.get('inFlight')) {
         this.set('downloadError', true);
       }
@@ -67,8 +72,7 @@ export default Component.extend({
   actions: {
     downloadVideo() {
       if (!this.get('urls').trim()) {
-        this.set('status', 'Please enter at least one URL.');
-        this.set('statusClass', 'danger');
+        this.setStatus('Please enter at least one URL.', 'danger');
         return;
       }
 
@@ -85,8 +89,7 @@ export default Component.extend({
       this.set('status', '');
 
       socket.on('download error', () => {
-        this.set('status', `Sorry, looks like that URL isn't supported. (Video ${videoNumber}/${totalVideos})`);
-        this.set('statusClass', 'danger');
+        this.setStatus(`Sorry, looks like that URL isn't supported. (Video ${videoNumber}/${totalVideos})`, 'danger');
         this.set('responseWaiting', false);
         videoNumber++;
         fails++;
@@ -100,8 +103,7 @@ export default Component.extend({
 
         let id = details.id;
         let fileStatus = `"${details.fileName}" (Video ${videoNumber}/${totalVideos})`;
-        this.set('status', `Downloading ${fileStatus}`);
-        this.set('statusClass', 'dark');
+        this.setStatus( `Downloading ${fileStatus}`);
 
         videoNumber++;
 
@@ -113,8 +115,7 @@ export default Component.extend({
               downloadVideo();
               break;
             case 'transcoding':
-              this.set('status', `Converting ${fileStatus}`);
-              this.set('statusClass', 'dark');
+              this.setStatus(`Converting ${fileStatus}`);
             default:
               this.set('progress', (response.progress * 100).toFixed(2));
           }
@@ -130,8 +131,7 @@ export default Component.extend({
         if (!urls.length) {
           setTimeout(() => {
             this.set('inFlight', false);
-            this.set('status', `Downloading complete.${fails ? ` ${fails} video${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
-            this.set('statusClass', 'dark');
+            this.setStatus(`Downloading complete.${fails ? ` ${fails} video${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
             this.set('downloadError', false);
             this.set('progress', 0);
 
