@@ -2,31 +2,35 @@
   <div class="card">
     <div class="card-body">
       <h1 class="title text-center">Awesome Media Downloader</h1>
-      <form {{action "downloadVideo" on="submit"}}>
-        <div class="form-group">
-          {{textarea class="form-control" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
+      {{#if initialSocketConnection}}
+        <form {{action "downloadVideo" on="submit"}}>
+          <div class="form-group">
+            {{textarea class="form-control" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
+          </div>
+          {{#if environment.ffmpeg}}
+            <label for="format">File Format</label>
+            <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected}}>
+              <option value="" selected>Original</option>
+              {{#each-in formats as |type extensions|}}
+                <optgroup label="{{type}}">
+                  {{#each extensions as |extension|}}
+                    <option value="{{extension}}">{{uppercase extension}}</option>
+                  {{/each}}
+                </optgroup>
+              {{/each-in}}
+            </select>
+          {{/if}}
+          <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Submit{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
+        </form>
+        <p class="status text-{{statusClass}}">{{status}}</p>
+        <div class="progress">
+          <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger"}}" style="width: {{if downloadError 100 progress}}%;">
+            <span title="{{displayedProgress}}">{{displayedProgress}}</span>
+          </div>
         </div>
-        {{#if environment.ffmpeg}}
-          <label for="format">File Format</label>
-          <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected}}>
-            <option value="" selected>Original</option>
-            {{#each-in formats as |type extensions|}}
-              <optgroup label="{{type}}">
-                {{#each extensions as |extension|}}
-                  <option value="{{extension}}">{{uppercase extension}}</option>
-                {{/each}}
-              </optgroup>
-            {{/each-in}}
-          </select>
-        {{/if}}
-        <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Submit{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
-      </form>
-      <p class="status text-{{statusClass}}">{{status}}</p>
-      <div class="progress">
-        <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger"}}" style="width: {{if downloadError 100 progress}}%;">
-          <span title="{{displayedProgress}}">{{displayedProgress}}</span>
-        </div>
-      </div>
+      {{else}}
+        <p class="text-center">Loading...</p>
+      {{/if}}
     </div>
   </div>
 </div>

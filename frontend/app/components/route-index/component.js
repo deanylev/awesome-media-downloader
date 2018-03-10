@@ -25,6 +25,7 @@ export default Component.extend({
   urls: '',
   downloadError: false,
   environment: null,
+  initialSocketConnection: false,
   socketConnected: false,
   socketDisconnected: Ember.computed.not('socketConnected'),
 
@@ -39,6 +40,7 @@ export default Component.extend({
 
       socket.on('environment details', (details) => {
         this.set('environment', details);
+        this.set('initialSocketConnection', true);
       });
 
       this.set('downloadError', false);
@@ -46,6 +48,7 @@ export default Component.extend({
     });
 
     socket.on('connect_error', (error) => {
+      this.set('initialSocketConnection', true);
       this.set('socketConnected', false);
       this.set('status', `Couldn't establish connection to backend socket. ${error}.`);
       this.set('statusClass', 'danger');
