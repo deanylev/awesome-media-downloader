@@ -17,12 +17,10 @@ You must have Node.js installed (preferably the latest version) and optionally f
 
 When running in development mode, the frontend assumes the backend is running on port 8080\. You can change this by setting the `SERVER_PORT` env variable.
 
-1. Run `ember s` from `/frontend`.
-2. Access the frontend at `http://localhost:4200`.
+1. Run `npm install` once from `/frontend` to setup dependencies.
+2. Run `ember s` from `/frontend`.
+3. Access the frontend at `http://localhost:4200`.
 
 ### Building the frontend
 
-1. Run `npm install` once from `/frontend` to setup dependencies.
-2. Run `ember b --prod` from `/frontend`.
-3. In `frontend/dist` copy `index.html` to `/pages/views` and rename it to `index.ejs` (replacing the existing file).
-4. In `frontend/dist` copy `assets` and `fonts`, delete `assets and fonts` in `/public/` and paste the new folders in.
+Run `/build_frontend.sh`. It will build the frontend and move the generated files to the correct places.
