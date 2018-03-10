@@ -63,7 +63,7 @@ export default Component.extend({
 
   actions: {
     downloadVideo() {
-      if (!this.get('urls')) {
+      if (!this.get('urls').trim()) {
         this.set('status', 'Please enter at least one URL.');
         this.set('statusClass', 'danger');
         return;
