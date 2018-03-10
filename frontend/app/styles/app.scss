@@ -4,6 +4,16 @@ html {
   min-height: 100%;
 }
 
+body {
+  @extend .bg-primary;
+}
+
+textarea {
+  box-sizing: border-box;
+  min-height: 62px;
+  overflow-x: hidden;
+}
+
 footer {
   position: absolute;
   bottom: 0;
@@ -11,10 +21,6 @@ footer {
   height: 210px;
   line-height: 20px;
   word-wrap: break-word;
-}
-
-body {
-  @extend .bg-primary;
 }
 
 .custom-select {

@@ -20,12 +20,17 @@ export default Component.extend({
 
   init() {
     this._super(...arguments);
+
     $.getJSON(`${apiHost}/environment`).done((response) => {
       this.set('environment', response);
     }).fail((response) => {
       this.set('status', 'Failed to establish a backend connection.');
       this.set('statusClass', 'danger');
     });
+  },
+
+  didInsertElement() {
+    $('textarea').textareaAutoSize();    
   },
 
   actions: {
