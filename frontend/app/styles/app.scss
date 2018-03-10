@@ -22,8 +22,12 @@ body {
   margin-bottom: 20px;
 }
 
-.copyright {
+.footer-name {
   margin-top: 37px;
+
+  a {
+    color: white;
+  }
 }
 
 .card, .status {
