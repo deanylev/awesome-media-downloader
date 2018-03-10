@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
+const uuidv4 = require('uuid/v4');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -35,25 +36,28 @@ if (ENV === 'development') {
   let transcodingProgress;
   let transcodingError;
   let environment;
+  let guids = {};
+
+  commandExists('ffmpeg', (err, commandExists) => {
+    environment = {
+      environment: ENV,
+      statusInterval: STATUS_INTERVAL,
+      ffmpeg: commandExists
+    };
+  });
 
   app.get('/', (req, res) => {
     res.render('pages/index');
   });
 
   app.get('/api/environment', (req, res) => {
-    commandExists('ffmpeg', (err, commandExists) => {
-      environment = {
-        environment: ENV,
-        statusInterval: STATUS_INTERVAL,
-        ffmpeg: commandExists
-      };
-      res.json(environment);
-    });
+    res.json(environment);
   });
 
   app.post('/api/download', (req, res) => {
     let video = youtubedl(req.body.url);
-    let tempFile = `videos/${Math.random().toString(36).substring(2)}.tmp`;
+    let id = uuidv4();
+    let tempFile = `videos/${id}.tmp`;
     let fileName;
     let filePath;
     let format = environment.ffmpeg ? req.body.format : '';
@@ -68,13 +72,15 @@ if (ENV === 'development') {
           format = '';
         }
       }
+      guids[id] = {
+        fileName,
+        fileSize: info.size
+      };
       filePath = `videos/${fileName}`;
       console.log('downloading video', fileName);
       res.json({
-        fileName,
-        fileSize: info.size,
-        tempFile,
-        extension: req.body.format || info.ext
+        fileName: fileName.slice(0, -((req.body.format || info.ext).length + 1)),
+        id
       });
     });
 
@@ -133,20 +139,19 @@ if (ENV === 'development') {
   });
 
   app.get('/api/download_file', (req, res) => {
-    let video = decodeURIComponent(req.query.video);
+    let video = guids[req.query.id].fileName;
     let path = `videos/${video}`;
     let file = fs.createReadStream(path);
     let stat = fs.statSync(path);
-    console.log('providing video to browser for download', req.query.video);
+    console.log('providing video to browser for download', video);
     res.setHeader('Content-Length', stat.size);
-    res.setHeader('Content-Type', 'video/webm');
     res.setHeader('Content-Disposition', `attachment; filename=${video}`);
     file.pipe(res);
   });
 
   app.get('/api/download_status', (req, res) => {
-    let totalSize = parseInt(req.query.fileSize);
-    let tempFile = decodeURIComponent(req.query.tempFile);
+    let totalSize = guids[req.query.id].fileSize;
+    let tempFile = `videos/${req.query.id}.tmp`;
     let actualSize;
     let status;
 

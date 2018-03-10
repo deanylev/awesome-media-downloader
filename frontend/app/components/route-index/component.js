@@ -30,7 +30,7 @@ export default Component.extend({
   },
 
   didInsertElement() {
-    $('textarea').textareaAutoSize();    
+    $('textarea').textareaAutoSize();
   },
 
   actions: {
@@ -85,22 +85,19 @@ export default Component.extend({
             videoNumber++;
           },
           success: (response) => {
-            let fileSize = response.fileSize;
-            let fileName = encodeURIComponent(response.fileName);
-            let tempFile = response.tempFile;
-            let fileStatus = `"${response.fileName.slice(0, -(response.extension.length + 1))}" (Video ${videoNumber}/${totalVideos})`;
+            let id = response.id;
+            let fileStatus = `"${response.fileName}" (Video ${videoNumber}/${totalVideos})`;
             this.set('status', `Downloading ${fileStatus}`);
             this.set('statusClass', 'dark');
             let checkStatus = setInterval(() => {
               $.getJSON(`${apiHost}/download_status`, {
-                tempFile,
-                fileSize
+                id
               }).done((response) => {
                 switch (response.status) {
                   case 'complete':
                     this.set('progress', 100);
                     clearInterval(checkStatus);
-                    window.location.href = `${apiHost}/download_file?video=${fileName}`;
+                    window.location.href = `${apiHost}/download_file?id=${id}`;
                     downloadVideo();
                     break;
                   case 'transcoding':
