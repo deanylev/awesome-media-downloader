@@ -94,6 +94,8 @@ http.listen(PORT, () => {
           id
         });
 
+        transcodingError = false;
+
         let statusCheck = setInterval(() => {
           let totalSize = guids[id].fileSize;
           let tempFile = `videos/${id}.tmp`;
@@ -120,6 +122,7 @@ http.listen(PORT, () => {
 
           if (transcodingError) {
             socket.emit('transcoding error');
+            clearInterval(statusCheck);
           } else {
             socket.emit('download progress', {
               progress,
