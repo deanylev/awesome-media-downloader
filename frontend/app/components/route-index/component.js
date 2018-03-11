@@ -31,6 +31,11 @@ export default Component.extend({
   initialSocketConnection: false,
   socketConnected: false,
   socketDisconnected: Ember.computed.not('socketConnected'),
+  documentReady: Ember.observer('initialSocketConnection', function() {
+    setTimeout(() => {
+      $('textarea').textareaAutoSize();
+    }, 10);
+  }),
 
   setStatus(text, bsClass) {
     bsClass = bsClass || 'dark';
@@ -70,10 +75,6 @@ export default Component.extend({
       this.set('inFlight', false);
       this.set('responseWaiting', false);
     });
-  },
-
-  didInsertElement() {
-    $('textarea').textareaAutoSize();
   },
 
   actions: {
