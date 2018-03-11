@@ -14,6 +14,9 @@ const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
 const VIDEO_DELETION_INTERVAL = process.env.VIDEO_DELETION_INTERVAL || 3600000;
 const TEMP_DELETION_INTERVAL = process.env.TEMP_DELETION_INTERVAL || 86400000;
 
+const VIDEO_FORMATS = ['mp4', 'mkv'];
+const AUDIO_FORMATS = ['mp3', 'wav'];
+
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
@@ -45,7 +48,9 @@ http.listen(PORT, () => {
   commandExists('ffmpeg', (err, commandExists) => {
     environment = {
       environment: ENV,
-      ffmpeg: commandExists
+      ffmpeg: commandExists,
+      videoFormats: VIDEO_FORMATS,
+      audioFormats: AUDIO_FORMATS
     };
   });
 
@@ -62,28 +67,39 @@ http.listen(PORT, () => {
       io.emit('environment details', environment);
     });
 
-    socket.on('download video', (url, requestedFormat) => {
-      let video = youtubedl(url);
+    socket.on('download video', (url, requestedFormat, requestedQuality) => {
+      id = uuidv4();
+      let tempFile = `videos/${id}.tmp`;
+      let tempFileAudio;
+      let options = [];
+      if (requestedQuality === 'best') {
+        options.push('-f', 'bestvideo');
+        let audio = youtubedl(url, ['-f', 'bestaudio']);
+        tempFileAudio = `${tempFile}audio`;
+        audio.pipe(fs.createWriteStream(tempFileAudio));
+      }
+      let video = youtubedl(url, options);
       let fileName;
       let filePath;
       let format = environment.ffmpeg ? requestedFormat : '';
       let x264Formats = ['mp4', 'mkv'];
-
-      id = uuidv4();
-      let tempFile = `videos/${id}.tmp`;
+      let originalFormat;
 
       video.on('info', (info) => {
-        fileName = info._filename;
-        if (format) {
-          fileName = fileName.slice(0, -(info.ext.length));
+        fileName = `${info.title}.`;
+        if (format && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
           fileName += format;
           if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {
             format = '';
           }
+        } else {
+          fileName += info.ext;
+          format = '';
         }
+        originalFormat = info.ext;
         guids[id] = {
           url,
-          originalFormat: info.ext,
+          originalFormat,
           fileName,
           fileSize: info.size
         };
@@ -144,7 +160,6 @@ http.listen(PORT, () => {
         console.log('video finished downloading', fileName);
         if (format) {
           console.log(`transcoding to ${format}`);
-          let command;
           switch (format) {
             case 'mp4':
             case 'mkv':
@@ -180,6 +195,19 @@ http.listen(PORT, () => {
             default:
               transcodingError = true;
           }
+        } else if (requestedQuality === 'best') {
+          console.log('combining video and audio files');
+          let videoCodec = originalFormat === 'webm' ? 'libvpx' : 'libx264';
+          ffmpeg().videoCodec(videoCodec).input(tempFile).input(tempFileAudio).on('progress', (progress) => {
+            transcodingProgress = progress.percent / 100;
+          }).on('error', (err) => {
+            console.log('error when combining files', err);
+            transcodingError = true;
+          }).on('end', () => {
+            fs.unlink(tempFile);
+            fs.unlink(tempFileAudio);
+            console.log('transcoding finished');
+          }).save(filePath);
         } else {
           fs.rename(tempFile, filePath);
         }

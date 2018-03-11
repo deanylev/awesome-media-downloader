@@ -7,10 +7,7 @@ const socket = io(config.APP.SOCKET_HOST);
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
 
 export default Component.extend({
-  formats: {
-    Video: ['mp4', 'mkv'],
-    Audio: ['mp3', 'wav']
-  },
+  formats: null,
   progress: 0,
   displayedProgress: Ember.computed('progress', 'downloadError', function() {
     if (this.get('downloadError')) {
@@ -18,6 +15,10 @@ export default Component.extend({
     } else if (this.get('progress')) {
       return `${this.get('progress')}%`;
     }
+  }),
+  format: '',
+  audioFormatSelected: Ember.computed('format', 'formats', function() {
+    return this.get('formats').Audio.includes(this.get('format'));
   }),
   inFlight: false,
   responseWaiting: false,
@@ -48,6 +49,10 @@ export default Component.extend({
       socket.on('environment details', (details) => {
         this.set('environment', details);
         this.set('initialSocketConnection', true);
+        this.set('formats', {
+          Video: details.videoFormats,
+          Audio: details.audioFormats
+        });
       });
 
       this.set('downloadError', false);
@@ -71,9 +76,13 @@ export default Component.extend({
   },
 
   actions: {
+    updateFormat() {
+      this.set('format', $('#format').val());
+    },
+
     downloadVideo() {
       let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
-      let format = $('#format').val();
+      let quality = this.get('audioFormatSelected') ? '' : $('#quality').val();
       let totalVideos = urls.length;
       let videoNumber = 1;
       let fails = 0;
@@ -124,7 +133,7 @@ export default Component.extend({
               downloadVideo();
               break;
             case 'transcoding':
-              this.setStatus(`Converting ${fileStatus}`);
+              this.setStatus(`Processing ${fileStatus}`);
             default:
               this.set('progress', (response.progress * 100).toFixed(2));
           }
@@ -151,7 +160,7 @@ export default Component.extend({
         this.set('inFlight', true);
         this.set('responseWaiting', true);
 
-        socket.emit('download video', url, format);
+        socket.emit('download video', url, this.get('format'), quality);
       }
 
       downloadVideo();

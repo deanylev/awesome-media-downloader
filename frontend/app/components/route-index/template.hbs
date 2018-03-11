@@ -9,7 +9,7 @@
           </div>
           {{#if environment.ffmpeg}}
             <label for="format">File Format</label>
-            <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected}}>
+            <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected}} {{action "updateFormat" on="change"}}>
               <option value="" selected>Original</option>
               {{#each-in formats as |type extensions|}}
                 <optgroup label="{{type}}">
@@ -18,6 +18,11 @@
                   {{/each}}
                 </optgroup>
               {{/each-in}}
+            </select>
+            <label for="quality">Video Quality</label>
+            <select id="quality" class="custom-select" disabled={{or inFlight socketDisconnected audioFormatSelected}}>
+              <option value="" selected>Up to 720p (recommended)</option>
+              <option value="best">Best (may take much longer)</option>
             </select>
           {{/if}}
           <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Submit{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
