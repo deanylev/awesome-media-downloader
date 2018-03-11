@@ -87,6 +87,10 @@ export default Component.extend({
     },
 
     downloadFile() {
+      if (this.get('inFlight') || this.get('socketDisconnected')) {
+        return;
+      }
+
       let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
       let format = this.get('quality') ? '' : this.get('format');
       let quality = this.get('audioFormatSelected') ? '' : this.get('quality');
@@ -96,10 +100,6 @@ export default Component.extend({
 
       if (!urls.length) {
         this.setStatus('Please enter at least one URL.', 'danger');
-        return;
-      }
-
-      if (this.get('inFlight')) {
         return;
       }
 
