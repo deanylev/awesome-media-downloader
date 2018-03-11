@@ -4,6 +4,7 @@ import $ from 'jquery';
 
 const apiHost = config.APP.API_HOST;
 const socket = io(config.APP.SOCKET_HOST);
+const urlRegex =  /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
 
 export default Component.extend({
   formats: {
@@ -71,7 +72,13 @@ export default Component.extend({
 
   actions: {
     downloadVideo() {
-      if (!this.get('urls').trim()) {
+      let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
+      let format = $('#format').val();
+      let totalVideos = urls.length;
+      let videoNumber = 1;
+      let fails = 0;
+
+      if (!urls.length) {
         this.setStatus('Please enter at least one URL.', 'danger');
         return;
       }
@@ -79,12 +86,6 @@ export default Component.extend({
       if (this.get('inFlight')) {
         return;
       }
-
-      let urls = this.get('urls').split('\n');
-      let format = $('#format').val();
-      let totalVideos = urls.length;
-      let videoNumber = 1;
-      let fails = 0;
 
       this.set('status', '');
 
@@ -103,7 +104,7 @@ export default Component.extend({
 
         let id = details.id;
         let fileStatus = `"${details.fileName}" (Video ${videoNumber}/${totalVideos})`;
-        this.setStatus( `Downloading ${fileStatus}`);
+        this.setStatus(`Downloading ${fileStatus}`);
 
         videoNumber++;
 
