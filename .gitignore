@@ -1,4 +1,4 @@
 node_modules
 .DS_Store
-videos/*
-!videos/.gitkeep
+files/*
+!files/.gitkeep

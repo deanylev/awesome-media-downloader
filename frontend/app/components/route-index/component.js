@@ -20,6 +20,7 @@ export default Component.extend({
   audioFormatSelected: Ember.computed('format', 'formats', function() {
     return this.get('formats').Audio.includes(this.get('format'));
   }),
+  quality: '',
   inFlight: false,
   responseWaiting: false,
   status: '',
@@ -76,15 +77,20 @@ export default Component.extend({
   },
 
   actions: {
-    updateFormat() {
+    setFormat() {
       this.set('format', $('#format').val());
     },
 
-    downloadVideo() {
+    setQuality() {
+      this.set('quality', $('#quality').val());
+    },
+
+    downloadFile() {
       let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
-      let quality = this.get('audioFormatSelected') ? '' : $('#quality').val();
-      let totalVideos = urls.length;
-      let videoNumber = 1;
+      let format = this.get('quality') ? '' : this.get('format');
+      let quality = this.get('audioFormatSelected') ? '' : this.get('quality');
+      let totalFiles = urls.length;
+      let fileNumber = 1;
       let fails = 0;
 
       if (!urls.length) {
@@ -99,38 +105,38 @@ export default Component.extend({
       this.set('status', '');
 
       socket.on('download error', () => {
-        this.setStatus(`Sorry, looks like that URL isn't supported. (Video ${videoNumber}/${totalVideos})`, 'danger');
+        this.setStatus(`Sorry, looks like that URL isn't supported. (File ${fileNumber}/${totalFiles})`, 'danger');
         this.set('responseWaiting', false);
-        videoNumber++;
+        fileNumber++;
         fails++;
-        downloadVideo();
+        downloadFile();
       });
 
       socket.on('transcoding error', () => {
-        this.setStatus(`Error during conversion. (Video ${videoNumber - 1}/${totalVideos})`, 'danger');
+        this.setStatus(`Error during conversion. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
         this.set('downloadError', true);
         this.set('inFlight', false);
         fails++;
-        downloadVideo();
+        downloadFile();
       });
 
-      socket.on('video details', (details) => {
+      socket.on('file details', (details) => {
         this.set('downloadError', false);
         this.set('progress', 0);
         this.set('responseWaiting', false);
 
         let id = details.id;
-        let fileStatus = `"${details.fileName}" (Video ${videoNumber}/${totalVideos})`;
+        let fileStatus = `"${details.fileName}" (File ${fileNumber}/${totalFiles})`;
         this.setStatus(`Downloading ${fileStatus}`);
 
-        videoNumber++;
+        fileNumber++;
 
         socket.on('download progress', (response) => {
           switch (response.status) {
             case 'complete':
               this.set('progress', 100);
               window.location.href = `${apiHost}/download_file?id=${id}`;
-              downloadVideo();
+              downloadFile();
               break;
             case 'transcoding':
               this.setStatus(`Processing ${fileStatus}`);
@@ -140,15 +146,15 @@ export default Component.extend({
         });
       });
 
-      let downloadVideo = () => {
+      let downloadFile = () => {
         if (!urls.length) {
           setTimeout(() => {
             this.set('inFlight', false);
-            this.setStatus(`Downloading complete.${fails ? ` ${fails} video${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
+            this.setStatus(`Downloading complete.${fails ? ` ${fails} files${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
             this.set('downloadError', false);
             this.set('progress', 0);
 
-            ['download error', 'video details', 'download progress', 'transcoding error'].forEach((listener) => {
+            ['download error', 'file details', 'download progress', 'transcoding error'].forEach((listener) => {
               socket.off(listener);
             });
           }, 1500);
@@ -160,10 +166,10 @@ export default Component.extend({
         this.set('inFlight', true);
         this.set('responseWaiting', true);
 
-        socket.emit('download video', url, this.get('format'), quality);
+        socket.emit('download file', url, format, quality);
       }
 
-      downloadVideo();
+      downloadFile();
     }
   }
 });

@@ -3,26 +3,30 @@
     <div class="card-body">
       <h1 class="title text-center">Awesome Media Downloader</h1>
       {{#if initialSocketConnection}}
-        <form {{action "downloadVideo" on="submit"}}>
+        <form {{action "downloadFile" on="submit"}}>
           <div class="form-group">
             {{textarea class="form-control" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
           </div>
           {{#if environment.ffmpeg}}
             <label for="format">File Format</label>
-            <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected}} {{action "updateFormat" on="change"}}>
+            <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected quality}} {{action "setFormat" on="change"}}>
               <option value="" selected>Original</option>
-              {{#each-in formats as |type extensions|}}
-                <optgroup label="{{type}}">
-                  {{#each extensions as |extension|}}
-                    <option value="{{extension}}">{{uppercase extension}}</option>
-                  {{/each}}
-                </optgroup>
-              {{/each-in}}
+              {{#if (not quality)}}
+                {{#each-in formats as |type extensions|}}
+                  <optgroup label="{{type}}">
+                    {{#each extensions as |extension|}}
+                      <option value="{{extension}}">{{uppercase extension}}</option>
+                    {{/each}}
+                  </optgroup>
+                {{/each-in}}
+              {{/if}}
             </select>
-            <label for="quality">Video Quality</label>
-            <select id="quality" class="custom-select" disabled={{or inFlight socketDisconnected audioFormatSelected}}>
-              <option value="" selected>Up to 720p (recommended)</option>
-              <option value="best">Best (may take much longer)</option>
+            <label for="quality">File Quality</label>
+            <select id="quality" class="custom-select" disabled={{or inFlight socketDisconnected audioFormatSelected}} {{action "setQuality" on="change"}}>
+              <option value="" selected>Standard (recommended)</option>
+              {{#if (not audioFormatSelected)}}
+                <option value="best">Best (takes much longer)</option>
+              {{/if}}
             </select>
           {{/if}}
           <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Submit{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
