@@ -13,6 +13,8 @@ const ENV = process.env.ENV || 'production';
 const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
 const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
 const TEMP_DELETION_INTERVAL = process.env.TEMP_DELETION_INTERVAL || 86400000;
+const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
+const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
 
 const VIDEO_FORMATS = ['mp4', 'mkv'];
 const AUDIO_FORMATS = ['mp3', 'wav'];
@@ -51,6 +53,8 @@ http.listen(PORT, () => {
     environment = {
       environment: ENV,
       ffmpeg: commandExists,
+      allowFormatSelection: ALLOW_FORMAT_SELECTION,
+      allowQualitySelection: ALLOW_QUALITY_SELECTION,
       videoFormats: VIDEO_FORMATS,
       audioFormats: AUDIO_FORMATS
     };
@@ -74,7 +78,7 @@ http.listen(PORT, () => {
       let tempFile = `files/${id}.tmp`;
       let tempFileAudio;
       let options = [];
-      if (requestedQuality === 'best') {
+      if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
         options.push('-f', 'bestvideo');
         let audio = youtubedl(url, ['-f', 'bestaudio']);
         tempFileAudio = `${tempFile}audio`;
@@ -83,7 +87,7 @@ http.listen(PORT, () => {
       let file = youtubedl(url, options);
       let fileName;
       let filePath;
-      let format = environment.ffmpeg ? requestedFormat : '';
+      let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
       let x264Formats = ['mp4', 'mkv'];
       let originalFormat;
 
@@ -198,7 +202,7 @@ http.listen(PORT, () => {
             default:
               transcodingError = true;
           }
-        } else if (requestedQuality === 'best') {
+        } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
           console.log('combining video and audio files');
           let videoCodec = originalFormat === 'webm' ? 'libvpx' : 'libx264';
           command = ffmpeg().videoCodec(videoCodec).input(tempFile).input(tempFileAudio).on('progress', (progress) => {

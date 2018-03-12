@@ -8,26 +8,30 @@
             {{textarea class="form-control" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
           </div>
           {{#if environment.ffmpeg}}
-            <label for="format">File Format</label>
-            <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected quality}} {{action "setFormat" on="change"}}>
-              <option value="" selected>Original</option>
-              {{#if (not quality)}}
-                {{#each-in formats as |type extensions|}}
-                  <optgroup label="{{type}}">
-                    {{#each extensions as |extension|}}
-                      <option value="{{extension}}">{{uppercase extension}}</option>
-                    {{/each}}
-                  </optgroup>
-                {{/each-in}}
-              {{/if}}
-            </select>
-            <label for="quality">File Quality</label>
-            <select id="quality" class="custom-select" disabled={{or inFlight socketDisconnected audioFormatSelected}} {{action "setQuality" on="change"}}>
-              <option value="" selected>Standard (recommended)</option>
-              {{#if (not audioFormatSelected)}}
-                <option value="best">Best (takes much longer)</option>
-              {{/if}}
-            </select>
+            {{#if environment.allowFormatSelection}}
+              <label for="format">File Format</label>
+              <select id="format" class="custom-select" disabled={{or inFlight socketDisconnected quality}} {{action "setFormat" on="change"}}>
+                <option value="" selected>Original</option>
+                {{#if (not quality)}}
+                  {{#each-in formats as |type extensions|}}
+                    <optgroup label="{{type}}">
+                      {{#each extensions as |extension|}}
+                        <option value="{{extension}}">{{uppercase extension}}</option>
+                      {{/each}}
+                    </optgroup>
+                  {{/each-in}}
+                {{/if}}
+              </select>
+            {{/if}}
+            {{#if environment.allowQualitySelection}}
+              <label for="quality">File Quality</label>
+              <select id="quality" class="custom-select" disabled={{or inFlight socketDisconnected format}} {{action "setQuality" on="change"}}>
+                <option value="" selected>Standard (recommended)</option>
+                {{#if (not format)}}
+                  <option value="best">Best (takes much longer)</option>
+                {{/if}}
+              </select>
+            {{/if}}
           {{/if}}
           <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Submit{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
         </form>

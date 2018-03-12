@@ -17,9 +17,6 @@ export default Component.extend({
     }
   }),
   format: '',
-  audioFormatSelected: Ember.computed('format', 'formats', function() {
-    return this.get('formats').Audio.includes(this.get('format'));
-  }),
   quality: '',
   inFlight: false,
   responseWaiting: false,
