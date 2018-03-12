@@ -15,6 +15,9 @@ const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
 const TEMP_DELETION_INTERVAL = process.env.TEMP_DELETION_INTERVAL || 86400000;
 const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
 const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
+const {
+  ADMIN_IPS
+} = process.env;
 
 const VIDEO_FORMATS = ['mp4', 'mkv'];
 const AUDIO_FORMATS = ['mp3', 'wav'];
@@ -250,8 +253,7 @@ http.listen(PORT, () => {
 
   app.get('/api/admin', (req, res) => {
     let ip = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(', ')[0] : req.connection.remoteAddress;
-
-    if (ENV === 'development' || ip === process.env.ADMIN_IP) {
+    if (ENV === 'development' || (ADMIN_IPS && ADMIN_IPS.split(' ').includes(ip))) {
       res.json({
         files: guids
       });
