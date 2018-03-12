@@ -223,11 +223,11 @@ http.listen(PORT, () => {
           let killTranscoder = () => {
             console.log('client disconnected, killing ffmpeg')
             command.kill('SIGKILL');
-            fs.unlink(tempFile);
-            if (tempFileAudio) {
-              fs.unlink(tempFileAudio);
-            }
-            fs.unlink(filePath);
+            [tempFile, tempFile, tempFileAudio].forEach((file) => {
+              if (fs.existsSync(file)) {
+                fs.unlink(file);
+              }
+            })
             socket.removeListener('disconnect', killTranscoder);
           }
 
