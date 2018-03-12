@@ -8,6 +8,16 @@ const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(
 
 export default Component.extend({
   formats: null,
+  qualities: {
+    'Standard (recommended)': '',
+    'Best (takes much longer)': 'best'
+  },
+  qualitiesArray: Ember.computed('qualities', function() {
+    return Object.keys(this.get('qualities'));
+  }),
+  selectedQuality: Ember.computed('quality', function() {
+    return Object.keys(this.get('qualities')).find(key => this.get('qualities')[key] === this.get('quality'));
+  }),
   progress: 0,
   displayedProgress: Ember.computed('progress', 'downloadError', function() {
     if (this.get('downloadError')) {
@@ -52,10 +62,15 @@ export default Component.extend({
       socket.on('environment details', (details) => {
         this.set('environment', details);
         this.set('initialSocketConnection', true);
-        this.set('formats', {
-          Video: details.videoFormats,
-          Audio: details.audioFormats
-        });
+        this.set('formats', [{
+            groupName: 'Video',
+            options: details.videoFormats
+          },
+          {
+            groupName: 'Audio',
+            options: details.audioFormats
+          },
+        ]);
       });
 
       this.set('downloadError', false);
@@ -75,12 +90,12 @@ export default Component.extend({
   },
 
   actions: {
-    setFormat() {
-      this.set('format', $('#format').val());
+    setFormat(format) {
+      this.set('format', format);
     },
 
-    setQuality() {
-      this.set('quality', $('#quality').val());
+    setQuality(quality) {
+      this.set('quality', this.get('qualities')[quality]);
     },
 
     downloadFile() {
@@ -90,7 +105,7 @@ export default Component.extend({
 
       let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
       let format = this.get('quality') ? '' : this.get('format');
-      let quality = this.get('audioFormatSelected') ? '' : this.get('quality');
+      let quality = this.get('format') ? '' : this.get('quality');
       let totalFiles = urls.length;
       let fileNumber = 1;
       let fails = 0;
