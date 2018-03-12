@@ -148,7 +148,7 @@ export default Component.extend({
         if (!urls.length) {
           setTimeout(() => {
             this.set('inFlight', false);
-            this.setStatus(`Downloading complete.${fails ? ` ${fails} files${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
+            this.setStatus(`Downloading complete.${fails ? ` ${fails} file${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
             this.set('downloadError', false);
             this.set('progress', 0);
 
