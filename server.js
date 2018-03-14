@@ -8,7 +8,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
 
-const SERVER_PORT = process.env.SERVER_PORT || 8080;
+const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
 const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
 const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
@@ -44,15 +44,15 @@ if (ENV === 'development') {
 
 http.on('error', (err) => {
   if (err.code === 'EACCES') {
-    console.log(`error: port ${SERVER_PORT} is in use. ${process.env.SERVER_PORT ? '' : `kill whatever is running on port ${SERVER_PORT} or set the SERVER_PORT env variable to something different.`}`);
+    console.log(`error: port ${PORT} is in use. ${process.env.PORT ? '' : `kill whatever is running on port ${PORT} or set the PORT env variable to something different.`}`);
   } else {
     console.log('an error occured', err);
   }
   process.exit();
 });
 
-http.listen(SERVER_PORT, () => {
-  console.log('started server on port', SERVER_PORT);
+http.listen(PORT, () => {
+  console.log('started server on port', PORT);
 });
 
 (() => {
