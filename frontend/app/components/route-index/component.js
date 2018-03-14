@@ -101,7 +101,7 @@ export default Component.extend({
         return;
       }
 
-      let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
+      let urls = this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && urlRegex.test(url));
       let format = this.get('quality') === 'none' ? this.get('format') : '';
       let quality = this.get('format') === 'none' ? this.get('quality') : '';
       let totalFiles = urls.length;
