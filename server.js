@@ -8,7 +8,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
 
-const PORT = process.env.PORT || 8080;
+const SERVER_PORT = process.env.SERVER_PORT || 8080;
 const ENV = process.env.ENV || 'production';
 const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
 const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
@@ -42,8 +42,8 @@ if (ENV === 'development') {
   });
 }
 
-http.listen(PORT, () => {
-  console.log('started server on port', PORT);
+http.listen(SERVER_PORT, () => {
+  console.log('started server on port', SERVER_PORT);
 });
 
 (() => {

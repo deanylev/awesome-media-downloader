@@ -27,9 +27,7 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 ### Environment Variables
 
-`PORT` - What port the backend will run on (default 8080)
-
-`SERVER_PORT` - What port the frontend will try to access the backend on. This needs to be the same as `PORT`. (default 8080)
+`SERVER_PORT` - What port the backend will run on. (default 8080)
 
 `ENV` - What environment the backend will run in. Either development or production. (default production)
 
