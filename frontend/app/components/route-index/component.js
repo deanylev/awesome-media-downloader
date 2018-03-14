@@ -12,12 +12,18 @@ export default Component.extend({
   formatLabels: {
     'none': 'Original'
   },
+  disableFormat: Ember.computed('inFlight', 'socketDisconnected', 'quality', function() {
+    return this.get('inFlight') || this.get('socketDisconnected') || this.get('quality') !== 'none';
+  }),
   quality: 'none',
   qualities: ['none', 'best'],
   qualityLabels: {
     'none': 'Standard (recommended)',
     'best': 'Best (takes much longer)'
   },
+  disableQuality: Ember.computed('inFlight', 'socketDisconnected', 'format', function() {
+    return this.get('inFlight') || this.get('socketDisconnected') || this.get('format') !== 'none';
+  }),
   progress: 0,
   displayedProgress: Ember.computed('progress', 'downloadError', function() {
     if (this.get('downloadError')) {
