@@ -42,6 +42,15 @@ if (ENV === 'development') {
   });
 }
 
+http.on('error', (err) => {
+  if (err.code === 'EACCES') {
+    console.log(`error: port ${SERVER_PORT} is in use. ${process.env.SERVER_PORT ? '' : `kill whatever is running on port ${SERVER_PORT} or set the SERVER_PORT env variable to something different.`}`);
+  } else {
+    console.log('an error occured', err);
+  }
+  process.exit();
+});
+
 http.listen(SERVER_PORT, () => {
   console.log('started server on port', SERVER_PORT);
 });
