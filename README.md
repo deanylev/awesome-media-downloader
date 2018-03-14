@@ -15,7 +15,7 @@ You must have Node.js installed (preferably the latest version) and optionally f
 
 ### Running the frontend
 
-When running in development mode, the frontend assumes the backend is running on port 8080\. You can change this by setting the `SERVER_PORT` env variable.
+When running in development mode, the frontend assumes the backend is running on port 8080. You can change this by setting the `SERVER_PORT` env variable.
 
 1. Run `npm install` once from `/frontend` to setup dependencies.
 2. Run `ember s` from `/frontend`.
@@ -24,3 +24,23 @@ When running in development mode, the frontend assumes the backend is running on
 ### Building the frontend
 
 Run `/build_frontend.sh`. It will build the frontend and move the generated files to the correct places.
+
+### Environment Variables
+
+`PORT` - What port the backend will run on (default 8080)
+
+`SERVER_PORT` - What port the frontend will try to access the backend on. This needs to be the same as `PORT`. (default 8080)
+
+`ENV` - What environment the backend will run in. Either development or production. (default production)
+
+`STATUS_INTERVAL` - How often the progress bar will update, in milliseconds. (default 1000)
+
+`FILE_DELETION_INTERVAL` - How often video files will get deleted, in milliseconds. (default 3600000)
+
+`TEMP_DELETION_INTERVAL` - How often incomplete downloads (.tmp/.tmpaudio files) will get deleted, in milliseconds. (default 86400000)
+
+`ALLOW_FORMAT_SELECTION` - Whether to allow format selection on the frontend. (default false)
+
+`ALLOW_QUALITY_SELECTION` - Whether to allow quality selection on the frontend. (default false)
+
+`ADMIN_IPS` - Space-seperated list of IPs which will be allowed to access the admin path (/api/admin, just a list of downloads for now). (default null)
