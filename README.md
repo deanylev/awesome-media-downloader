@@ -41,4 +41,4 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `ALLOW_QUALITY_SELECTION` - Whether to allow quality selection on the frontend. (default false)
 
-`ADMIN_IPS` - Space-seperated list of IPs which will be allowed to access the admin path (/api/admin, just a list of downloads for now). (default null)
+`ADMIN_IPS` - Space-separated list of IPs which will be allowed to access the admin path (/api/admin, just a list of downloads for now). (default null)
