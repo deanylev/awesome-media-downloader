@@ -10,14 +10,18 @@
           {{#if environment.ffmpeg}}
             {{#if environment.allowFormatSelection}}
               <label>File Format</label>
-              {{#power-select placeholder="Original" selected=format searchEnabled=false allowClear=true disabled=(or inFlight socketDisconnected quality) options=formats onchange=(action "setFormat") as |format|}}
-                {{uppercase format}}
+              {{#power-select selected=format searchEnabled=false disabled=(or inFlight socketDisconnected (not (eq quality "none"))) options=formats onchange=(action "setFormat") as |format|}}
+                {{#if (get formatLabels format)}}
+                  {{get formatLabels format}}
+                {{else}}
+                  {{uppercase format}}
+                {{/if}}
               {{/power-select}}
             {{/if}}
             {{#if environment.allowQualitySelection}}
               <label>File Quality</label>
-              {{#power-select selected=selectedQuality searchEnabled=false disabled=(or inFlight socketDisconnected format) options=qualitiesArray onchange=(action "setQuality") as |quality|}}
-                {{quality}}
+              {{#power-select selected=quality searchEnabled=false disabled=(or inFlight socketDisconnected (not (eq format "none"))) options=qualities onchange=(action "setQuality") as |quality|}}
+                {{get qualityLabels quality}}
               {{/power-select}}
             {{/if}}
           {{/if}}

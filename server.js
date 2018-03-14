@@ -78,6 +78,8 @@ http.listen(PORT, () => {
 
     socket.on('download file', (url, requestedFormat, requestedQuality) => {
       id = uuidv4();
+      requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
+      requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
       let tempFile = `files/${id}.tmp`;
       let tempFileAudio;
       let options = [];

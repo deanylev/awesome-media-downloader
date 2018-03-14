@@ -7,17 +7,17 @@ const socket = io(config.APP.SOCKET_HOST);
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
 
 export default Component.extend({
+  format: 'none',
   formats: null,
-  qualities: {
-    'Standard (recommended)': '',
-    'Best (takes much longer)': 'best'
+  formatLabels: {
+    'none': 'Original'
   },
-  qualitiesArray: Ember.computed('qualities', function() {
-    return Object.keys(this.get('qualities'));
-  }),
-  selectedQuality: Ember.computed('quality', function() {
-    return Object.keys(this.get('qualities')).find(key => this.get('qualities')[key] === this.get('quality'));
-  }),
+  quality: 'none',
+  qualities: ['none', 'best'],
+  qualityLabels: {
+    'none': 'Standard (recommended)',
+    'best': 'Best (takes much longer)'
+  },
   progress: 0,
   displayedProgress: Ember.computed('progress', 'downloadError', function() {
     if (this.get('downloadError')) {
@@ -26,8 +26,6 @@ export default Component.extend({
       return `${this.get('progress')}%`;
     }
   }),
-  format: '',
-  quality: '',
   inFlight: false,
   responseWaiting: false,
   status: '',
@@ -62,7 +60,7 @@ export default Component.extend({
       socket.on('environment details', (details) => {
         this.set('environment', details);
         this.set('initialSocketConnection', true);
-        this.set('formats', [{
+        this.set('formats', ['none', {
             groupName: 'Video',
             options: details.videoFormats
           },
@@ -95,7 +93,7 @@ export default Component.extend({
     },
 
     setQuality(quality) {
-      this.set('quality', this.get('qualities')[quality]);
+      this.set('quality', quality);
     },
 
     downloadFile() {
@@ -104,8 +102,8 @@ export default Component.extend({
       }
 
       let urls = this.get('urls').split('\n').map(url => url.trim()).filter(url => url && urlRegex.test(url));
-      let format = this.get('quality') ? '' : this.get('format');
-      let quality = this.get('format') ? '' : this.get('quality');
+      let format = this.get('quality') === 'none' ? this.get('format') : '';
+      let quality = this.get('format') === 'none' ? this.get('quality') : '';
       let totalFiles = urls.length;
       let fileNumber = 1;
       let fails = 0;
