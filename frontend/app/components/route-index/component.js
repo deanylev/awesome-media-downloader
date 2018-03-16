@@ -7,6 +7,10 @@ const socket = io(config.APP.SOCKET_HOST);
 const urlRegex = /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
 
 export default Component.extend({
+  urls: '',
+  urlArray: Ember.computed('urls', function() {
+    return this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && urlRegex.test(url));
+  }),
   format: 'none',
   formats: null,
   formatLabels: {
@@ -36,7 +40,6 @@ export default Component.extend({
   responseWaiting: false,
   status: '',
   statusClass: 'dark',
-  urls: '',
   downloadError: false,
   environment: null,
   initialSocketConnection: false,
@@ -46,6 +49,11 @@ export default Component.extend({
     setTimeout(() => {
       $('textarea').textareaAutoSize();
     }, 10);
+  }),
+  getFileTitles: Ember.observer('urlArray', function() {
+    this.get('urlArray').forEach((url, index) => {
+      socket.emit('file title', url, index);
+    });
   }),
 
   setStatus(text, bsClass) {
@@ -91,6 +99,10 @@ export default Component.extend({
       this.set('inFlight', false);
       this.set('responseWaiting', false);
     });
+
+    socket.on('file title', (title, index) => {
+      $(`#name-input-${index + 1}`).attr('placeholder', title);
+    });
   },
 
   actions: {
@@ -107,7 +119,11 @@ export default Component.extend({
         return;
       }
 
-      let urls = this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && urlRegex.test(url));
+      let urls = [];
+      this.get('urlArray').forEach((url) => {
+        urls.push(url);
+      });
+
       let format = this.get('quality') === 'none' ? this.get('format') : '';
       let quality = this.get('format') === 'none' ? this.get('quality') : '';
       let totalFiles = urls.length;
@@ -183,7 +199,7 @@ export default Component.extend({
         this.set('inFlight', true);
         this.set('responseWaiting', true);
 
-        socket.emit('download file', url, format, quality);
+        socket.emit('download file', url, format, quality, $(`#name-input-${fileNumber}`).val());
       }
 
       downloadFile();

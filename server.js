@@ -15,6 +15,7 @@ const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
 const TEMP_DELETION_INTERVAL = process.env.TEMP_DELETION_INTERVAL || 86400000;
 const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
 const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
+const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
 const {
   ADMIN_IPS
 } = process.env;
@@ -68,7 +69,8 @@ http.listen(PORT, () => {
       allowFormatSelection: ALLOW_FORMAT_SELECTION,
       allowQualitySelection: ALLOW_QUALITY_SELECTION,
       videoFormats: VIDEO_FORMATS,
-      audioFormats: AUDIO_FORMATS
+      audioFormats: AUDIO_FORMATS,
+      allowRequestedName: ALLOW_REQUESTED_NAME
     };
   });
 
@@ -85,7 +87,14 @@ http.listen(PORT, () => {
       io.emit('environment details', environment);
     });
 
-    socket.on('download file', (url, requestedFormat, requestedQuality) => {
+    socket.on('file title', (url, index) => {
+      youtubedl.getInfo(url, (err, info) => {
+        let title = err ? 'Not a valid URL' : info.title;
+        io.emit('file title', title, index);
+      });
+    });
+
+    socket.on('download file', (url, requestedFormat, requestedQuality, requestedName) => {
       id = uuidv4();
       requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
       requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
@@ -106,7 +115,7 @@ http.listen(PORT, () => {
       let originalFormat;
 
       file.on('info', (info) => {
-        fileName = `${info.title}.`;
+        fileName = requestedName && ALLOW_REQUESTED_NAME ? `${requestedName}.` : `${info.title}.`;
         if (format && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
           fileName += format;
           if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {

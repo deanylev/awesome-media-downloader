@@ -7,6 +7,14 @@
           <div class="form-group">
             {{textarea class="form-control" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
           </div>
+          {{#if environment.allowRequestedName}}
+            {{#each urlArray as |url index|}}
+              <div class="form-group">
+                <label for="name-input-{{add index 1}}">Filename for Video {{add index 1}}</label>
+                {{input id=(concat "name-input-" (add index 1)) class="form-control" placeholder="Loading..." disabled=(or inFlight socketDisconnected)}}
+              </div>
+            {{/each}}
+          {{/if}}
           {{#if environment.ffmpeg}}
             {{#if environment.allowFormatSelection}}
               <label>File Format</label>
