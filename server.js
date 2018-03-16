@@ -59,7 +59,7 @@ http.listen(PORT, () => {
 });
 
 (() => {
-  let transcodingProgress;
+  let transcodingProgress = 0;
   let transcodingError;
   let environment;
   let guids = {};
@@ -95,7 +95,7 @@ http.listen(PORT, () => {
           let title = err ? 'Not a valid URL' : info.title;
           io.emit('file title', title, index);
         });
-      });  
+      });
     }
 
     socket.on('download file', (url, requestedFormat, requestedQuality, requestedName) => {
