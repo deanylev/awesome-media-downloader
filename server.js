@@ -59,8 +59,6 @@ http.listen(PORT, () => {
 });
 
 (() => {
-  let transcodingProgress = 0;
-  let transcodingError;
   let environment;
   let guids = {};
 
@@ -84,6 +82,8 @@ http.listen(PORT, () => {
     console.log('client connected');
 
     let id;
+    let transcodingProgress = 0;
+    let transcodingError;
 
     socket.on('environment check', () => {
       io.emit('environment details', environment);
