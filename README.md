@@ -45,4 +45,4 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `ALLOW_REQUESTED_NAME` - Whether to allow the user to name their files on the frontend. (default false)
 
-`ADMIN_IPS` - Space-separated list of IPs which will be allowed to access the admin path (/api/admin, just a list of downloads for now). (default null)
+`ADMIN_USERNAME`, `ADMIN_PASSWORD` - Credentials which will be allowed to access the admin area (/api/admin, just a list of downloads for now). (default null)

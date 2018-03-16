@@ -7,6 +7,7 @@ const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
+const auth = require('basic-auth');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -17,7 +18,8 @@ const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
 const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
 const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
 const {
-  ADMIN_IPS
+  ADMIN_USERNAME,
+  ADMIN_PASSWORD
 } = process.env;
 
 const VIDEO_FORMATS = ['mp4', 'mkv'];
@@ -44,7 +46,7 @@ if (ENV === 'development') {
 }
 
 http.on('error', (err) => {
-  if (err.code === 'EACCES') {
+  if (err.code === 'EADDRINUSE') {
     console.log(`error: port ${PORT} is in use. ${process.env.PORT ? '' : `kill whatever is running on port ${PORT} or set the PORT env variable to something different.`}`);
   } else {
     console.log('an error occured', err);
@@ -272,12 +274,13 @@ http.listen(PORT, () => {
   });
 
   app.get('/api/admin', (req, res) => {
-    let ip = req.headers['x-forwarded-for'] ? req.headers['x-forwarded-for'].split(', ')[0] : req.connection.remoteAddress;
-    if (ENV === 'development' || (ADMIN_IPS && ADMIN_IPS.split(' ').includes(ip))) {
+    let credentials = auth(req);
+    if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
       res.json({
         files: guids
       });
     } else {
+      res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
       res.sendStatus(401);
     }
   });
