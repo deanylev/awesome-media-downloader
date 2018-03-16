@@ -51,9 +51,11 @@ export default Component.extend({
     }, 10);
   }),
   getFileTitles: Ember.observer('urlArray', function() {
-    this.get('urlArray').forEach((url, index) => {
-      socket.emit('file title', url, index);
-    });
+    if (this.get('environment.allowRequestedName')) {
+      this.get('urlArray').forEach((url, index) => {
+        socket.emit('file title', url, index);
+      });
+    }
   }),
 
   setStatus(text, bsClass) {
