@@ -275,10 +275,11 @@ http.listen(PORT, () => {
     });
   });
 
-  app.get('/api/download_file', (req, res) => {
-    let path = `${FILE_DIR}/${req.query.id}.${FINAL_EXT}`;
-    if (fs.existsSync(path) && guids[req.query.id]) {
-      let fileName = guids[req.query.id].fileName;
+  app.get('/api/download_file/:id', (req, res) => {
+    let id = req.params.id;
+    let path = `${FILE_DIR}/${id}.${FINAL_EXT}`;
+    if (fs.existsSync(path) && guids[id]) {
+      let fileName = guids[id].fileName;
       let file = fs.createReadStream(path);
       let stat = fs.statSync(path);
       console.log('providing file to browser for download', fileName);

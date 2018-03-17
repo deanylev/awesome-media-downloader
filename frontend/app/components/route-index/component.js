@@ -186,7 +186,7 @@ export default Component.extend({
             switch (response.status) {
               case 'complete':
                 this.set('progress', 100);
-                window.location.href = `${apiHost}/download_file?id=${id}`;
+                window.location.href = `${apiHost}/download_file/${id}`;
                 downloadFile();
                 break;
               case 'transcoding':
