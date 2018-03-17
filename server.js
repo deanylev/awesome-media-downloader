@@ -118,7 +118,7 @@ http.listen(PORT, () => {
       let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
       let x264Formats = ['mp4', 'mkv'];
       let originalFormat;
-      let deleteFile = () => {
+      let cancelDownload = () => {
         if (fs.existsSync(`${FILE_DIR}/${id}.${TMP_EXT}`)) {
           console.log('client disconnected, cancelling download');
           fs.unlink(`${FILE_DIR}/${id}.${TMP_EXT}`);
@@ -128,7 +128,7 @@ http.listen(PORT, () => {
       };
 
       file.on('info', (info) => {
-        socket.on('disconnect', deleteFile);
+        socket.on('disconnect', cancelDownload);
         fileName = requestedName && ALLOW_REQUESTED_NAME ? `${requestedName}.` : `${info.title}.`;
         if (format && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
           fileName += format;
@@ -200,7 +200,7 @@ http.listen(PORT, () => {
       file.pipe(fs.createWriteStream(tempFile));
 
       file.on('end', () => {
-        socket.removeListener('disconnect', deleteFile);
+        socket.removeListener('disconnect', cancelDownload);
         console.log('file finished downloading', fileName);
         let command;
         if (format) {
