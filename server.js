@@ -276,14 +276,18 @@ http.listen(PORT, () => {
   });
 
   app.get('/api/download_file', (req, res) => {
-    let fileName = guids[req.query.id].fileName;
     let path = `${FILE_DIR}/${req.query.id}.${FINAL_EXT}`;
-    let file = fs.createReadStream(path);
-    let stat = fs.statSync(path);
-    console.log('providing file to browser for download', fileName);
-    res.setHeader('Content-Length', stat.size);
-    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-    file.pipe(res);
+    if (fs.existsSync(path) && guids[req.query.id]) {
+      let fileName = guids[req.query.id].fileName;
+      let file = fs.createReadStream(path);
+      let stat = fs.statSync(path);
+      console.log('providing file to browser for download', fileName);
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+      file.pipe(res);
+    } else {
+      res.sendStatus(404);
+    }
   });
 
   app.get('/api/admin', (req, res) => {
