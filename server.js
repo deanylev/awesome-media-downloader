@@ -8,6 +8,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
 const auth = require('basic-auth');
+const mime = require('mime-types');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -284,6 +285,7 @@ http.listen(PORT, () => {
       let stat = fs.statSync(path);
       console.log('providing file to browser for download', fileName);
       res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Type', mime.lookup(fileName));
       res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
       file.pipe(res);
     } else {
