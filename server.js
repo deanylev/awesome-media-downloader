@@ -62,7 +62,7 @@ http.listen(PORT, () => {
 
 (() => {
   let environment;
-  let guids = {};
+  let files = {};
 
   commandExists('ffmpeg', (err, commandExists) => {
     environment = {
@@ -141,7 +141,7 @@ http.listen(PORT, () => {
           format = '';
         }
         originalFormat = info.ext;
-        guids[id] = {
+        files[id] = {
           url,
           originalFormat,
           fileName,
@@ -157,7 +157,7 @@ http.listen(PORT, () => {
         transcodingError = false;
 
         let statusCheck = setInterval(() => {
-          let totalSize = guids[id].fileSize;
+          let totalSize = files[id].fileSize;
           let tempFile = `${FILE_DIR}/${id}.${TMP_EXT}`;
           let actualSize;
           let status;
@@ -177,8 +177,8 @@ http.listen(PORT, () => {
 
           let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
 
-          guids[id].status = status;
-          guids[id].progress = progress;
+          files[id].status = status;
+          files[id].progress = progress;
 
           if (transcodingError) {
             socket.emit('transcoding error');
@@ -267,7 +267,6 @@ http.listen(PORT, () => {
                 fs.unlink(file);
               }
             });
-            socket.removeListener('disconnect', killTranscoder);
           }
 
           socket.on('disconnect', killTranscoder);
@@ -279,8 +278,8 @@ http.listen(PORT, () => {
   app.get('/api/download_file/:id', (req, res) => {
     let id = req.params.id;
     let path = `${FILE_DIR}/${id}.${FINAL_EXT}`;
-    if (fs.existsSync(path) && guids[id]) {
-      let fileName = guids[id].fileName;
+    if (fs.existsSync(path) && files[id]) {
+      let fileName = files[id].fileName;
       let file = fs.createReadStream(path);
       let stat = fs.statSync(path);
       console.log('providing file to browser for download', fileName);
@@ -296,8 +295,8 @@ http.listen(PORT, () => {
   app.get('/api/admin', (req, res) => {
     let credentials = auth(req);
     if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
-      res.json({
-        files: guids
+      res.render('pages/admin', {
+        files
       });
     } else {
       res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
