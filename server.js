@@ -1,9 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const youtubedl = require('youtube-dl');
-const request = require('request');
 const fs = require('fs');
-const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
@@ -165,7 +163,7 @@ http.listen(PORT, () => {
           if (fs.existsSync(tempFile)) {
             actualSize = fs.statSync(tempFile).size;
             if (actualSize === totalSize) {
-              status = 'transcoding'
+              status = 'transcoding';
             } else {
               status = 'downloading';
             }
@@ -260,14 +258,14 @@ http.listen(PORT, () => {
 
         if (command) {
           let killTranscoder = () => {
-            console.log('client disconnected, killing ffmpeg')
+            console.log('client disconnected, killing ffmpeg');
             command.kill('SIGKILL');
             [filePath, tempFile, tempFileAudio].forEach((file) => {
               if (fs.existsSync(file)) {
                 fs.unlink(file);
               }
             });
-          }
+          };
 
           socket.on('disconnect', killTranscoder);
         }
