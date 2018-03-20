@@ -7,6 +7,7 @@ const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
 const auth = require('basic-auth');
 const mime = require('mime-types');
+const os = require('os-utils');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -290,16 +291,33 @@ http.listen(PORT, () => {
     }
   });
 
-  app.get('/api/admin', (req, res) => {
+  let forceAuth = (req, res, callback) => {
     let credentials = auth(req);
     if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
-      res.render('pages/admin', {
-        files
-      });
+      callback();
     } else {
       res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
       res.sendStatus(401);
     }
+  };
+
+  app.get('/api/admin', (req, res) => {
+    forceAuth(req, res, () => {
+      res.render('pages/admin', {
+        files
+      });
+    });
+  });
+
+  app.get('/api/admin/usage', (req, res) => {
+    forceAuth(req, res, () => {
+      os.cpuUsage((cpuUsage) => {
+        res.json({
+          cpuUsage,
+          memoryUsage: 1 - os.freememPercentage()
+        });
+      });
+    });
   });
 
   setInterval(() => {
