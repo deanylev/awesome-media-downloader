@@ -8,6 +8,7 @@ const uuidv4 = require('uuid/v4');
 const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
+const Logger = require('./logger');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -31,6 +32,7 @@ const FINAL_EXT = 'complete';
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
+const logger = new Logger();
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -39,7 +41,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 if (ENV === 'development') {
-  console.log('dev mode, allowing any origin to access API');
+  logger.log('dev mode, allowing any origin to access API');
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     next();
@@ -48,15 +50,15 @@ if (ENV === 'development') {
 
 http.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.log(`error: port ${PORT} is in use. ${process.env.PORT ? '' : `kill whatever is running on port ${PORT} or set the PORT env variable to something different.`}`);
+    logger.error(`port ${PORT} is in use. ${process.env.PORT ? '' : `kill whatever is running on port ${PORT} or set the PORT env variable to something different.`}`);
   } else {
-    console.log('an error occured', err);
+    logger.error('an error occured', err);
   }
   process.exit();
 });
 
 http.listen(PORT, () => {
-  console.log('started server on port', PORT);
+  logger.log('started server on port', PORT);
 });
 
 (() => {
@@ -80,7 +82,7 @@ http.listen(PORT, () => {
   });
 
   io.on('connection', (socket) => {
-    console.log('client connected');
+    logger.log('client connected');
 
     let id;
     let transcodingProgress = 0;
@@ -120,7 +122,7 @@ http.listen(PORT, () => {
       let originalFormat;
       let cancelDownload = () => {
         if (fs.existsSync(`${FILE_DIR}/${id}.${TMP_EXT}`)) {
-          console.log('client disconnected, cancelling download');
+          logger.warn('client disconnected, cancelling download');
           fs.unlink(`${FILE_DIR}/${id}.${TMP_EXT}`);
           file.pause();
           file.unpipe();
@@ -147,7 +149,7 @@ http.listen(PORT, () => {
           fileSize: info.size
         };
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
-        console.log('downloading file', fileName);
+        logger.log('downloading file', fileName);
         io.emit('file details', {
           fileName: fileName.slice(0, -((requestedFormat || info.ext).length + 1)),
           id
@@ -193,7 +195,7 @@ http.listen(PORT, () => {
       });
 
       file.on('error', (err) => {
-        console.log('error while downloading file', err);
+        logger.error('error while downloading file', err);
         fs.unlink(tempFile);
         io.emit('download error');
       });
@@ -202,19 +204,19 @@ http.listen(PORT, () => {
 
       file.on('end', () => {
         socket.removeListener('disconnect', cancelDownload);
-        console.log('file finished downloading', fileName);
+        logger.log('file finished downloading', fileName);
         let command;
         let outputFile = `files/${id}.transcoding.${format}`;
         if (format) {
-          console.log(`transcoding to ${format}`);
+          logger.log(`transcoding to ${format}`);
           let conversionError = (err) => {
-            console.log('error when transcoding', err);
+            logger.error('error when transcoding', err);
             transcodingError = true;
           };
           let finishConversion = () => {
             fs.unlink(tempFile);
             fs.rename(outputFile, filePath);
-            console.log('transcoding finished');
+            logger.log('transcoding finished');
           };
           switch (format) {
             case 'mp4':
@@ -249,18 +251,18 @@ http.listen(PORT, () => {
               transcodingError = true;
           }
         } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
-          console.log('combining video and audio files');
+          logger.log('combining video and audio files');
           let videoCodec = originalFormat === 'webm' ? 'libvpx' : 'libx264';
           command = ffmpeg().videoCodec(videoCodec).input(tempFile).input(tempFileAudio).on('progress', (progress) => {
             transcodingProgress = progress.percent / 100;
           }).on('error', (err) => {
-            console.log('error when combining files', err);
+            logger.error('error when combining files', err);
             transcodingError = true;
           }).on('end', () => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
             fs.rename(outputFile, filePath);
-            console.log('transcoding finished');
+            logger.log('transcoding finished');
           }).save(outputFile);
         } else {
           fs.rename(tempFile, filePath);
@@ -268,7 +270,7 @@ http.listen(PORT, () => {
 
         if (command) {
           socket.on('disconnect', () => {
-            console.log('client disconnected, killing ffmpeg');
+            logger.warn('client disconnected, killing ffmpeg');
             command.kill('SIGKILL');
             [filePath, tempFile, tempFileAudio].forEach((file) => {
               if (fs.existsSync(file)) {
@@ -288,7 +290,7 @@ http.listen(PORT, () => {
       let fileName = files[id].fileName;
       let file = fs.createReadStream(path);
       let stat = fs.statSync(path);
-      console.log('providing file to browser for download', fileName);
+      logger.log('providing file to browser for download', fileName);
       res.setHeader('Content-Length', stat.size);
       res.setHeader('Content-Type', mime.lookup(fileName));
       res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
@@ -329,7 +331,7 @@ http.listen(PORT, () => {
   });
 
   setInterval(() => {
-    console.log('deleting unused files');
+    logger.log('deleting unused files');
     fs.readdir(FILE_DIR, (err, files) => {
       for (const file of files) {
         let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
