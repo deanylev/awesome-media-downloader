@@ -323,14 +323,50 @@ http.listen(PORT, () => {
   app.get('/api/admin/stats', (req, res) => {
     forceAuth(req, res, () => {
       os.cpuUsage((cpuUsage) => {
-        res.json({
-          usage: {
-            cpuUsage,
-            memoryUsage: 1 - os.freememPercentage()
-          },
-          files
+        fs.readdir('logs', (err, logs) => {
+          logs = logs.filter((log) => log.endsWith('.log')).map((log) => log.slice(0, -4));
+          res.json({
+            usage: {
+              cpuUsage,
+              memoryUsage: 1 - os.freememPercentage()
+            },
+            files,
+            logs
+          });
         });
       });
+    });
+  });
+
+  app.get('/api/admin/view_log/:log', (req, res) => {
+    forceAuth(req, res, () => {
+      let log = `logs/${req.params.log}.log`;
+      if (fs.existsSync(log)) {
+        fs.readFile(log, {
+          encoding: 'utf-8'
+        }, (err, data) => {
+          res.send(data.split('\n').join('<br>'));
+        });
+      } else {
+        res.sendStatus(404);
+      }
+    });
+  });
+
+  app.get('/api/admin/download_log/:log', (req, res) => {
+    forceAuth(req, res, () => {
+      let log = `${req.params.log}.log`;
+      let path = `logs/${log}`;
+      if (fs.existsSync(path)) {
+        let file = fs.createReadStream(path);
+        let stat = fs.statSync(path);
+        logger.log('providing log to browser for download', log);
+        res.setHeader('Content-Length', stat.size);
+        res.setHeader('Content-Disposition', `attachment; filename=${log}`);
+        file.pipe(res);
+      } else {
+        res.sendStatus(404);
+      }
     });
   });
 
