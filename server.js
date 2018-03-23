@@ -206,7 +206,7 @@ http.listen(PORT, () => {
         socket.removeListener('disconnect', cancelDownload);
         logger.log('file finished downloading', fileName);
         let command;
-        let outputFile = `files/${id}.transcoding.${format}`;
+        let outputFile = `files/${id}.transcoding.${format || originalFormat}`;
         if (format) {
           logger.log(`transcoding to ${format}`);
           let conversionError = (err) => {
