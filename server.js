@@ -175,6 +175,7 @@ http.listen(PORT, () => {
           }
 
           let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
+          progress = progress > 1 ? 1 : progress;
 
           files[id].status = status;
           files[id].progress = progress;
