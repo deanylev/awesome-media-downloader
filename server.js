@@ -203,6 +203,7 @@ http.listen(PORT, () => {
         socket.removeListener('disconnect', cancelDownload);
         console.log('file finished downloading', fileName);
         let command;
+        let outputFile = `files/${id}.transcoding.${format}`;
         if (format) {
           console.log(`transcoding to ${format}`);
           switch (format) {
@@ -210,32 +211,38 @@ http.listen(PORT, () => {
             case 'mkv':
               command = ffmpeg(tempFile).videoCodec('libx264').on('progress', (progress) => {
                 transcodingProgress = progress.percent / 100;
-              }).on('error', () => {
+              }).on('error', (err) => {
+                console.log('error when transcoding', err);
                 transcodingError = true;
               }).on('end', () => {
                 fs.unlink(tempFile);
+                fs.rename(outputFile, filePath);
                 console.log('transcoding finished');
-              }).save(filePath);
+              }).save(outputFile);
               break;
             case 'mp3':
               command = ffmpeg(tempFile).noVideo().audioBitrate('192k').audioChannels(2).audioCodec('libmp3lame').on('progress', (progress) => {
                 transcodingProgress = progress.percent / 100;
-              }).on('error', () => {
+              }).on('error', (err) => {
+                console.log('error when transcoding', err);
                 transcodingError = true;
               }).on('end', () => {
                 fs.unlink(tempFile);
+                fs.rename(outputFile, filePath);
                 console.log('transcoding finished');
-              }).save(filePath);
+              }).save(outputFile);
               break;
             case 'wav':
               command = ffmpeg(tempFile).noVideo().audioFrequency(44100).audioChannels(2).audioCodec('pcm_s16le').on('progress', (progress) => {
                 transcodingProgress = progress.percent / 100;
-              }).on('error', () => {
+              }).on('error', (err) => {
+                console.log('error when transcoding', err);
                 transcodingError = true;
               }).on('end', () => {
                 fs.unlink(tempFile);
+                fs.rename(outputFile, filePath);
                 console.log('transcoding finished');
-              }).save(filePath);
+              }).save(outputFile);
               break;
             default:
               transcodingError = true;
@@ -251,8 +258,9 @@ http.listen(PORT, () => {
           }).on('end', () => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
+            fs.rename(outputFile, filePath);
             console.log('transcoding finished');
-          }).save(filePath);
+          }).save(outputFile);
         } else {
           fs.rename(tempFile, filePath);
         }
