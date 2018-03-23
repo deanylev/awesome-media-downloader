@@ -10,10 +10,21 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script>
     let getUsage = () => {
-      $.getJSON('/api/admin/usage', (data) => {
-        $.each(data, (key, val) => {
+      $.getJSON('/api/admin/stats', (data) => {
+        $.each(data.usage, (key, val) => {
           let usage = `${(val * 100).toFixed(2)}%`;
           $(`#${key}`).css('width', usage).text(usage);
+        });
+
+        $('tbody').empty();
+        $.each(data.files, (key, val) => {
+          $('tbody').append(`
+            <tr>
+              <td>${val.fileName}</td>
+              <td>${val.url}</td>
+              <td>${val.status}</td>
+            </tr>
+            `);
         });
       });
     };
@@ -47,15 +58,7 @@
         <th>Status</th>
       </tr>
     </thead>
-    <tbody>
-      <% Object.keys(files).forEach(function(file) { %>
-        <tr>
-          <td><%= files[file].fileName %></td>
-          <td><%= files[file].url %></td>
-          <td><%= files[file].status %></td>
-        </tr>
-      <% }) %>
-    </tbody>
+    <tbody></tbody>
   </table>
 </body>
 </html>

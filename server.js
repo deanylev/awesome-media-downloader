@@ -310,18 +310,19 @@ http.listen(PORT, () => {
 
   app.get('/api/admin', (req, res) => {
     forceAuth(req, res, () => {
-      res.render('pages/admin', {
-        files
-      });
+      res.render('pages/admin');
     });
   });
 
-  app.get('/api/admin/usage', (req, res) => {
+  app.get('/api/admin/stats', (req, res) => {
     forceAuth(req, res, () => {
       os.cpuUsage((cpuUsage) => {
         res.json({
-          cpuUsage,
-          memoryUsage: 1 - os.freememPercentage()
+          usage: {
+            cpuUsage,
+            memoryUsage: 1 - os.freememPercentage()
+          },
+          files
         });
       });
     });
