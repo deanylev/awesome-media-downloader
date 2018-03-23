@@ -82,7 +82,11 @@ http.listen(PORT, () => {
   });
 
   io.on('connection', (socket) => {
-    logger.log('client connected');
+    logger.log('client connected', socket.id);
+
+    socket.on('disconnect', () => {
+      logger.log('client disconnected', socket.id);
+    });
 
     let id;
     let transcodingProgress = 0;
