@@ -1,5 +1,5 @@
 {
-  "name": "node_media_downloader",
+  "name": "awesome-media-downloader",
   "version": "1.0.0",
   "description": "Downloads media from YouTube and other sites in various formats",
   "main": "index.js",

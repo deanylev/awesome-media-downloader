@@ -258,7 +258,7 @@ http.listen(PORT, () => {
         }
 
         if (command) {
-          let killTranscoder = () => {
+          socket.on('disconnect', () => {
             console.log('client disconnected, killing ffmpeg');
             command.kill('SIGKILL');
             [filePath, tempFile, tempFileAudio].forEach((file) => {
@@ -266,9 +266,7 @@ http.listen(PORT, () => {
                 fs.unlink(file);
               }
             });
-          };
-
-          socket.on('disconnect', killTranscoder);
+          });
         }
       });
     });
