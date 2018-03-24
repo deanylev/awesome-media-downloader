@@ -8,6 +8,7 @@ const uuidv4 = require('uuid/v4');
 const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
+const Heroku = require('heroku-client');
 const Logger = require('./logger');
 
 const PORT = process.env.PORT || 8080;
@@ -17,6 +18,7 @@ const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
 const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
 const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
 const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
+const ON_HEROKU = !!process.env.ON_HEROKU;
 const {
   ADMIN_USERNAME,
   ADMIN_PASSWORD
@@ -33,6 +35,9 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger();
+const heroku = new Heroku({
+  token: process.env.HEROKU_API_TOKEN
+});
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -69,6 +74,7 @@ http.listen(PORT, () => {
     environment = {
       environment: ENV,
       ffmpeg: commandExists,
+      onHeroku: ON_HEROKU,
       allowFormatSelection: ALLOW_FORMAT_SELECTION,
       allowQualitySelection: ALLOW_QUALITY_SELECTION,
       videoFormats: VIDEO_FORMATS,
@@ -329,6 +335,7 @@ http.listen(PORT, () => {
         fs.readdir('logs', (err, logs) => {
           logs = logs.filter((log) => log.endsWith('.log')).map((log) => log.slice(0, -4));
           res.json({
+            environment,
             usage: {
               cpu: cpuUsage,
               memory: 1 - os.freememPercentage()
@@ -369,6 +376,15 @@ http.listen(PORT, () => {
         file.pipe(res);
       } else {
         res.sendStatus(404);
+      }
+    });
+  });
+
+  app.post('/api/admin/reboot', (req, res) => {
+    forceAuth(req, res, () => {
+      if (ON_HEROKU) {
+        // Can't provide a response, since we're killing the process
+        heroku.delete('/apps/awesome-media-downloader/dynos');
       }
     });
   });

@@ -29,6 +29,10 @@
         <div class="progress-bar" v-bind:style="{ width: usage.memory }">{{ usage.memory }}</div>
       </div>
       <br><br>
+      <div v-if="environment.onHeroku">
+        <button class="btn btn-danger" v-on:click="restartDynos">Restart Dynos</button>
+      </div>
+      <br><br>
       <h4>Downloaded Files</h4>
       <br>
       <table id="files" class="table table-striped">
@@ -77,18 +81,28 @@
     let app = new Vue({
       el: '#app',
       data: {
+        environment: {},
         initialLoad: false,
         usage: {
           cpu: '0%',
           memory: '0%'
         },
         files: {},
-        logs: [],
+        logs: []
+      },
+      methods: {
+        restartDynos: () => {
+          $.ajax({
+            method: 'POST',
+            url: '/api/admin/reboot'
+          });
+        }
       }
     });
 
     let getUsage = () => {
       $.getJSON('/api/admin/stats', (data) => {
+        app.environment = data.environment;
         $.each(data.usage, (key, val) => {
           app.usage[key] = `${(val * 100).toFixed(2)}%`;
         });
