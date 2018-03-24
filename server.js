@@ -220,8 +220,9 @@ http.listen(PORT, () => {
         if (format) {
           logger.log(`transcoding to ${format}`);
           let conversionError = (err) => {
+            err = err.toString();
             // XXX string matching isn't great, but no way to avoid the error
-            if (err.toString() !== 'Error: ffmpeg was killed with signal SIGKILL') {
+            if (err !== 'Error: ffmpeg was killed with signal SIGKILL') {
               logger.error('error when transcoding', err);
               transcodingError = true;
             }
@@ -329,7 +330,7 @@ http.listen(PORT, () => {
     });
   });
 
-  app.get('/api/admin/stats', (req, res) => {
+  app.get('/api/admin/info', (req, res) => {
     forceAuth(req, res, () => {
       os.cpuUsage((cpuUsage) => {
         fs.readdir('logs', (err, logs) => {

@@ -101,7 +101,7 @@
     });
 
     let getUsage = () => {
-      $.getJSON('/api/admin/stats', (data) => {
+      $.getJSON('/api/admin/info', (data) => {
         app.environment = data.environment;
         $.each(data.usage, (key, val) => {
           app.usage[key] = `${(val * 100).toFixed(2)}%`;
