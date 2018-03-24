@@ -214,8 +214,11 @@ http.listen(PORT, () => {
         if (format) {
           logger.log(`transcoding to ${format}`);
           let conversionError = (err) => {
-            logger.error('error when transcoding', err);
-            transcodingError = true;
+            // XXX string matching isn't great, but no way to avoid the error
+            if (err.toString() !== 'Error: ffmpeg was killed with signal SIGKILL') {
+              logger.error('error when transcoding', err);
+              transcodingError = true;
+            }
           };
           let finishConversion = () => {
             fs.unlink(tempFile);
