@@ -12,15 +12,11 @@ function Logger() {}
 
 ['log', 'warn', 'error'].forEach((level) => {
   Logger.prototype[level] = (message, data) => {
-    let logFile = `logs/${moment().format('YYYYMMDD')}.log`;
-    if (!fs.existsSync(logFile)) {
-      fs.createWriteStream(logFile);
-    }
-    let file = fs.createWriteStream(logFile, {
+    let logFile = fs.createWriteStream(`logs/${moment().format('YYYYMMDD')}.log`, {
       flags: 'a'
     });
     console[level](`${chalk[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data || '');
-    file.write(`${JSON.stringify({
+    logFile.write(`${JSON.stringify({
       time: moment().format('LTS'),
       level,
       message,
