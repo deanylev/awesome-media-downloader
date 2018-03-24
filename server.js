@@ -149,7 +149,7 @@ http.listen(PORT, () => {
         files[id] = {
           url,
           originalFormat,
-          fileName,
+          name: fileName,
           fileSize: info.size
         };
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
@@ -291,7 +291,7 @@ http.listen(PORT, () => {
     let id = req.params.id;
     let path = `${FILE_DIR}/${id}.${FINAL_EXT}`;
     if (fs.existsSync(path) && files[id]) {
-      let fileName = files[id].fileName;
+      let fileName = files[id].name;
       let file = fs.createReadStream(path);
       let stat = fs.statSync(path);
       logger.log('providing file to browser for download', fileName);
@@ -327,8 +327,8 @@ http.listen(PORT, () => {
           logs = logs.filter((log) => log.endsWith('.log')).map((log) => log.slice(0, -4));
           res.json({
             usage: {
-              cpuUsage,
-              memoryUsage: 1 - os.freememPercentage()
+              cpu: cpuUsage,
+              memory: 1 - os.freememPercentage()
             },
             files,
             logs

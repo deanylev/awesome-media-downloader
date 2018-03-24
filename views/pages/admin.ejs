@@ -7,82 +7,102 @@
   <title>Admin Area</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+</head>
+<body class="container text-center">
+  <div id="app">
+    <br>
+    <h1>Admin Area</h1>
+    <br>
+    <div v-if="initialLoad">
+      <h4>Usage</h4>
+      <br>
+      <p>CPU</p>
+      <div class="progress">
+        <div class="progress-bar" v-bind:style="{ width: usage.cpu }">{{ usage.cpu }}</div>
+      </div>
+      <br>
+      <p>Memory</p>
+      <div class="progress">
+        <div class="progress-bar" v-bind:style="{ width: usage.memory }">{{ usage.memory }}</div>
+      </div>
+      <br><br>
+      <h4>Downloaded Files</h4>
+      <br>
+      <table id="files" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>URL</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="file in files">
+            <td>{{ file.name }}</td>
+            <td>{{ file.url }}</td>
+            <td>{{ file.status }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <h4>Logs</h4>
+      <br>
+      <table id="logs" class="table table-striped">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="log in logs">
+            <td>{{ log.date }}</td>
+            <td>
+              <a v-bind:href="'/api/admin/view_log/' + log.name">View</a>
+              <span> | </span>
+              <a v-bind:href="'/api/admin/download_log/' + log.name">Download</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-else>
+      Loading...
+    </div>
+  </div>
   <script>
+    let app = new Vue({
+      el: '#app',
+      data: {
+        initialLoad: false,
+        usage: {
+          cpu: '0%',
+          memory: '0%'
+        },
+        files: {},
+        logs: [],
+      }
+    });
+
     let getUsage = () => {
       $.getJSON('/api/admin/stats', (data) => {
         $.each(data.usage, (key, val) => {
-          let usage = `${(val * 100).toFixed(2)}%`;
-          $(`#${key}`).css('width', usage).text(usage);
+          app.usage[key] = `${(val * 100).toFixed(2)}%`;
         });
-
-        $('tbody').empty();
-        $.each(data.files, (key, val) => {
-          $('#files tbody').append(`
-            <tr>
-              <td>${val.fileName}</td>
-              <td>${val.url}</td>
-              <td>${val.status}</td>
-            </tr>
-          `);
-        });
-        data.logs.forEach((log) => {
-          $('#logs tbody').append(`
-            <tr>
-              <td>${moment(log, 'YYYYMMDD').format('LL')}</td>
-              <td>
-                <a href="/api/admin/view_log/${log}">View</a>
-                <span> | </span>
-                <a href="/api/admin/download_log/${log}">Download</a>
-              </td>
-            </tr>
-          `);
-        })
+        app.files = data.files;
+        app.logs = data.logs.map((log) => ({
+          date: moment(log, 'YYYYMMDD').format('LL'),
+          name: log
+        }));
+        app.initialLoad = true;
       });
     };
+
     getUsage();
     setInterval(getUsage, 5000);
   </script>
-</head>
-<body class="container text-center">
-  <br>
-  <h1>Admin Area</h1>
-  <br>
-  <h4>Usage</h4>
-  <br>
-  <p>CPU</p>
-  <div class="progress">
-    <div id="cpuUsage" class="progress-bar"></div>
-  </div>
-  <br>
-  <p>Memory</p>
-  <div class="progress">
-    <div id="memoryUsage" class="progress-bar"></div>
-  </div>
-  <br><br>
-  <h4>Downloaded Files</h4>
-  <br>
-  <table id="files" class="table table-striped">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>URL</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <br>
-  <h4>Logs</h4>
-  <table id="logs" class="table table-striped">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
 </body>
 </html>
