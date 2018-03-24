@@ -199,7 +199,7 @@ http.listen(PORT, () => {
       });
 
       file.on('error', (err) => {
-        logger.error('error while downloading file', err);
+        logger.error('error while downloading file', err.toString());
         fs.unlink(tempFile);
         io.emit('download error');
       });
