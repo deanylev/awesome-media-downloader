@@ -22,6 +22,7 @@ function Logger() {}
     console[level](`${chalk[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data || '');
     file.write(`${JSON.stringify({
       time: moment().format('LTS'),
+      level,
       message,
       data
     })}\n`);
