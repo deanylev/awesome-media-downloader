@@ -1,10 +1,10 @@
 # Awesome Media Downloader
 
-Awesome Media Downloader uses youtube-dl to download (and optionally ffmpeg to convert) media from your favourite websites.
+Awesome Media Downloader uses youtube-dl to download (and optionally ffmpeg to transcode) media from your favourite websites.
 
 ## Installing Locally
 
-You must have Node.js installed (preferably the latest version) and optionally ffmpeg if you want converting to work (otherwise the format selector will be hidden in the application).
+You must have Node.js installed (preferably the latest version) and optionally ffmpeg if you want transcoding to work (otherwise the format/quality selector will be hidden in the application).
 
 ### Running the backend
 
