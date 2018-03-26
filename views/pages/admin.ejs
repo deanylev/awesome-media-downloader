@@ -30,7 +30,10 @@
       </div>
       <br><br>
       <div v-if="environment.onHeroku">
-        <button class="btn btn-danger" v-on:click="restartDynos">Restart Dynos</button>
+        <button class="btn btn-danger" v-on:click="restartDynos" v-bind:disabled="restarting">
+          <span v-if="restarting">Restarting...</span>
+          <span v-else>Restart Dynos</span>
+        </button>
       </div>
       <br><br>
       <h4>Downloaded Files</h4>
@@ -83,6 +86,7 @@
       data: {
         environment: {},
         initialLoad: false,
+        restarting: false,
         usage: {
           cpu: '0%',
           memory: '0%'
@@ -92,9 +96,13 @@
       },
       methods: {
         restartDynos: () => {
+          app.restarting = true;
           $.ajax({
             method: 'POST',
-            url: '/api/admin/reboot'
+            url: '/api/admin/reboot',
+            complete: () => {
+              app.restarting = false;
+            }
           });
         }
       }
