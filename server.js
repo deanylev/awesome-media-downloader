@@ -21,7 +21,8 @@ const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
 const ON_HEROKU = !!process.env.ON_HEROKU;
 const {
   ADMIN_USERNAME,
-  ADMIN_PASSWORD
+  ADMIN_PASSWORD,
+  HEROKU_APP_NAME
 } = process.env;
 
 const VIDEO_FORMATS = ['mp4', 'mkv'];
@@ -385,7 +386,7 @@ http.listen(PORT, () => {
     forceAuth(req, res, () => {
       if (ON_HEROKU) {
         // Can't provide a response, since we're killing the process
-        heroku.delete('/apps/awesome-media-downloader/dynos');
+        heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
       }
     });
   });
