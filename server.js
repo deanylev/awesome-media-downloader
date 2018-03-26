@@ -89,10 +89,18 @@ http.listen(PORT, () => {
   });
 
   io.on('connection', (socket) => {
-    logger.log('client connected', socket.id);
+    let ipAddress = socket.client.request.headers['cf-connecting-ip'] || socket.request.connection.remoteAddress;
+
+    logger.log('client connected', {
+      id: socket.id,
+      ipAddress
+    });
 
     socket.on('disconnect', () => {
-      logger.log('client disconnected', socket.id);
+      logger.log('client disconnected', {
+        id: socket.id,
+        ipAddress
+      });
     });
 
     let id;
