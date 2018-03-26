@@ -323,20 +323,31 @@ http.listen(PORT, () => {
     }
   });
 
-  let forceAuth = (req, res, callback) => {
+  let forceAuth = (req, res, callback, log) => {
+    let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     let credentials = auth(req);
     if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
+      if (log) {
+        logger.log('Successful admin login', {
+          ipAddress,
+          user: credentials.name
+        });
+      }
       callback();
     } else {
       res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
       res.sendStatus(401);
+      logger.warn('Admin login attempt', {
+        ipAddress,
+        user: credentials ? credentials.name : ''
+      });
     }
   };
 
   app.get('/api/admin', (req, res) => {
     forceAuth(req, res, () => {
       res.render('pages/admin');
-    });
+    }, true);
   });
 
   app.get('/api/admin/info', (req, res) => {
