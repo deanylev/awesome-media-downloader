@@ -5,7 +5,7 @@
       {{#if initialSocketConnection}}
         <form {{action "downloadFile" on="submit"}}>
           <div class="form-group">
-            {{textarea class="form-control" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
+            {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
           </div>
           {{#if environment.allowRequestedName}}
             {{#each urlArray as |url index|}}
