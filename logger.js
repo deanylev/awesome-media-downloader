@@ -15,7 +15,7 @@ function Logger() {}
     let logFile = fs.createWriteStream(`logs/${moment().format('YYYYMMDD')}.log`, {
       flags: 'a'
     });
-    console[level](`${chalk[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data || '');
+    console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data || '');
     logFile.write(`${JSON.stringify({
       time: moment().format('LTS'),
       level,

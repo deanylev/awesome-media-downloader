@@ -90,15 +90,15 @@ http.listen(PORT, () => {
 
   io.on('connection', (socket) => {
     let ipAddress = socket.client.request.headers['cf-connecting-ip'] || socket.request.connection.remoteAddress;
-
+    let clientId = socket.id;
     logger.log('client connected', {
-      id: socket.id,
+      clientId,
       ipAddress
     });
 
     socket.on('disconnect', () => {
       logger.log('client disconnected', {
-        id: socket.id,
+        clientId,
         ipAddress
       });
     });
@@ -245,45 +245,45 @@ http.listen(PORT, () => {
             case 'mp4':
             case 'mkv':
               command = ffmpeg(tempFile)
-              .videoCodec('libx264')
-              .on('progress', (progress) => {
-                transcodingProgress = progress.percent / 100;
-              })
-              .on('error', (err) => {
-                conversionError(err);
-              })
-              .on('end', finishConversion)
-              .save(outputFile);
+                .videoCodec('libx264')
+                .on('progress', (progress) => {
+                  transcodingProgress = progress.percent / 100;
+                })
+                .on('error', (err) => {
+                  conversionError(err);
+                })
+                .on('end', finishConversion)
+                .save(outputFile);
               break;
             case 'mp3':
               command = ffmpeg(tempFile)
-              .noVideo()
-              .audioBitrate('192k')
-              .audioChannels(2)
-              .audioCodec('libmp3lame')
-              .on('progress', (progress) => {
-                transcodingProgress = progress.percent / 100;
-              })
-              .on('error', (err) => {
-                conversionError(err);
-              })
-              .on('end', finishConversion)
-              .save(outputFile);
+                .noVideo()
+                .audioBitrate('192k')
+                .audioChannels(2)
+                .audioCodec('libmp3lame')
+                .on('progress', (progress) => {
+                  transcodingProgress = progress.percent / 100;
+                })
+                .on('error', (err) => {
+                  conversionError(err);
+                })
+                .on('end', finishConversion)
+                .save(outputFile);
               break;
             case 'wav':
               command = ffmpeg(tempFile)
-              .noVideo()
-              .audioFrequency(44100)
-              .audioChannels(2)
-              .audioCodec('pcm_s16le')
-              .on('progress', (progress) => {
-                transcodingProgress = progress.percent / 100;
-              })
-              .on('error', (err) => {
-                conversionError(err);
-              })
-              .on('end', finishConversion)
-              .save(outputFile);
+                .noVideo()
+                .audioFrequency(44100)
+                .audioChannels(2)
+                .audioCodec('pcm_s16le')
+                .on('progress', (progress) => {
+                  transcodingProgress = progress.percent / 100;
+                })
+                .on('error', (err) => {
+                  conversionError(err);
+                })
+                .on('end', finishConversion)
+                .save(outputFile);
               break;
             default:
               transcodingError = true;
@@ -426,7 +426,8 @@ http.listen(PORT, () => {
   });
 
   setInterval(() => {
-    logger.log('deleting unused files');
+    // delete downloaded files more than 1 hour old
+    logger.log('deleting old downloaded files');
     fs.readdir(FILE_DIR, (err, files) => {
       for (const file of files) {
         let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
