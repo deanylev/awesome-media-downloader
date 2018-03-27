@@ -338,91 +338,83 @@ http.listen(PORT, () => {
     }
   });
 
-  let forceAuth = (req, res, callback, log) => {
-    let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    let credentials = auth(req);
-    if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
-      if (log) {
-        logger.log('Successful admin login', {
+  let forceAuth = (method, url, callback, log) => {
+    app[method](url, (req, res) => {
+      let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      let credentials = auth(req);
+      if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
+        if (log) {
+          logger.log('Successful admin login', {
+            ipAddress,
+            user: credentials.name
+          });
+        }
+        callback(req, res);
+      } else {
+        res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
+        res.sendStatus(401);
+        logger.warn('Admin login attempt', {
           ipAddress,
-          user: credentials.name
+          user: credentials ? credentials.name : ''
         });
       }
-      callback();
-    } else {
-      res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
-      res.sendStatus(401);
-      logger.warn('Admin login attempt', {
-        ipAddress,
-        user: credentials ? credentials.name : ''
-      });
-    }
+    });
   };
 
-  app.get('/api/admin', (req, res) => {
-    forceAuth(req, res, () => {
-      res.render('pages/admin');
-    }, true);
-  });
+  forceAuth('get', '/api/admin', (req, res) => {
+    res.render('pages/admin');
+  }, true);
 
-  app.get('/api/admin/info', (req, res) => {
-    forceAuth(req, res, () => {
-      os.cpuUsage((cpuUsage) => {
-        fs.readdir('logs', (err, logs) => {
-          logs = logs.filter((log) => log.endsWith('.log')).map((log) => log.slice(0, -4));
-          res.json({
-            environment,
-            usage: {
-              cpu: cpuUsage,
-              memory: 1 - os.freememPercentage()
-            },
-            files,
-            logs
-          });
+  forceAuth('get', '/api/admin/info', (req, res) => {
+    os.cpuUsage((cpuUsage) => {
+      fs.readdir('logs', (err, logs) => {
+        logs = logs.filter((log) => log.endsWith('.log')).map((log) => log.slice(0, -4));
+        res.json({
+          environment,
+          usage: {
+            cpu: cpuUsage,
+            memory: 1 - os.freememPercentage()
+          },
+          files,
+          logs
         });
       });
     });
   });
 
-  app.get('/api/admin/view_log/:log', (req, res) => {
-    forceAuth(req, res, () => {
-      let log = `logs/${req.params.log}.log`;
-      if (fs.existsSync(log)) {
-        fs.readFile(log, {
-          encoding: 'utf-8'
-        }, (err, data) => {
-          res.send(data.split('\n').join('<br>'));
-        });
-      } else {
-        res.sendStatus(404);
-      }
-    });
+  forceAuth('get', '/api/admin/view_log/:log', (req, res) => {
+    let log = `logs/${req.params.log}.log`;
+    if (fs.existsSync(log)) {
+      fs.readFile(log, {
+        encoding: 'utf-8'
+      }, (err, data) => {
+        res.send(data.split('\n').join('<br>'));
+      });
+    } else {
+      res.sendStatus(404);
+    }
   });
 
-  app.get('/api/admin/download_log/:log', (req, res) => {
-    forceAuth(req, res, () => {
-      let log = `${req.params.log}.log`;
-      let path = `logs/${log}`;
-      if (fs.existsSync(path)) {
-        let file = fs.createReadStream(path);
-        let stat = fs.statSync(path);
-        logger.log('providing log to browser for download', log);
-        res.setHeader('Content-Length', stat.size);
-        res.setHeader('Content-Disposition', `attachment; filename=${log}`);
-        file.pipe(res);
-      } else {
-        res.sendStatus(404);
-      }
-    });
+  forceAuth('get', '/api/admin/download_log/:log', (req, res) => {
+    let log = `${req.params.log}.log`;
+    let path = `logs/${log}`;
+    if (fs.existsSync(path)) {
+      let file = fs.createReadStream(path);
+      let stat = fs.statSync(path);
+      logger.log('providing log to browser for download', log);
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Disposition', `attachment; filename=${log}`);
+      file.pipe(res);
+    } else {
+      res.sendStatus(404);
+    }
   });
 
-  app.post('/api/admin/reboot', (req, res) => {
-    forceAuth(req, res, () => {
-      if (ON_HEROKU) {
-        // Can't provide a response, since we're killing the process
-        heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
-      }
-    });
+  forceAuth('post', '/api/admin/reboot', (req, res) => {
+    if (ON_HEROKU) {
+      // Can't provide a response, since we're killing the process
+      heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
+    }
   });
 
   setInterval(() => {
