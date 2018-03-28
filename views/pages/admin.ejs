@@ -55,31 +55,13 @@
         </tbody>
       </table>
       <br>
-      <h4>Log Files</h4>
-      <a class="d-block" href="/api/admin/view_logs" target="_blank">View All Logs</a>
+      <h4>Logs</h4>
       <button class="btn btn-link text-danger text-center" v-on:click="clearLogs" v-bind:disabled="clearingLogs">
         <span v-if="clearingLogs">Clearing...</span>
         <span v-else>Clear Logs</span>
       </button>
       <br><br>
-      <table id="logs" class="table table-striped">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="log in logs">
-            <td>{{ log.date }}</td>
-            <td>
-              <a v-bind:href="'/api/admin/view_log/' + log.name" target="_blank">View</a>
-              <span> | </span>
-              <a v-bind:href="'/api/admin/download_log/' + log.name">Download</a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <p class="text-left" v-html="logs"></p>
     </div>
     <div v-else>
       Loading...
@@ -98,7 +80,7 @@
           memory: '0%'
         },
         files: {},
-        logs: []
+        logs: ''
       },
       methods: {
         restartDynos: () => {
@@ -112,37 +94,35 @@
           });
         },
         clearLogs: () => {
-          app.clearingLogs = true;
           if (confirm('Are you sure? This cannot be undone.')) {
+            app.clearingLogs = true;
             $.ajax({
               method: 'POST',
               url: '/api/admin/clear_logs',
               complete: () => {
                 app.clearingLogs = false;
+                getInfo();
               }
-            })
+            });
           }
         }
       }
     });
 
-    let getUsage = () => {
+    let getInfo = () => {
       $.getJSON('/api/admin/info', (data) => {
         app.environment = data.environment;
         $.each(data.usage, (key, val) => {
           app.usage[key] = `${(val * 100).toFixed(2)}%`;
         });
         app.files = data.files;
-        app.logs = data.logs.map((log) => ({
-          date: moment(log, 'YYYYMMDD').format('LL'),
-          name: log
-        }));
+        app.logs = data.logs.join('<br>');
         app.initialLoad = true;
       });
     };
 
-    getUsage();
-    setInterval(getUsage, 5000);
+    getInfo();
+    setInterval(getInfo, 5000);
   </script>
 </body>
 </html>

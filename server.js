@@ -371,8 +371,13 @@ http.listen(PORT, () => {
 
   forceAuth('get', '/api/admin/info', (req, res) => {
     os.cpuUsage((cpuUsage) => {
-      fs.readdir('logs', (err, logs) => {
-        logs = logs.filter((log) => log.endsWith('.log')).map((log) => log.slice(0, -4));
+      db.query('SELECT * FROM logs', (err, logs) => {
+        logs.forEach((log, index) => {
+          delete logs[index].id;
+          logs[index].data = JSON.parse(log.data);
+          logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
+          logs[index] = JSON.stringify(logs[index]);
+        });
         res.json({
           environment,
           usage: {
@@ -382,46 +387,7 @@ http.listen(PORT, () => {
           files,
           logs
         });
-      });
-    });
-  });
-
-  forceAuth('get', '/api/admin/view_log/:log', (req, res) => {
-    let log = `logs/${req.params.log}.log`;
-    if (fs.existsSync(log)) {
-      fs.readFile(log, {
-        encoding: 'utf-8'
-      }, (err, data) => {
-        res.send(data.split('\n').join('<br>'));
-      });
-    } else {
-      res.sendStatus(404);
-    }
-  });
-
-  forceAuth('get', '/api/admin/download_log/:log', (req, res) => {
-    let log = `${req.params.log}.log`;
-    let path = `logs/${log}`;
-    if (fs.existsSync(path)) {
-      let file = fs.createReadStream(path);
-      let stat = fs.statSync(path);
-      logger.log('providing log to browser for download', log);
-      res.setHeader('Content-Length', stat.size);
-      res.setHeader('Content-Disposition', `attachment; filename=${log}`);
-      file.pipe(res);
-    } else {
-      res.sendStatus(404);
-    }
-  });
-
-  forceAuth('get', '/api/admin/view_logs', (req, res) => {
-    db.query('SELECT * FROM logs', (err, results) => {
-      results.forEach((result, index) => {
-        delete results[index].id;
-        results[index].data = JSON.parse(result.data);
-        results[index].datetime = moment(result.datetime).format('MMMM Do YYYY, h:mm:ss a');
-      });
-      res.json(results);
+      })
     });
   });
 
