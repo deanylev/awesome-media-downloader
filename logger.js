@@ -1,6 +1,4 @@
 const chalk = require('chalk');
-const fs = require('fs');
-const moment = require('moment');
 const Database = require('./database');
 
 const db = new Database();
@@ -16,7 +14,7 @@ function Logger() {}
 ['log', 'warn', 'error'].forEach((level) => {
   Logger.prototype[level] = (message, data) => {
     data = data || '';
-    let datetime = moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+    let datetime = db.now();
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
 

@@ -1,4 +1,5 @@
 const mysql = require('mysql');
+const moment = require('moment');
 
 const db = mysql.createConnection({
   host: process.env.CLEARDB_DATABASE_URL || 'localhost',
@@ -17,7 +18,22 @@ let createDefaults = () => {
     `data` mediumtext, \
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \
-  ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8',
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
+  (err) => {
+    if (err) {
+      throw err;
+    }
+  });
+
+  db.query(
+  'CREATE TABLE IF NOT EXISTS `files` ( \
+    `id` varchar(36) NOT NULL, \
+    `datetime` datetime NOT NULL, \
+    `url` varchar(150) NOT NULL, \
+    `name` varchar(150) NOT NULL, \
+    PRIMARY KEY (`id`), \
+    UNIQUE KEY `id_UNIQUE` (`id`) \
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
   (err) => {
     if (err) {
       throw err;
@@ -34,5 +50,9 @@ Database.prototype.query = (query, callback) => {
 };
 
 Database.prototype.createDefaults = createDefaults;
+
+Database.prototype.now = () => {
+  return moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+};
 
 module.exports = Database;

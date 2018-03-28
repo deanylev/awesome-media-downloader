@@ -171,6 +171,7 @@ http.listen(PORT, () => {
           name: fileName,
           fileSize: info.size
         };
+        db.query(`INSERT INTO files (id, datetime, url, name) VALUES ('${id}', '${db.now()}', '${url}', '${fileName}')`);
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
         logger.log('downloading file', fileName);
         io.emit('file details', {
@@ -378,16 +379,21 @@ http.listen(PORT, () => {
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
           logs[index] = JSON.stringify(logs[index]);
         });
-        res.json({
-          environment,
-          usage: {
-            cpu: cpuUsage,
-            memory: 1 - os.freememPercentage()
-          },
-          files,
-          logs
-        });
-      })
+        db.query('SELECT * FROM files', (err, files) => {
+          Object.keys(files).forEach((file) => {
+            files[file].datetime = moment(files[file].datetime).format('MMMM Do YYYY, h:mm:ss a');
+          });
+          res.json({
+            environment,
+            usage: {
+              cpu: cpuUsage,
+              memory: 1 - os.freememPercentage()
+            },
+            files,
+            logs
+          });
+        })
+      });
     });
   });
 

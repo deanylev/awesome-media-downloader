@@ -41,16 +41,16 @@
       <table id="files" class="table table-striped">
         <thead>
           <tr>
+            <th>Datetime</th>
             <th>Name</th>
             <th>URL</th>
-            <th>Status</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="file in files">
+            <td>{{ file.datetime }}</td>
             <td>{{ file.name }}</td>
             <td>{{ file.url }}</td>
-            <td>{{ file.status }}</td>
           </tr>
         </tbody>
       </table>
