@@ -55,8 +55,13 @@
         </tbody>
       </table>
       <br>
-      <h4>Logs</h4>
-      <br>
+      <h4>Log Files</h4>
+      <a class="d-block" href="/api/admin/view_logs">View All Logs</a>
+      <button class="btn btn-link text-danger text-center" v-on:click="clearLogs" v-bind:disabled="clearingLogs">
+        <span v-if="clearingLogs">Clearing...</span>
+        <span v-else>Clear Logs</span>
+      </button>
+      <br><br>
       <table id="logs" class="table table-striped">
         <thead>
           <tr>
@@ -87,6 +92,7 @@
         environment: {},
         initialLoad: false,
         restarting: false,
+        clearingLogs: false,
         usage: {
           cpu: '0%',
           memory: '0%'
@@ -104,6 +110,18 @@
               app.restarting = false;
             }
           });
+        },
+        clearLogs: () => {
+          app.clearingLogs = true;
+          if (confirm('Are you sure? This cannot be undone.')) {
+            $.ajax({
+              method: 'POST',
+              url: '/api/admin/clear_logs',
+              complete: () => {
+                app.clearingLogs = false;
+              }
+            })
+          }
         }
       }
     });

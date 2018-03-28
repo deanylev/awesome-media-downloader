@@ -8,8 +8,11 @@ const uuidv4 = require('uuid/v4');
 const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
+const moment = require('moment');
+
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
+const Database = require('./database');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -36,6 +39,7 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger();
+const db = new Database();
 const heroku = new Heroku({
   token: process.env.HEROKU_API_TOKEN
 });
@@ -408,6 +412,23 @@ http.listen(PORT, () => {
     } else {
       res.sendStatus(404);
     }
+  });
+
+  forceAuth('get', '/api/admin/view_logs', (req, res) => {
+    db.query('SELECT * FROM logs', (err, results) => {
+      results.forEach((result, index) => {
+        delete results[index].id;
+        results[index].data = JSON.parse(result.data);
+        results[index].datetime = moment(result.datetime).format('MMMM Do YYYY, h:mm:ss a');
+      });
+      res.json(results);
+    });
+  });
+
+  forceAuth('post', '/api/admin/clear_logs', (req, res) => {
+    db.query('DROP TABLE logs');
+    db.createDefaults();
+    res.send('ok');
   });
 
   forceAuth('post', '/api/admin/reboot', (req, res) => {
