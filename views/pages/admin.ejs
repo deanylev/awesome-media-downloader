@@ -36,7 +36,7 @@
         </button>
       </div>
       <br><br>
-      <h4>Downloaded Files</h4>
+      <h4>Downloaded Files ({{ files.length }})</h4>
       <button class="btn btn-link text-danger text-center" v-on:click="clear('files')" v-bind:disabled="clearing.files">
         <span v-if="clearing.files">Clearing...</span>
         <span v-else>Clear Files</span>
@@ -59,7 +59,7 @@
         </tbody>
       </table>
       <br>
-      <h4>Logs</h4>
+      <h4>Logs ({{ logs.length }})</h4>
       <button class="btn btn-link text-danger text-center" v-on:click="clear('logs')" v-bind:disabled="clearing.logs">
         <span v-if="clearing.logs">Clearing...</span>
         <span v-else>Clear Logs</span>
