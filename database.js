@@ -50,8 +50,8 @@ createDefaults();
 
 function Database() {}
 
-Database.prototype.query = (query, callback) => {
-  db.query(query, callback);
+Database.prototype.query = (query, values, callback) => {
+  db.query(query, values, callback);
 };
 
 Database.prototype.createDefaults = createDefaults;

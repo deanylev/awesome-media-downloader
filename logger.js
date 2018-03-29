@@ -18,7 +18,14 @@ function Logger() {}
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
 
-    db.query(`INSERT INTO logs (datetime, level, message, data) VALUES ('${db.now()}', '${level}', '${message}', '${JSON.stringify(data)}')`, (err) => {
+    let sqlValues = {
+      datetime: db.now(),
+      level,
+      message,
+      data: JSON.stringify(data)
+    };
+
+    db.query('INSERT INTO logs SET ?', sqlValues, (err) => {
       if (err) {
         throw err;
       }

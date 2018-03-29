@@ -171,7 +171,13 @@ http.listen(PORT, () => {
           name: fileName,
           fileSize: info.size
         };
-        db.query(`INSERT INTO files (id, datetime, url, name) VALUES ('${id}', '${db.now()}', '${url}', '${fileName}')`);
+        let sqlValues = {
+          id,
+          datetime: db.now(),
+          url,
+          name: fileName
+        }
+        db.query(`INSERT INTO files SET ?`, sqlValues);
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
         logger.log('downloading file', fileName);
         io.emit('file details', {
