@@ -45,11 +45,6 @@ export default Component.extend({
   initialSocketConnection: false,
   socketConnected: false,
   socketDisconnected: Ember.computed.not('socketConnected'),
-  documentReady: Ember.observer('initialSocketConnection', function() {
-    setTimeout(() => {
-      $('textarea').textareaAutoSize();
-    }, 10);
-  }),
   getFileTitles: Ember.observer('urlArray', function() {
     if (this.get('environment.allowRequestedName')) {
       this.get('urlArray').forEach((url, index) => {
