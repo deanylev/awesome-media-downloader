@@ -37,7 +37,11 @@
       </div>
       <br><br>
       <h4>Downloaded Files</h4>
-      <br>
+      <button class="btn btn-link text-danger text-center" v-on:click="clear('files')" v-bind:disabled="clearing.files">
+        <span v-if="clearing.files">Clearing...</span>
+        <span v-else>Clear Files</span>
+      </button>
+      <br><br>
       <table class="table table-striped">
         <thead>
           <tr>
@@ -56,8 +60,8 @@
       </table>
       <br>
       <h4>Logs</h4>
-      <button class="btn btn-link text-danger text-center" v-on:click="clearLogs" v-bind:disabled="clearingLogs">
-        <span v-if="clearingLogs">Clearing...</span>
+      <button class="btn btn-link text-danger text-center" v-on:click="clear('logs')" v-bind:disabled="clearing.logs">
+        <span v-if="clearing.logs">Clearing...</span>
         <span v-else>Clear Logs</span>
       </button>
       <br><br>
@@ -91,7 +95,10 @@
         environment: {},
         initialLoad: false,
         restarting: false,
-        clearingLogs: false,
+        clearing: {
+          files: false,
+          logs: false
+        },
         usage: {
           cpu: '0%',
           memory: '0%'
@@ -110,14 +117,14 @@
             }
           });
         },
-        clearLogs: () => {
+        clear: (table) => {
           if (confirm('Are you sure? This cannot be undone.')) {
-            app.clearingLogs = true;
+            app.clearing[table] = true;
             $.ajax({
               method: 'POST',
-              url: '/api/admin/clear_logs',
+              url: `/api/admin/clear/${table}`,
               complete: () => {
-                app.clearingLogs = false;
+                app.clearing[table] = false;
                 getInfo();
               }
             });

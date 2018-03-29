@@ -394,8 +394,8 @@ http.listen(PORT, () => {
     });
   });
 
-  forceAuth('post', '/api/admin/clear_logs', (req, res) => {
-    db.query('DROP TABLE logs');
+  forceAuth('post', '/api/admin/clear/:table', (req, res) => {
+    db.query(`DROP TABLE ${req.params.table}`);
     db.createDefaults();
     res.send('ok');
   });
