@@ -349,7 +349,7 @@ http.listen(PORT, () => {
       let credentials = auth(req);
       if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
         if (log) {
-          logger.log('Successful admin login', {
+          logger.log('successful admin login', {
             ipAddress,
             user: credentials.name
           });
@@ -374,10 +374,7 @@ http.listen(PORT, () => {
     os.cpuUsage((cpuUsage) => {
       db.query('SELECT * FROM logs', (err, logs) => {
         logs.forEach((log, index) => {
-          delete logs[index].id;
-          logs[index].data = JSON.parse(log.data);
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-          logs[index] = JSON.stringify(logs[index]);
         });
         db.query('SELECT * FROM files', (err, files) => {
           Object.keys(files).forEach((file) => {

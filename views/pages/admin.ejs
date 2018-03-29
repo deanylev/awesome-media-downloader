@@ -38,7 +38,7 @@
       <br><br>
       <h4>Downloaded Files</h4>
       <br>
-      <table id="files" class="table table-striped">
+      <table class="table table-striped">
         <thead>
           <tr>
             <th>Datetime</th>
@@ -61,7 +61,24 @@
         <span v-else>Clear Logs</span>
       </button>
       <br><br>
-      <p class="text-left" v-html="logs"></p>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Datetime</th>
+            <th>Level</th>
+            <th>Message</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="log in logs">
+            <td>{{ log.datetime }}</td>
+            <td>{{ log.level }}</td>
+            <td>{{ log.message }}</td>
+            <td>{{ log.data }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <div v-else>
       Loading...
@@ -80,7 +97,7 @@
           memory: '0%'
         },
         files: {},
-        logs: ''
+        logs: []
       },
       methods: {
         restartDynos: () => {
@@ -116,7 +133,7 @@
           app.usage[key] = `${(val * 100).toFixed(2)}%`;
         });
         app.files = data.files;
-        app.logs = data.logs.join('<br>');
+        app.logs = data.logs;
         app.initialLoad = true;
       });
     };
