@@ -8,9 +8,14 @@ const db = mysql.createConnection({
   database: process.env.DATABASE_NAME || 'awesome_media_downloader'
 });
 
+// hack to keep the db connection alive
+setInterval(() => {
+  db.query('SELECT 1');
+}, 10000);
+
 let createDefaults = () => {
   db.query(
-  'CREATE TABLE IF NOT EXISTS `logs` ( \
+    'CREATE TABLE IF NOT EXISTS `logs` ( \
     `id` int(11) NOT NULL AUTO_INCREMENT, \
     `datetime` datetime NOT NULL, \
     `level` varchar(10) NOT NULL, \
@@ -19,14 +24,14 @@ let createDefaults = () => {
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
-  (err) => {
-    if (err) {
-      throw err;
-    }
-  });
+    (err) => {
+      if (err) {
+        throw err;
+      }
+    });
 
   db.query(
-  'CREATE TABLE IF NOT EXISTS `files` ( \
+    'CREATE TABLE IF NOT EXISTS `files` ( \
     `id` varchar(36) NOT NULL, \
     `datetime` datetime NOT NULL, \
     `url` varchar(150) NOT NULL, \
@@ -34,11 +39,11 @@ let createDefaults = () => {
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
-  (err) => {
-    if (err) {
-      throw err;
-    }
-  });
+    (err) => {
+      if (err) {
+        throw err;
+      }
+    });
 }
 
 createDefaults();
