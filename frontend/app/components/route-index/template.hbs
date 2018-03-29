@@ -33,7 +33,7 @@
               {{/power-select}}
             {{/if}}
           {{/if}}
-          <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Submit{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
+          <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Download{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
         </form>
         <p class="status text-{{statusClass}}">{{status}}</p>
         <div class="progress">
