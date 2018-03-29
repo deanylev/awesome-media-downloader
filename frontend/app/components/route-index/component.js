@@ -52,6 +52,15 @@ export default Component.extend({
       });
     }
   }),
+  documentReady: Ember.observer('initialSocketConnection', function() {
+    setTimeout(() => {
+      $('textarea').keyup(function(e) {
+        while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css('borderTopWidth')) + parseFloat($(this).css('borderBottomWidth'))) {
+          $(this).height($(this).height() + 1);
+        };
+      });
+    }, 10);
+  }),
 
   setStatus(text, bsClass) {
     bsClass = bsClass || 'dark';
