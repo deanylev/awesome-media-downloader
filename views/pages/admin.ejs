@@ -108,14 +108,16 @@
       },
       methods: {
         restartDynos: () => {
-          app.restarting = true;
-          $.ajax({
-            method: 'POST',
-            url: '/api/admin/reboot',
-            complete: () => {
-              app.restarting = false;
-            }
-          });
+          if (confirm('Are you sure?')) {
+            app.restarting = true;
+            $.ajax({
+              method: 'POST',
+              url: '/api/admin/reboot',
+              complete: () => {
+                app.restarting = false;
+              }
+            });  
+          }
         },
         clear: (table) => {
           if (confirm('Are you sure? This cannot be undone.')) {
