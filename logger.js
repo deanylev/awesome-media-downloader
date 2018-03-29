@@ -1,4 +1,5 @@
 const chalk = require('chalk');
+
 const Database = require('./database');
 
 const db = new Database();
@@ -14,11 +15,10 @@ function Logger() {}
 ['log', 'warn', 'error'].forEach((level) => {
   Logger.prototype[level] = (message, data) => {
     data = data || '';
-    let datetime = db.now();
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
 
-    db.query(`INSERT INTO logs (datetime, level, message, data) VALUES ('${datetime}', '${level}', '${message}', '${JSON.stringify(data)}')`, (err) => {
+    db.query(`INSERT INTO logs (datetime, level, message, data) VALUES ('${db.now()}', '${level}', '${message}', '${JSON.stringify(data)}')`, (err) => {
       if (err) {
         throw err;
       }
