@@ -46,8 +46,8 @@
         </button>
         <br><br>
         <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
+          <table class="table table-bordered">
+            <thead class="thead-light">
               <tr>
                 <th>Datetime</th>
                 <th>Client ID</th>
@@ -77,8 +77,8 @@
         </button>
         <br><br>
         <div class="table-responsive">
-          <table class="table table-striped">
-            <thead>
+          <table class="table table-bordered">
+            <thead class="thead-light">
               <tr>
                 <th>Datetime</th>
                 <th>Level</th>
@@ -138,14 +138,18 @@
           }
         },
         remove: (table, id) => {
+          let target = $(event.target);
           if (confirm('Are you sure? This cannot be undone.')) {
             app.deleting[table] = !id;
             $.ajax({
               method: 'POST',
               url: `/api/admin/delete/${table}/${id || ''}`,
               complete: () => {
-                app.deleting[table] = false;
-                getInfo();
+                if (id) {
+                  target.parents('tr').remove();
+                } else {
+                  app.deleting[table] = false;
+                }
               }
             });
           }
