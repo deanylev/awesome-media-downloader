@@ -57,7 +57,7 @@ Database.prototype.query = (query, values, callback) => {
 Database.prototype.createDefaults = createDefaults;
 
 Database.prototype.now = () => {
-  return moment(new Date()).format('YYYY-MM-DD HH:mm:ss');
+  return moment().format('YYYY-MM-DD HH:mm:ss');
 };
 
 module.exports = Database;
