@@ -39,9 +39,34 @@
           </button>
         </div>
         <br><br>
+        <h4>DB Dumps ({{ dbs.length }})</h4>
+        <button class="btn btn-link text-danger text-center" v-on:click="dbDump()" v-bind:disabled="inFlight.dbs">
+          <span v-if="inFlight.dbs">Dumping...</span>
+          <span v-else>Dump DB</span>
+        </button>
+        <br><br>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="thead-light">
+              <tr>
+                <th>Datetime</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="db in dbs">
+                <td>{{ db.datetime }}</td>
+                <td>
+                  <a v-bind:href="'/api/admin/download/db/' + db.id" class="text-danger"><i class="fa fa-download"></i></a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <br>
         <h4>Downloaded Files ({{ files.length }})</h4>
-        <button class="btn btn-link text-danger text-center" v-on:click="remove('files')" v-bind:disabled="deleting.files">
-          <span v-if="deleting.files">Deleting...</span>
+        <button class="btn btn-link text-danger text-center" v-on:click="remove('files')" v-bind:disabled="inFlight.files">
+          <span v-if="inFlight.files">Deleting...</span>
           <span v-else>Delete All Files</span>
         </button>
         <br><br>
@@ -71,8 +96,8 @@
         </div>
         <br>
         <h4>Logs ({{ logs.length }})</h4>
-        <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="deleting.logs">
-          <span v-if="deleting.logs">Deleting...</span>
+        <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="inFlight.logs">
+          <span v-if="inFlight.logs">Deleting...</span>
           <span v-else>Delete All Logs</span>
         </button>
         <br><br>
@@ -113,14 +138,16 @@
         environment: {},
         initialLoad: false,
         restarting: false,
-        deleting: {
+        inFlight: {
+          dbs: false,
           files: false,
-          logs: false
+          logs: false,
         },
         usage: {
           cpu: '0%',
           memory: '0%'
         },
+        dbs: [],
         files: [],
         logs: []
       },
@@ -130,7 +157,7 @@
             app.restarting = true;
             $.ajax({
               method: 'POST',
-              url: '/api/admin/reboot',
+              url: '/api/admin/actions/reboot',
               complete: () => {
                 app.restarting = false;
               }
@@ -140,19 +167,29 @@
         remove: (table, id) => {
           let target = $(event.target);
           if (confirm('Are you sure? This cannot be undone.')) {
-            app.deleting[table] = !id;
+            app.inFlight[table] = !id;
             $.ajax({
               method: 'POST',
-              url: `/api/admin/delete/${table}/${id || ''}`,
+              url: `/api/admin/actions/delete/${table}/${id || ''}`,
               complete: () => {
                 if (id) {
                   target.parents('tr').remove();
                 } else {
-                  app.deleting[table] = false;
+                  app.inFlight[table] = false;
                 }
               }
             });
           }
+        },
+        dbDump: () => {
+          app.inFlight.dbs = true;
+          $.ajax({
+            method: 'POST',
+            url: `/api/admin/actions/db_dump`,
+            complete: () => {
+              app.inFlight.dbs = false;
+            }
+          });
         },
         usageClass: (type) => {
           let object = {};
@@ -177,6 +214,7 @@
         $.each(data.usage, (key, val) => {
           app.usage[key] = `${(val * 100).toFixed(2)}%`;
         });
+        app.dbs = data.dbs;
         app.files = data.files;
         app.logs = data.logs;
         app.initialLoad = true;

@@ -1,12 +1,8 @@
 const mysql = require('mysql');
 const moment = require('moment');
+const { DbCreds } = require('./credentials');
 
-const db = mysql.createConnection({
-  host: process.env.CLEARDB_DATABASE_URL || 'localhost',
-  user: process.env.DATABASE_USER || 'root',
-  password: process.env.DATABASE_PASSWORD || '',
-  database: process.env.DATABASE_NAME || 'awesome_media_downloader'
-});
+const db = mysql.createConnection(DbCreds);
 
 // hack to keep the db connection alive
 setInterval(() => {

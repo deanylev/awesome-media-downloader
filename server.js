@@ -13,6 +13,7 @@ const moment = require('moment');
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
 const Database = require('./database');
+const BackgroundTasks = require('./background-tasks');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -40,6 +41,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger();
 const db = new Database();
+const backgroundTasks = new BackgroundTasks();
 const heroku = new Heroku({
   token: process.env.HEROKU_API_TOKEN
 });
@@ -384,24 +386,47 @@ http.listen(PORT, () => {
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
         });
         db.query('SELECT * FROM files', (err, files) => {
-          Object.keys(files).forEach((file) => {
-            files[file].datetime = moment(files[file].datetime).format('MMMM Do YYYY, h:mm:ss a');
+          files.forEach((file, index) => {
+            files[index].datetime = moment(files[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
           });
-          res.json({
-            environment,
-            usage: {
-              cpu: cpuUsage,
-              memory: 1 - os.freememPercentage()
-            },
-            files,
-            logs
+          fs.readdir('bak/db', (err, dbs) => {
+            dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
+              datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
+              id: db
+            }));
+            res.json({
+              environment,
+              usage: {
+                cpu: cpuUsage,
+                memory: 1 - os.freememPercentage()
+              },
+              dbs,
+              files,
+              logs
+            });
           });
-        })
+        });
       });
     });
   });
 
-  forceAuth('post', '/api/admin/delete/:table/:id?', (req, res) => {
+  forceAuth('get', '/api/admin/download/db/:id', (req, res) => {
+    let id = req.params.id;
+    let path = `bak/db/${id}`;
+    if (fs.existsSync(path)) {
+      let file = fs.createReadStream(path);
+      let stat = fs.statSync(path);
+      logger.log('providing db to browser for download', id);
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Type', mime.lookup(`${id}.sql`));
+      res.setHeader('Content-Disposition', `attachment; filename=db_${id}.sql`);
+      file.pipe(res);
+    } else {
+      res.sendStatus(404);
+    }
+  });
+
+  forceAuth('post', '/api/admin/actions/delete/:table/:id?', (req, res) => {
     if (req.params.id) {
       db.query(`DELETE FROM ${req.params.table} WHERE id = '${req.params.id}'`);
     } else {
@@ -411,11 +436,16 @@ http.listen(PORT, () => {
     res.sendStatus(200);
   });
 
-  forceAuth('post', '/api/admin/reboot', (req, res) => {
+  forceAuth('post', '/api/admin/actions/reboot', (req, res) => {
     if (ON_HEROKU) {
       // Can't provide a response, since we're killing the process
       heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
     }
+  });
+
+  forceAuth('post', '/api/admin/actions/db_dump', (req, res) => {
+    backgroundTasks.dbDump();
+    res.sendStatus(200);
   });
 
   setInterval(() => {
