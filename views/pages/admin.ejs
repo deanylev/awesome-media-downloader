@@ -12,93 +12,96 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
 </head>
-<body class="container text-center">
-  <div id="app">
-    <br>
-    <h1>Admin Area</h1>
-    <br>
-    <div v-if="initialLoad">
-      <h4>Usage</h4>
+<body class="container text-center bg-dark">
+  <br>
+  <div id="app" class="card">
+    <div class="card-body">
+      <h1>Admin Area</h1>
       <br>
-      <p>CPU</p>
-      <div class="progress">
-        <div class="progress-bar" v-bind:style="{ width: usage.cpu }">{{ usage.cpu }}</div>
-      </div>
-      <br>
-      <p>Memory</p>
-      <div class="progress">
-        <div class="progress-bar" v-bind:style="{ width: usage.memory }">{{ usage.memory }}</div>
-      </div>
-      <br><br>
-      <div v-if="environment.onHeroku">
-        <button class="btn btn-danger" v-on:click="restartDynos" v-bind:disabled="restarting">
-          <span v-if="restarting">Restarting...</span>
-          <span v-else>Restart Dynos</span>
+      <div v-if="initialLoad">
+        <h4>Usage</h4>
+        <br>
+        <p>CPU</p>
+        <div class="progress">
+          <div class="progress-bar" v-bind:class="usageClass('cpu')" v-bind:style="{ width: usage.cpu }">{{ usage.cpu }}</div>
+        </div>
+        <br>
+        <p>Memory</p>
+        <div class="progress">
+          <div class="progress-bar" v-bind:class="usageClass('memory')" v-bind:style="{ width: usage.memory }">{{ usage.memory }}</div>
+        </div>
+        <br><br>
+        <div v-if="environment.onHeroku">
+          <button class="btn btn-danger" v-on:click="restartDynos" v-bind:disabled="restarting">
+            <span v-if="restarting">Restarting...</span>
+            <span v-else>Restart Dynos&nbsp;</span>
+            <i class="fa fa-refresh" v-bind:class="{ 'fa-spin': restarting, 'fa-pulse': restarting }"></i>
+          </button>
+        </div>
+        <br><br>
+        <h4>Downloaded Files ({{ files.length }})</h4>
+        <button class="btn btn-link text-danger text-center" v-on:click="remove('files')" v-bind:disabled="deleting.files">
+          <span v-if="deleting.files">Deleting...</span>
+          <span v-else>Delete All Files</span>
         </button>
+        <br><br>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Datetime</th>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="file in files">
+                <td>{{ file.datetime }}</td>
+                <td>{{ file.name }}</td>
+                <td>{{ file.url }}</td>
+                <td>
+                  <button class="btn btn-link text-danger" v-on:click="remove('files', file.id)"><i class="fa fa-trash"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <br>
+        <h4>Logs ({{ logs.length }})</h4>
+        <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="deleting.logs">
+          <span v-if="deleting.logs">Deleting...</span>
+          <span v-else>Delete All Logs</span>
+        </button>
+        <br><br>
+        <div class="table-responsive">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Datetime</th>
+                <th>Level</th>
+                <th>Message</th>
+                <th>Data</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="log in logs">
+                <td>{{ log.datetime }}</td>
+                <td>{{ log.level }}</td>
+                <td>{{ log.message }}</td>
+                <td>{{ log.data }}</td>
+                <td>
+                  <button class="btn btn-link text-danger" v-on:click="remove('logs', log.id)"><i class="fa fa-trash"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <br><br>
-      <h4>Downloaded Files ({{ files.length }})</h4>
-      <button class="btn btn-link text-danger text-center" v-on:click="remove('files')" v-bind:disabled="deleting.files">
-        <span v-if="deleting.files">Deleting...</span>
-        <span v-else>Delete All Files</span>
-      </button>
-      <br><br>
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Datetime</th>
-              <th>Name</th>
-              <th>URL</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="file in files">
-              <td>{{ file.datetime }}</td>
-              <td>{{ file.name }}</td>
-              <td>{{ file.url }}</td>
-              <td>
-                <button class="btn btn-link text-danger" v-on:click="remove('files', file.id)"><i class="fa fa-trash"></i></button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div v-else>
+        Loading...
       </div>
-      <br>
-      <h4>Logs ({{ logs.length }})</h4>
-      <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="deleting.logs">
-        <span v-if="deleting.logs">Deleting...</span>
-        <span v-else>Delete All Logs</span>
-      </button>
-      <br><br>
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
-            <tr>
-              <th>Datetime</th>
-              <th>Level</th>
-              <th>Message</th>
-              <th>Data</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="log in logs">
-              <td>{{ log.datetime }}</td>
-              <td>{{ log.level }}</td>
-              <td>{{ log.message }}</td>
-              <td>{{ log.data }}</td>
-              <td>
-                <button class="btn btn-link text-danger" v-on:click="remove('logs', log.id)"><i class="fa fa-trash"></i></button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div v-else>
-      Loading...
     </div>
   </div>
   <script>
@@ -144,6 +147,20 @@
               }
             });
           }
+        },
+        usageClass: (type) => {
+          let object = {};
+          let usage = parseInt(app.usage[type].slice(0, -1));
+          let bsClass;
+          if (usage > 40 && usage < 75) {
+            bsClass = 'warning';
+          } else if (usage >= 75) {
+            bsClass = 'danger';
+          } else {
+            bsClass = 'success';
+          }
+          object[`bg-${bsClass}`] = true;
+          return object;
         }
       }
     });
