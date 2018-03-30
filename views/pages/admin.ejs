@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Admin Area</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.16/vue.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
@@ -37,9 +38,9 @@
       </div>
       <br><br>
       <h4>Downloaded Files ({{ files.length }})</h4>
-      <button class="btn btn-link text-danger text-center" v-on:click="clear('files')" v-bind:disabled="clearing.files">
-        <span v-if="clearing.files">Clearing...</span>
-        <span v-else>Clear Files</span>
+      <button class="btn btn-link text-danger text-center" v-on:click="remove('files')" v-bind:disabled="deleting.files">
+        <span v-if="deleting.files">Deleting...</span>
+        <span v-else>Delete All Files</span>
       </button>
       <br><br>
       <div class="table-responsive">
@@ -49,6 +50,7 @@
               <th>Datetime</th>
               <th>Name</th>
               <th>URL</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -56,15 +58,18 @@
               <td>{{ file.datetime }}</td>
               <td>{{ file.name }}</td>
               <td>{{ file.url }}</td>
+              <td>
+                <button class="btn btn-link text-danger" v-on:click="remove('files', file.id)"><i class="fa fa-trash"></i></button>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
       <br>
       <h4>Logs ({{ logs.length }})</h4>
-      <button class="btn btn-link text-danger text-center" v-on:click="clear('logs')" v-bind:disabled="clearing.logs">
-        <span v-if="clearing.logs">Clearing...</span>
-        <span v-else>Clear Logs</span>
+      <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="deleting.logs">
+        <span v-if="deleting.logs">Deleting...</span>
+        <span v-else>Delete All Logs</span>
       </button>
       <br><br>
       <div class="table-responsive">
@@ -75,6 +80,7 @@
               <th>Level</th>
               <th>Message</th>
               <th>Data</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -83,6 +89,9 @@
               <td>{{ log.level }}</td>
               <td>{{ log.message }}</td>
               <td>{{ log.data }}</td>
+              <td>
+                <button class="btn btn-link text-danger" v-on:click="remove('logs', log.id)"><i class="fa fa-trash"></i></button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -99,7 +108,7 @@
         environment: {},
         initialLoad: false,
         restarting: false,
-        clearing: {
+        deleting: {
           files: false,
           logs: false
         },
@@ -107,7 +116,7 @@
           cpu: '0%',
           memory: '0%'
         },
-        files: {},
+        files: [],
         logs: []
       },
       methods: {
@@ -123,14 +132,14 @@
             });
           }
         },
-        clear: (table) => {
+        remove: (table, id) => {
           if (confirm('Are you sure? This cannot be undone.')) {
-            app.clearing[table] = true;
+            app.deleting[table] = !id;
             $.ajax({
               method: 'POST',
-              url: `/api/admin/clear/${table}`,
+              url: `/api/admin/delete/${table}/${id || ''}`,
               complete: () => {
-                app.clearing[table] = false;
+                app.deleting[table] = false;
                 getInfo();
               }
             });

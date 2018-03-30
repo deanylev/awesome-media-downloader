@@ -400,10 +400,14 @@ http.listen(PORT, () => {
     });
   });
 
-  forceAuth('post', '/api/admin/clear/:table', (req, res) => {
-    db.query(`DROP TABLE ${req.params.table}`);
+  forceAuth('post', '/api/admin/delete/:table/:id?', (req, res) => {
+    if (req.params.id) {
+      db.query(`DELETE FROM ${req.params.table} WHERE id = '${req.params.id}'`);
+    } else {
+      db.query(`DROP TABLE ${req.params.table}`);
+    }
     db.createDefaults();
-    res.send('ok');
+    res.sendStatus(200);
   });
 
   forceAuth('post', '/api/admin/reboot', (req, res) => {
