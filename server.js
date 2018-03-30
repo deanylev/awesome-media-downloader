@@ -388,6 +388,7 @@ http.listen(PORT, () => {
         db.query('SELECT * FROM files ORDER BY datetime DESC', (err, files) => {
           files.forEach((file, index) => {
             files[index].datetime = moment(files[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
+            files[index].exists = fs.existsSync(`${FILE_DIR}/${files[index].id}.${FINAL_EXT}`);
           });
           fs.readdir('bak/db', (err, dbs) => {
             dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
