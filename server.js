@@ -381,11 +381,11 @@ http.listen(PORT, () => {
 
   forceAuth('get', '/api/admin/info', (req, res) => {
     os.cpuUsage((cpuUsage) => {
-      db.query('SELECT * FROM logs', (err, logs) => {
+      db.query('SELECT * FROM logs ORDER BY datetime DESC', (err, logs) => {
         logs.forEach((log, index) => {
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
         });
-        db.query('SELECT * FROM files', (err, files) => {
+        db.query('SELECT * FROM files ORDER BY datetime DESC', (err, files) => {
           files.forEach((file, index) => {
             files[index].datetime = moment(files[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
           });
