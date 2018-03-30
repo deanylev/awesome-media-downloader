@@ -34,6 +34,7 @@ let createDefaults = () => {
     'CREATE TABLE IF NOT EXISTS `files` ( \
     `id` varchar(36) NOT NULL, \
     `datetime` datetime NOT NULL, \
+    `clientId` varchar(20) NOT NULL, \
     `url` varchar(150) NOT NULL, \
     `name` varchar(150) NOT NULL, \
     PRIMARY KEY (`id`), \
