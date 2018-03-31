@@ -17,7 +17,7 @@ let dbDump = () => {
 
     logger.log('dumped database to file', id);
   });
-}
+};
 
 setInterval(dbDump, 3600000);
 

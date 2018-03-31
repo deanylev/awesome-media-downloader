@@ -1,49 +1,47 @@
-<div class="container">
-  <div class="card">
-    <div class="card-body">
-      <h1 class="title text-center">Awesome Media Downloader</h1>
-      {{#if initialSocketConnection}}
-        <form {{action "downloadFile" on="submit"}}>
-          <div class="form-group">
-            {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
-          </div>
-          {{#if environment.allowRequestedName}}
-            {{#each urlArray as |url index|}}
-              <div class="form-group">
-                <label for="name-input-{{add index 1}}">Filename for Video {{add index 1}}</label>
-                {{input id=(concat "name-input-" (add index 1)) class="form-control" placeholder="Loading..." disabled=(or inFlight socketDisconnected)}}
-              </div>
-            {{/each}}
-          {{/if}}
-          {{#if environment.ffmpeg}}
-            {{#if environment.allowFormatSelection}}
-              <label>File Format</label>
-              {{#power-select selected=format searchEnabled=false disabled=disableFormat options=formats onchange=(action "setFormat") as |format|}}
-                {{#if (get formatLabels format)}}
-                  {{get formatLabels format}}
-                {{else}}
-                  {{uppercase format}}
-                {{/if}}
-              {{/power-select}}
-            {{/if}}
-            {{#if environment.allowQualitySelection}}
-              <label>File Quality</label>
-              {{#power-select selected=quality searchEnabled=false disabled=disableQuality options=qualities onchange=(action "setQuality") as |quality|}}
-                {{get qualityLabels quality}}
-              {{/power-select}}
-            {{/if}}
-          {{/if}}
-          <button class="btn btn-primary" type="submit" disabled={{or inFlight socketDisconnected}}>Download{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
-        </form>
-        <p class="status text-{{statusClass}}">{{status}}</p>
-        <div class="progress">
-          <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger"}}" style="width: {{if downloadError 100 progress}}%;">
-            <span title="{{displayedProgress}}">{{displayedProgress}}</span>
-          </div>
+<div class="bg-light main-section">
+  <div class="container">
+    <h1 class="title text-center display-4">Awesome Media Downloader</h1>
+    {{#if initialSocketConnection}}
+      <form {{action "downloadFile" on="submit"}}>
+        <div class="form-group">
+          {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
         </div>
-      {{else}}
-        <p class="text-center">Loading...</p>
-      {{/if}}
-    </div>
+        {{#if environment.allowRequestedName}}
+          {{#each urlArray as |url index|}}
+            <div class="form-group">
+              <label for="name-input-{{add index 1}}">Filename for Video {{add index 1}}</label>
+              {{input id=(concat "name-input-" (add index 1)) class="form-control" placeholder="Loading..." disabled=(or inFlight socketDisconnected)}}
+            </div>
+          {{/each}}
+        {{/if}}
+        {{#if environment.ffmpeg}}
+          {{#if environment.allowFormatSelection}}
+            <label>File Format</label>
+            {{#power-select selected=format searchEnabled=false disabled=disableFormat options=formats onchange=(action "setFormat") as |format|}}
+              {{#if (get formatLabels format)}}
+                {{get formatLabels format}}
+              {{else}}
+                {{uppercase format}}
+              {{/if}}
+            {{/power-select}}
+          {{/if}}
+          {{#if environment.allowQualitySelection}}
+            <label>File Quality</label>
+            {{#power-select selected=quality searchEnabled=false disabled=disableQuality options=qualities onchange=(action "setQuality") as |quality|}}
+              {{get qualityLabels quality}}
+            {{/power-select}}
+          {{/if}}
+        {{/if}}
+        <button class="btn btn-dark btn-lg btn-block" type="submit" disabled={{or inFlight socketDisconnected}}>Download{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
+        <h4 class="status font-weight-light text-{{statusClass}}">{{status}}</h4>
+      </form>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger" "bg-dark"}}" style="width: {{if downloadError 100 progress}}%;">
+          <span title="{{displayedProgress}}">{{displayedProgress}}</span>
+        </div>
+      </div>
+    {{else}}
+      <p class="text-center">Loading...</p>
+    {{/if}}
   </div>
 </div>
