@@ -427,11 +427,11 @@ http.listen(PORT, () => {
     }
   });
 
-  forceAuth('delete', '/api/admin/actions/delete/:table/:id?', (req, res) => {
-    if (req.params.id) {
-      db.query(`DELETE FROM ${req.params.table} WHERE id = '${req.params.id}'`);
+  forceAuth('delete', '/api/admin/actions/delete', (req, res) => {
+    if (req.body.id) {
+      db.query(`DELETE FROM ${req.body.table} WHERE id = '${req.body.id}'`);
     } else {
-      db.query(`DROP TABLE ${req.params.table}`);
+      db.query(`DROP TABLE ${req.body.table}`);
     }
     db.createDefaults();
     res.sendStatus(200);
@@ -449,8 +449,8 @@ http.listen(PORT, () => {
     res.sendStatus(200);
   });
 
-  forceAuth('delete', '/api/admin/actions/db_dump/:id', (req, res) => {
-    fs.unlink(`bak/db/${req.params.id}`);
+  forceAuth('delete', '/api/admin/actions/db_dump', (req, res) => {
+    fs.unlink(`bak/db/${req.body.id}`);
     res.sendStatus(200);
   });
 

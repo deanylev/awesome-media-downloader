@@ -173,7 +173,11 @@
             app.inFlight[table] = !id;
             $.ajax({
               method: 'DELETE',
-              url: `/api/admin/actions/delete/${table}/${id || ''}`,
+              url: '/api/admin/actions/delete',
+              data: {
+                table,
+                id
+              },
               complete: () => {
                 app.inFlight[table] = false;
               }
@@ -186,7 +190,10 @@
             app.inFlight.dbs = !id;
             $.ajax({
               method,
-              url: `/api/admin/actions/db_dump/${id || ''}`,
+              url: '/api/admin/actions/db_dump',
+              data: {
+                id
+              },
               complete: () => {
                 app.inFlight.dbs = false;
               }
