@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
 </head>
+
 <body class="container text-center bg-dark">
   <br>
   <div id="app" class="card">
@@ -40,7 +42,7 @@
         </div>
         <br><br>
         <h4>DB Dumps ({{ dbs.length }})</h4>
-        <button class="btn btn-link text-danger text-center" v-on:click="dbDump()" v-bind:disabled="inFlight.dbs">
+        <button class="btn btn-link text-primary text-center" v-on:click="dbDump()" v-bind:disabled="inFlight.dbs">
           <span v-if="inFlight.dbs">Dumping...</span>
           <span v-else>Dump DB</span>
         </button>
@@ -57,16 +59,17 @@
               <tr v-for="db in dbs">
                 <td>{{ db.datetime }}</td>
                 <td>
-                  <a class="text-danger" v-bind:href="'/api/admin/download/db/' + db.id"><i class="fa fa-download"></i></a>
+                  <a class="btn btn-link text-primary" v-bind:href="'/api/admin/download/db/' + db.id"><i class="fa fa-download"></i></a>
+                  <button class="btn btn-link text-danger" v-on:click="dbDump('delete', db.id)"><i class="fa fa-trash"></i></button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
         <br>
-        <h4>Downloaded Files ({{ files.length }})</h4>
-        <button class="btn btn-link text-danger text-center" v-on:click="remove('files')" v-bind:disabled="inFlight.files">
-          <span v-if="inFlight.files">Deleting...</span>
+        <h4>Downloaded Files ({{ downloads.length }})</h4>
+        <button class="btn btn-link text-danger text-center" v-on:click="remove('downloads')" v-bind:disabled="inFlight.downloads">
+          <span v-if="inFlight.downloads">Deleting...</span>
           <span v-else>Delete All Files</span>
         </button>
         <br><br>
@@ -82,14 +85,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="file in files">
-                <td>{{ file.datetime }}</td>
-                <td>{{ file.clientId }}</td>
-                <td>{{ file.name }}</td>
-                <td>{{ file.url }}</td>
+              <tr v-for="download in downloads">
+                <td>{{ download.datetime }}</td>
+                <td>{{ download.clientId }}</td>
+                <td>{{ download.name }}</td>
+                <td>{{ download.url }}</td>
                 <td>
-                  <a class="btn btn-link text-danger" v-if="file.exists" v-bind:href="'/api/download_file/' + file.id"><i class="fa fa-download"></i></a>
-                  <button class="btn btn-link text-danger d-inline" v-on:click="remove('files', file.id)"><i class="fa fa-trash"></i></button>
+                  <a class="btn btn-link text-primary" v-if="download.exists" v-bind:href="'/api/download_file/' + download.id"><i class="fa fa-download"></i></a>
+                  <button class="btn btn-link text-danger" v-on:click="remove('downloads', download.id)"><i class="fa fa-trash"></i></button>
                 </td>
               </tr>
             </tbody>
@@ -141,7 +144,7 @@
         restarting: false,
         inFlight: {
           dbs: false,
-          files: false,
+          downloads: false,
           logs: false,
         },
         usage: {
@@ -149,7 +152,7 @@
           memory: '0%'
         },
         dbs: [],
-        files: [],
+        downloads: [],
         logs: []
       },
       methods: {
@@ -166,31 +169,29 @@
           }
         },
         remove: (table, id) => {
-          let target = $(event.target);
           if (confirm('Are you sure? This cannot be undone.')) {
             app.inFlight[table] = !id;
             $.ajax({
-              method: 'POST',
+              method: 'DELETE',
               url: `/api/admin/actions/delete/${table}/${id || ''}`,
               complete: () => {
-                if (id) {
-                  target.parents('tr').remove();
-                } else {
-                  app.inFlight[table] = false;
-                }
+                app.inFlight[table] = false;
               }
             });
           }
         },
-        dbDump: () => {
-          app.inFlight.dbs = true;
-          $.ajax({
-            method: 'POST',
-            url: `/api/admin/actions/db_dump`,
-            complete: () => {
-              app.inFlight.dbs = false;
-            }
-          });
+        dbDump: (action, id) => {
+          if (action !== 'delete' || confirm('Are you sure? This cannot be undone.')) {
+            method = action || 'POST';
+            app.inFlight.dbs = !id;
+            $.ajax({
+              method,
+              url: `/api/admin/actions/db_dump/${id || ''}`,
+              complete: () => {
+                app.inFlight.dbs = false;
+              }
+            });
+          }
         },
         usageClass: (type) => {
           let object = {};
@@ -216,7 +217,7 @@
           app.usage[key] = `${(val * 100).toFixed(2)}%`;
         });
         app.dbs = data.dbs;
-        app.files = data.files;
+        app.downloads = data.downloads;
         app.logs = data.logs;
         app.initialLoad = true;
       });
@@ -226,4 +227,5 @@
     setInterval(getInfo, 5000);
   </script>
 </body>
+
 </html>

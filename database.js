@@ -27,7 +27,7 @@ let createDefaults = () => {
     });
 
   db.query(
-    'CREATE TABLE IF NOT EXISTS `files` ( \
+    'CREATE TABLE IF NOT EXISTS `downloads` ( \
     `id` varchar(36) NOT NULL, \
     `datetime` datetime NOT NULL, \
     `clientId` varchar(20) NOT NULL, \

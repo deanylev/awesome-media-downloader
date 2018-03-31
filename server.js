@@ -180,7 +180,7 @@ http.listen(PORT, () => {
           url,
           name: fileName
         }
-        db.query(`INSERT INTO files SET ?`, sqlValues);
+        db.query(`INSERT INTO downloads SET ?`, sqlValues);
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
         logger.log('downloading file', fileName);
         io.emit('file details', {
@@ -385,10 +385,10 @@ http.listen(PORT, () => {
         logs.forEach((log, index) => {
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
         });
-        db.query('SELECT * FROM files ORDER BY datetime DESC', (err, files) => {
-          files.forEach((file, index) => {
-            files[index].datetime = moment(files[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
-            files[index].exists = fs.existsSync(`${FILE_DIR}/${files[index].id}.${FINAL_EXT}`);
+        db.query('SELECT * FROM downloads ORDER BY datetime DESC', (err, downloads) => {
+          downloads.forEach((download, index) => {
+            downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
+            downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
           });
           fs.readdir('bak/db', (err, dbs) => {
             dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
@@ -402,7 +402,7 @@ http.listen(PORT, () => {
                 memory: 1 - os.freememPercentage()
               },
               dbs,
-              files,
+              downloads,
               logs
             });
           });
@@ -427,7 +427,7 @@ http.listen(PORT, () => {
     }
   });
 
-  forceAuth('post', '/api/admin/actions/delete/:table/:id?', (req, res) => {
+  forceAuth('delete', '/api/admin/actions/delete/:table/:id?', (req, res) => {
     if (req.params.id) {
       db.query(`DELETE FROM ${req.params.table} WHERE id = '${req.params.id}'`);
     } else {
@@ -446,6 +446,11 @@ http.listen(PORT, () => {
 
   forceAuth('post', '/api/admin/actions/db_dump', (req, res) => {
     backgroundTasks.dbDump();
+    res.sendStatus(200);
+  });
+
+  forceAuth('delete', '/api/admin/actions/db_dump/:id', (req, res) => {
+    fs.unlink(`bak/db/${req.params.id}`);
     res.sendStatus(200);
   });
 
