@@ -9,6 +9,7 @@ const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
+const globals = require('./globals');
 
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
@@ -18,7 +19,6 @@ const BackgroundTasks = require('./background-tasks');
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
 const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
-const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
 const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
 const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
 const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
@@ -32,9 +32,9 @@ const {
 const VIDEO_FORMATS = ['mp4', 'mkv'];
 const AUDIO_FORMATS = ['mp3', 'wav'];
 
-const FILE_DIR = 'files';
-const TMP_EXT = 'inprogress';
-const FINAL_EXT = 'complete';
+const FILE_DIR = globals.FileDir;
+const TMP_EXT = globals.TmpExt;
+const FINAL_EXT = globals.FinalExt;
 
 const app = express();
 const http = require('http').Server(app);
@@ -458,17 +458,4 @@ http.listen(PORT, () => {
     fs.unlink(`bak/db/${req.body.id}`);
     res.sendStatus(200);
   });
-
-  setInterval(() => {
-    // delete downloaded files more than 1 hour old
-    logger.log('deleting old downloaded files');
-    fs.readdir(FILE_DIR, (err, files) => {
-      for (const file of files) {
-        let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
-        if (file.endsWith('.complete') && Date.now() - createdAt >= 3600000) {
-          fs.unlink(`${FILE_DIR}/${file}`);
-        }
-      }
-    });
-  }, FILE_DELETION_INTERVAL);
 })();

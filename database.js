@@ -1,6 +1,6 @@
 const mysql = require('mysql');
 const moment = require('moment');
-const { DbCreds } = require('./credentials');
+const { DbCreds } = require('./globals');
 
 const db = mysql.createConnection(DbCreds);
 

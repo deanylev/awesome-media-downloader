@@ -36,7 +36,8 @@
         <div v-if="environment.onHeroku">
           <button class="btn btn-danger" v-on:click="restartDynos" v-bind:disabled="restarting">
             <span v-if="restarting">Restarting...</span>
-            <span v-else>Restart Dynos&nbsp;</span>
+            <span v-else>Restart Dynos</span>
+            <span>&nbsp;</span>
             <i class="fa fa-refresh" v-bind:class="{ 'fa-spin': restarting, 'fa-pulse': restarting }"></i>
           </button>
         </div>

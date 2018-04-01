@@ -37,6 +37,8 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `FILE_DELETION_INTERVAL` - How often video files will get deleted, in milliseconds. (default 3600000)
 
+`DB_DUMP_INTERVAL` = How often the DB will be backed up to a file, in milliseconds. (default 3600000)
+
 `ALLOW_FORMAT_SELECTION` - Whether to allow format selection on the frontend. (default false)
 
 `ALLOW_QUALITY_SELECTION` - Whether to allow quality selection on the frontend. (default false)

@@ -4,3 +4,7 @@ module.exports.DbCreds = {
   password: process.env.DATABASE_PASSWORD || '',
   database: process.env.DATABASE_NAME || 'awesome_media_downloader'
 };
+
+module.exports.FileDir = 'files';
+module.exports.TmpExt = 'inprogress';
+module.exports.FinalExt = 'complete';
