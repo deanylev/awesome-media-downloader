@@ -31,8 +31,8 @@ let createDefaults = () => {
     `id` varchar(36) NOT NULL, \
     `datetime` datetime NOT NULL, \
     `clientId` varchar(20) NOT NULL, \
-    `url` varchar(150) NOT NULL, \
-    `name` varchar(150) NOT NULL, \
+    `url` varchar(255) NOT NULL, \
+    `name` varchar(255) NOT NULL, \
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
