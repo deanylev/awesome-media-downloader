@@ -182,7 +182,12 @@ http.listen(PORT, () => {
         }
         db.query(`INSERT INTO downloads SET ?`, sqlValues);
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
-        logger.log('downloading file', fileName);
+        logger.log('downloading file', {
+          url,
+          fileName,
+          requestedFormat,
+          requestedQuality
+        });
         io.emit('file details', {
           fileName: fileName.slice(0, -((requestedFormat || info.ext).length + 1)),
           id
