@@ -2,7 +2,6 @@
   "name": "awesome-media-downloader",
   "version": "1.0.0",
   "description": "Downloads media from YouTube and other sites in various formats",
-  "main": "index.js",
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -19,6 +18,7 @@
     "moment": "^2.21.0",
     "mysql": "^2.15.0",
     "mysqldump": "^1.4.2",
+    "npm": "^5.8.0",
     "os-utils": "0.0.14",
     "socket.io": "^2.0.4",
     "uuid": "^3.2.1",

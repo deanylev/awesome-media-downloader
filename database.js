@@ -41,7 +41,7 @@ let createDefaults = () => {
         throw err;
       }
     });
-}
+};
 
 createDefaults();
 
