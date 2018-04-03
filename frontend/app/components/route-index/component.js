@@ -11,6 +11,7 @@ export default Component.extend({
   urlArray: Ember.computed('urls', function() {
     return this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && urlRegex.test(url));
   }),
+  noUrls: Ember.computed.not('urlArray.length'),
   format: 'none',
   formats: null,
   formatLabels: {
