@@ -8,7 +8,7 @@ You must have Node.js installed (preferably the latest version) and optionally f
 
 ### Running the backend
 
-1. Run `npm install` once from the root of the repo to setup dependencies.
+1. Run `npm install` once from the root of the repo to set up dependencies.
 2. Run `npm start` from the root of the repo. The default port is 8080, but you can change this by setting the `PORT` env variable.
 3. Set the `ENV` env variable to `development` if you intend to do work on the frontend (as this opens up the origin header).
 4. Access the site at `http://localhost:PORT` where PORT is whatever you set the port to (the default being 8080).
@@ -17,7 +17,7 @@ You must have Node.js installed (preferably the latest version) and optionally f
 
 When running in development mode, the frontend assumes the backend is running on port 8080. You can change this by setting the `SERVER_PORT` env variable.
 
-1. Run `npm install` once from `/frontend` to setup dependencies.
+1. Run `npm install` once from `/frontend` to set up dependencies.
 2. Run `ember s` from `/frontend`.
 3. Access the frontend at `http://localhost:4200`.
 
