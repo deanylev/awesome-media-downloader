@@ -2,7 +2,7 @@
   <div class="container">
     <h1 class="title text-center display-4">Awesome Media Downloader</h1>
     {{#if initialSocketConnection}}
-      <form {{action "downloadFile" on="submit"}}>
+      <form>
         <div class="form-group">
           {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
         </div>
@@ -32,7 +32,7 @@
             {{/power-select}}
           {{/if}}
         {{/if}}
-        <button class="btn btn-dark btn-lg btn-block" type="submit" disabled={{or inFlight socketDisconnected noUrls}}>Download{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
+        {{#spin-button class="btn btn-dark btn-lg btn-block" buttonStyle="zoom-out" disabled=(or inFlight socketDisconnected noUrls) action=(action "downloadFile")}}Download{{/spin-button}}
         <h4 class="status font-weight-light text-{{statusClass}}">{{status}}</h4>
       </form>
       <div class="progress">

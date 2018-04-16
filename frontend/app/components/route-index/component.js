@@ -38,7 +38,6 @@ export default Component.extend({
     }
   }),
   inFlight: false,
-  responseWaiting: false,
   status: '',
   statusClass: 'dark',
   downloadError: false,
@@ -104,7 +103,6 @@ export default Component.extend({
         this.set('downloadError', true);
       }
       this.set('inFlight', false);
-      this.set('responseWaiting', false);
     });
 
     socket.on('file title', (title, index) => {
@@ -122,94 +120,88 @@ export default Component.extend({
     },
 
     downloadFile() {
-      if (this.get('inFlight') || this.get('socketDisconnected')) {
-        return;
-      }
-
-      let urls = [];
-      this.get('urlArray').forEach((url) => {
-        urls.push(url);
-      });
-
-      let format = this.get('quality') === 'none' ? this.get('format') : '';
-      let quality = this.get('format') === 'none' ? this.get('quality') : '';
-      let totalFiles = urls.length;
-      let fileNumber = 1;
-      let fails = 0;
-
-      if (!urls.length) {
-        this.setStatus('Please enter at least one URL.', 'danger');
-        return;
-      }
-
-      this.set('status', '');
-
-      let downloadFile = () => {
-        ['download error', 'file details', 'download progress', 'transcoding error'].forEach((listener) => {
-          socket.off(listener);
+      return new Ember.RSVP.Promise((resolve, reject) => {
+        let urls = [];
+        this.get('urlArray').forEach((url) => {
+          urls.push(url);
         });
 
-        if (!urls.length) {
-          setTimeout(() => {
+        let format = this.get('quality') === 'none' ? this.get('format') : '';
+        let quality = this.get('format') === 'none' ? this.get('quality') : '';
+        let totalFiles = urls.length;
+        let fileNumber = 1;
+        let fails = 0;
+
+        socket.on('disconnect', reject);
+
+        this.set('status', '');
+
+        let downloadFile = () => {
+          ['download error', 'file details', 'download progress', 'transcoding error'].forEach((listener) => {
+            socket.off(listener);
+          });
+
+          if (!urls.length) {
+            setTimeout(() => {
+              this.set('inFlight', false);
+              this.setStatus(`Downloading complete.${fails ? ` ${fails} file${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
+              this.set('downloadError', false);
+              this.set('progress', 0);
+            }, 1500);
+
+            socket.off('disconnect', reject);
+            resolve();
+            return;
+          }
+
+          socket.on('download error', () => {
+            this.setStatus(`Sorry, looks like that URL isn't supported. (File ${fileNumber}/${totalFiles})`, 'danger');
+            fileNumber++;
+            fails++;
+            downloadFile();
+          });
+
+          socket.on('transcoding error', () => {
+            this.setStatus(`Error during conversion. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
+            this.set('downloadError', true);
             this.set('inFlight', false);
-            this.setStatus(`Downloading complete.${fails ? ` ${fails} file${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
+            fails++;
+            downloadFile();
+          });
+
+          socket.on('file details', (details) => {
             this.set('downloadError', false);
             this.set('progress', 0);
-          }, 1500);
 
-          return;
+            let id = details.id;
+            let fileStatus = `"${details.fileName}" (File ${fileNumber}/${totalFiles})`;
+            this.setStatus(`Downloading ${fileStatus}`);
+
+            fileNumber++;
+
+            socket.on('download progress', (response) => {
+              switch (response.status) {
+                case 'complete':
+                  this.set('progress', 100);
+                  window.location.href = `${apiHost}/download_file/${id}`;
+                  downloadFile();
+                  break;
+                case 'transcoding':
+                  this.setStatus(`Processing ${fileStatus}`);
+                default:
+                  this.set('progress', (response.progress * 100).toFixed(2));
+              }
+            });
+          });
+
+          let url = urls.shift();
+          this.set('inFlight', true);
+
+          socket.emit('download file', url, format, quality, $(`#name-input-${fileNumber}`).val());
         }
 
-        socket.on('download error', () => {
-          this.setStatus(`Sorry, looks like that URL isn't supported. (File ${fileNumber}/${totalFiles})`, 'danger');
-          this.set('responseWaiting', false);
-          fileNumber++;
-          fails++;
-          downloadFile();
-        });
-
-        socket.on('transcoding error', () => {
-          this.setStatus(`Error during conversion. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
-          this.set('downloadError', true);
-          this.set('inFlight', false);
-          fails++;
-          downloadFile();
-        });
-
-        socket.on('file details', (details) => {
-          this.set('downloadError', false);
-          this.set('progress', 0);
-          this.set('responseWaiting', false);
-
-          let id = details.id;
-          let fileStatus = `"${details.fileName}" (File ${fileNumber}/${totalFiles})`;
-          this.setStatus(`Downloading ${fileStatus}`);
-
-          fileNumber++;
-
-          socket.on('download progress', (response) => {
-            switch (response.status) {
-              case 'complete':
-                this.set('progress', 100);
-                window.location.href = `${apiHost}/download_file/${id}`;
-                downloadFile();
-                break;
-              case 'transcoding':
-                this.setStatus(`Processing ${fileStatus}`);
-              default:
-                this.set('progress', (response.progress * 100).toFixed(2));
-            }
-          });
-        });
-
-        let url = urls.shift();
-        this.set('inFlight', true);
-        this.set('responseWaiting', true);
-
-        socket.emit('download file', url, format, quality, $(`#name-input-${fileNumber}`).val());
-      }
-
-      downloadFile();
+        downloadFile();
+      });
     }
   }
 });
