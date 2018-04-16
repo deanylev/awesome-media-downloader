@@ -1,5 +1,7 @@
 @import "ember-cli-bootstrap-4/bootstrap";
 @import "ember-power-select";
+@import "ember-modal-dialog/ember-modal-structure";
+@import "ember-modal-dialog/ember-modal-appearance";
 
 html {
   position: relative;
@@ -30,10 +32,6 @@ footer {
   }
 }
 
-form {
-  margin-bottom: 50px;
-}
-
 .ember-power-select-trigger {
   margin-bottom: 20px;
 }
@@ -54,8 +52,20 @@ form {
 
 .main-section {
   padding: 35px 0 50px;
+
+  form {
+    margin-bottom: 50px;
+  }
 }
 
 .progress {
   margin-top: 20px;
+}
+
+.account-modal {
+  width: 100%;
+
+  h1 {
+    margin-bottom: 25px;
+  }
 }

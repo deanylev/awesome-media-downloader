@@ -11,7 +11,8 @@ setInterval(() => {
 
 let createDefaults = () => {
   db.query(
-    'CREATE TABLE IF NOT EXISTS `logs` ( \
+    ' \
+    CREATE TABLE IF NOT EXISTS `logs` ( \
     `id` int(11) NOT NULL AUTO_INCREMENT, \
     `datetime` datetime NOT NULL, \
     `level` varchar(10) NOT NULL, \
@@ -19,15 +20,9 @@ let createDefaults = () => {
     `data` mediumtext, \
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
-    (err) => {
-      if (err) {
-        throw err;
-      }
-    });
-
-  db.query(
-    'CREATE TABLE IF NOT EXISTS `downloads` ( \
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8; \
+    \
+    CREATE TABLE IF NOT EXISTS `downloads` ( \
     `id` varchar(36) NOT NULL, \
     `datetime` datetime NOT NULL, \
     `clientId` varchar(20) NOT NULL, \
@@ -35,7 +30,16 @@ let createDefaults = () => {
     `name` varchar(255) NOT NULL, \
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8; \
+    \
+    CREATE TABLE IF NOT EXISTS `users` ( \
+    `id` varchar(36) NOT NULL, \
+    `email` varchar(255) NOT NULL, \
+    `password` varchar(255) NOT NULL, \
+    PRIMARY KEY (`id`), \
+    UNIQUE KEY `id_UNIQUE` (`id`) \
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8 \
+  ',
     (err) => {
       if (err) {
         throw err;

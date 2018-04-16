@@ -4,12 +4,15 @@ import $ from 'jquery';
 
 const apiHost = config.APP.API_HOST;
 const socket = io(config.APP.SOCKET_HOST);
-const urlRegex = /(?:^|\s)((https?:\/\/)?(?:localhost|[\w-]+(?:\.[\w-]+)+)(:\d+)?(\/\S*)?)/;
+const regexes = {
+  url: /(?:^|\s)((https?:\/\/)?(?:localhost|[\w-]+(?:\.[\w-]+)+)(:\d+)?(\/\S*)?)/,
+  email: /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+}
 
 export default Component.extend({
   urls: '',
   urlArray: Ember.computed('urls', function() {
-    return this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && urlRegex.test(url));
+    return this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && regexes.url.test(url));
   }),
   noUrls: Ember.computed.not('urlArray.length'),
   format: 'none',
@@ -62,6 +65,19 @@ export default Component.extend({
       });
     }, 10);
   }),
+  isAuthenticated: false,
+  registering: false,
+  registeringStatus: '',
+  authenticating: false,
+  email: '',
+  password: '',
+  passwordConfirmation: '',
+  disableRegister: Ember.computed('email', 'password', 'passwordConfirmation', 'responseWaiting', function() {
+    return !(regexes.email.test(this.get('email')) && this.get('password').length >= 8 && this.get('password') === this.get('passwordConfirmation') && !this.get('responseWaiting'));
+  }),
+  disableLogin: Ember.computed('email', 'password', 'passwordConfirmation', 'inFlight', function() {
+    return !(regexes.email.test(this.get('email')) && this.get('password') && !this.get('responseWaiting'));
+  }),
 
   setStatus(text, bsClass) {
     bsClass = bsClass || 'dark';
@@ -110,6 +126,8 @@ export default Component.extend({
     socket.on('file title', (title, index) => {
       $(`#name-input-${index + 1}`).attr('placeholder', title);
     });
+
+    //Ember.$.getJSON('/')
   },
 
   actions: {
@@ -119,6 +137,73 @@ export default Component.extend({
 
     setQuality(quality) {
       this.set('quality', quality);
+    },
+
+    toggleRegistering() {
+      this.set('registeringStatus', '');
+      if (!this.get('responseWaiting')) {
+        this.toggleProperty('registering');
+      }
+    },
+
+    toggleAuthenticating() {
+      this.set('authenticatingStatus', '');
+      if (!this.get('responseWaiting')) {
+        this.toggleProperty('authenticating');
+      }
+    },
+
+    register() {
+      this.set('responseWaiting', true);
+      $.ajax({
+        method: 'POST',
+        url: `${apiHost}/users/create`,
+        data: {
+          email: this.get('email'),
+          password: this.get('password')
+        },
+        complete: (response) => {
+          if (response.status === 200) {
+            this.set('registering', false);
+            this.set('email', '');
+            this.set('password', '');
+            this.set('passwordConfirmation', '');
+          } else if (response.status === 409) {
+            this.set('registeringStatus', 'An account with that email address already exists.');
+          } else {
+            this.set('registeringStatus', 'An error occured.');
+          }
+          this.set('responseWaiting', false);
+        }
+      });
+    },
+
+    authenticate() {
+      this.set('responseWaiting', true);
+      $.ajax({
+        method: 'POST',
+        url: `${apiHost}/users/authenticate`,
+        data: {
+          email: this.get('email'),
+          password: this.get('password')
+        },
+        complete: (response) => {
+          if (response.status === 200) {
+            this.set('authenticating', false);
+            this.set('email', '');
+            this.set('password', '');
+          } else if (response.status === 401) {
+            this.set('authenticatingStatus', 'Invalid credentials.');
+          } else {
+            this.set('authenticatingStatus', 'An error occured.');
+          }
+          this.set('responseWaiting', false);
+        }
+      });
+    },
+
+    unAuthenticate() {
+      this.set('authenticated', false);
     },
 
     downloadFile() {
@@ -187,8 +272,8 @@ export default Component.extend({
 
           fileNumber++;
 
-          socket.on('download progress', (response) => {
-            switch (response.status) {
+          socket.on('download progress', (data) => {
+            switch (data.status) {
               case 'complete':
                 this.set('progress', 100);
                 window.location.href = `${apiHost}/download_file/${id}`;
@@ -197,7 +282,7 @@ export default Component.extend({
               case 'transcoding':
                 this.setStatus(`Processing ${fileStatus}`);
               default:
-                this.set('progress', (response.progress * 100).toFixed(2));
+                this.set('progress', (data.progress * 100).toFixed(2));
             }
           });
         });

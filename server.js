@@ -9,9 +9,15 @@ const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const session = require('express-session');
+const passport = require('passport');
+
 const globals = require('./globals');
 
 const Heroku = require('heroku-client');
+const LocalStrategy = require('passport-local').Strategy;
 const Logger = require('./logger');
 const Database = require('./database');
 const BackgroundTasks = require('./background-tasks');
@@ -51,6 +57,13 @@ app.use(express.static('public'));
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+app.use(session({
+  secret: 'secret',
+  resave: false,
+  saveUninitialized: true
+}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 if (ENV === 'development') {
   logger.log('dev mode, allowing any origin to access API');
@@ -341,7 +354,7 @@ http.listen(PORT, () => {
   });
 
   app.get('/api/download_file/:id', (req, res) => {
-    let id = req.params.id;
+    let { id } = req.params;
     let path = `${FILE_DIR}/${id}.${FINAL_EXT}`;
     if (fs.existsSync(path) && files[id]) {
       let fileName = files[id].name;
@@ -355,6 +368,71 @@ http.listen(PORT, () => {
     } else {
       res.sendStatus(404);
     }
+  });
+
+  app.post('/api/users/create', (req, res) => {
+    let { email, password } = req.body;
+
+    bcrypt.hash(password, 10, (err, hash) => {
+      db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
+        if (results.length) {
+          res.sendStatus(409);
+        } else {
+          db.query('INSERT INTO users SET ?', {
+            id: uuidv4(),
+            email,
+            password: hash
+          }, (err, results) => {
+            if (err) {
+              res.sendStatus(500);
+            } else {
+              logger.log('registered new user', email);
+              res.sendStatus(200);
+            }
+          });
+        }
+      });
+    });
+  });
+
+  passport.serializeUser((user, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser((id, done) => {
+    db.query('SELECT * FROM users WHERE id = ?', [id], (err, results) => {
+      done(err, user);
+    });
+  });
+
+  passport.use('local-login', new LocalStrategy({
+    usernameField: 'email',
+    passwordField: 'password',
+    passReqToCallback: true
+  }, (req, email, password, done) => {
+    db.query('SELECT * FROM users WHERE email = ?', [email], (err, results) => {
+      let user = results[0];
+
+      if (!user) {
+        return done(null, false);
+      } else {
+        bcrypt.compare(password, user.password, (err, success) => {
+          if (success) {
+            return done(null, user);
+          } else {
+            return done(null, false);
+          }
+        });
+      }
+    });
+  }));
+
+  app.post('/api/users/authenticate', passport.authenticate('local-login'), (req, res) => {
+    res.json(req.user);
+  });
+
+  app.get('/api/users/me', (req, res) => {
+console.log(req.session);
   });
 
   let forceAuth = (method, url, callback, log) => {
@@ -372,7 +450,7 @@ http.listen(PORT, () => {
       } else {
         res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
         res.sendStatus(401);
-        logger.warn('Admin login attempt', {
+        logger.warn('admin login attempt', {
           ipAddress,
           user: credentials ? credentials.name : ''
         });
@@ -417,7 +495,7 @@ http.listen(PORT, () => {
   });
 
   forceAuth('get', '/api/admin/download/db/:id', (req, res) => {
-    let id = req.params.id;
+    let { id } = req.params;
     let path = `bak/db/${id}`;
     if (fs.existsSync(path)) {
       let file = fs.createReadStream(path);

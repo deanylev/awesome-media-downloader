@@ -2,6 +2,52 @@
   <div class="container">
     <h1 class="title text-center display-4">Awesome Media Downloader</h1>
     {{#if initialSocketConnection}}
+      <div class="text-center">
+        {{#if isAuthenticated}}
+          <button class="btn btn-link btn-lg text-dark" {{action "unAuthenticate"}} disabled={{inFlight}}>{{fa-icon "sign-out"}} Log Out</button>
+        {{else}}
+          <button class="btn btn-link btn-lg text-dark" {{action "toggleRegistering"}} disabled={{inFlight}}>{{fa-icon "user-plus"}} Register</button>
+          <button class="btn btn-link btn-lg text-dark" {{action "toggleAuthenticating"}} disabled={{inFlight}}>{{fa-icon "sign-in"}} Log In</button>
+        {{/if}}
+      </div>
+      {{#if registering}}
+        {{#modal-dialog containerClass="account-modal container text-center" onClose="toggleRegistering" translucentOverlay=true}}
+          <h1 class="display-4">Register</h1>
+          <form class="container" {{action "register" on="submit"}}>
+            <div class="form-group">
+              <label for="register-email">Email Address</label>
+              {{input id="register-email" class="form-control" type="email" value=email disabled=inFlight}}
+            </div>
+            <div class="form-group">
+              <label for="register-password">Password</label>
+              {{input id="register-password" class="form-control" type="password" value=password disabled=inFlight}}
+            </div>
+            <div class="form-group">
+              <label for="register-password-confirmation">Password Confirmation</label>
+              {{input id="register-password-confirmation" class="form-control" type="password" value=passwordConfirmation disabled=inFlight}}
+            </div>
+            <button class="btn btn-dark btn-lg btn-block" type="submit" disabled={{disableRegister}}>Register{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
+            <p class="status">{{registeringStatus}}</p>
+          </form>
+        {{/modal-dialog}}
+      {{/if}}
+      {{#if authenticating}}
+        {{#modal-dialog containerClass="account-modal container text-center" onClose="toggleAuthenticating" translucentOverlay=true}}
+          <h1 class="display-4">Log In</h1>
+          <form class="container" {{action "authenticate" on="submit"}}>
+            <div class="form-group">
+              <label for="login-email">Email Address</label>
+              {{input id="login-email" class="form-control" type="email" value=email disabled=inFlight}}
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              {{input id="login-password" class="form-control" type="password" value=password disabled=inFlight}}
+            </div>
+            <button class="btn btn-dark btn-lg btn-block" type="submit" disabled={{disableLogin}}>Log In{{#if responseWaiting}}&nbsp;{{fa-icon "spinner" pulse=true}}{{/if}}</button>
+            <p class="status">{{authenticatingStatus}}</p>
+          </form>
+        {{/modal-dialog}}
+      {{/if}}
       <form {{action "downloadFile" on="submit"}}>
         <div class="form-group">
           {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
