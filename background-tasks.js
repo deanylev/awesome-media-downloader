@@ -1,7 +1,9 @@
 const mysqlDump = require('mysqldump');
-const Logger = require('./logger');
+const fs = require('fs');
 const globals = require('./globals');
+
 const { DbCreds } = globals;
+const Logger = require('./logger');
 
 const DB_DUMP_INTERVAL = process.env.DB_DUMP_INTERVAL || 3600000;
 const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
@@ -15,10 +17,10 @@ const logger = new Logger();
 function BackgroundTasks() {}
 
 // dump the database to a backup file
-let dbDump = () => {
+BackgroundTasks.prototype.dbDump = () => {
   let dumpCreds = DbCreds;
   let id = Date.now();
-  dumpCreds['dest'] = `bak/db/${id}`;
+  dumpCreds.dest = `bak/db/${id}`;
   mysqlDump(dumpCreds, (err) => {
     if (err) {
       throw err;
@@ -28,12 +30,8 @@ let dbDump = () => {
   });
 };
 
-setInterval(dbDump, DB_DUMP_INTERVAL);
-
-BackgroundTasks.prototype.dbDump = dbDump;
-
 // delete downloaded files older than the specified time
-let clearFiles = () => {
+BackgroundTasks.prototype.clearFiles = () => {
   logger.log('deleting old downloaded files');
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
@@ -45,8 +43,9 @@ let clearFiles = () => {
   });
 };
 
-setInterval(clearFiles, FILE_DELETION_INTERVAL);
+let { dbDump, clearFiles } = BackgroundTasks.prototype;
 
-BackgroundTasks.prototype.clearFiles = clearFiles;
+setInterval(dbDump, DB_DUMP_INTERVAL);
+setInterval(clearFiles, FILE_DELETION_INTERVAL);
 
 module.exports = BackgroundTasks;

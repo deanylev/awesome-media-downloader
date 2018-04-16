@@ -372,7 +372,7 @@ http.listen(PORT, () => {
       } else {
         res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
         res.sendStatus(401);
-        logger.warn('Admin login attempt', {
+        logger.warn('admin login attempt', {
           ipAddress,
           user: credentials ? credentials.name : ''
         });
@@ -424,7 +424,7 @@ http.listen(PORT, () => {
       let stat = fs.statSync(path);
       logger.log('providing db to browser for download', id);
       res.setHeader('Content-Length', stat.size);
-      res.setHeader('Content-Type', mime.lookup(`${id}.sql`));
+      res.setHeader('Content-Type', mime.lookup('sql'));
       res.setHeader('Content-Disposition', `attachment; filename=db_${id}.sql`);
       file.pipe(res);
     } else {
