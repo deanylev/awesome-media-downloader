@@ -228,11 +228,11 @@
         app.downloads = data.downloads;
         app.logs = data.logs;
         app.initialLoad = true;
+        setTimeout(getInfo, 1000);
       });
     };
 
     getInfo();
-    setInterval(getInfo, 5000);
   </script>
 </body>
 
