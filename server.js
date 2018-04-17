@@ -173,14 +173,6 @@ http.listen(PORT, () => {
           name: fileName,
           fileSize: info.size
         };
-        let sqlValues = {
-          id,
-          datetime: db.now(),
-          clientId,
-          url,
-          name: fileName
-        }
-        db.query(`INSERT INTO downloads SET ?`, sqlValues);
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
         logger.log('downloading file', {
           url,
@@ -243,6 +235,13 @@ http.listen(PORT, () => {
       file.on('end', () => {
         socket.removeListener('disconnect', cancelDownload);
         logger.log('file finished downloading', fileName);
+        db.query('INSERT INTO downloads SET ?', {
+          id,
+          datetime: db.now(),
+          clientId,
+          url,
+          name: fileName
+        });
         let command;
         let outputFile = `files/${id}.transcoding.${format || originalFormat}`;
         if (format) {
