@@ -139,7 +139,10 @@ http.listen(PORT, () => {
         tempFileAudio = `${tempFile}audio`;
         audio.pipe(fs.createWriteStream(tempFileAudio));
       }
-      let file = youtubedl(url, options);
+      let file = youtubedl(url, options, {
+        cwd: __dirname,
+        maxBuffer: Infinity
+      });
       let fileName;
       let filePath;
       let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
