@@ -10,11 +10,18 @@ const COLOURS = {
   error: 'red'
 };
 
-function Logger() {}
+function Logger(env, io) {
+  this.env = env;
+  this.io = io;
+}
 
 ['log', 'warn', 'error'].forEach((level) => {
-  Logger.prototype[level] = (message, data) => {
+  Logger.prototype[level] = function(message, data) {
     data = data || '';
+
+    if (this.env === 'development') {
+      this.io.emit('server log', level, message, data);
+    }
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
 

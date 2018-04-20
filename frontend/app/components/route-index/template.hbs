@@ -36,7 +36,7 @@
         <h4 class="status font-weight-light text-{{statusClass}}">{{status}}</h4>
       </form>
       <div class="progress">
-        <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger" "bg-dark"}}" style="width: {{if downloadError 100 progress}}%;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger" "bg-dark"}}" style={{progressWidth}}>
           <span title="{{displayedProgress}}">{{displayedProgress}}</span>
         </div>
       </div>

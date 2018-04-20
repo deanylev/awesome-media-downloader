@@ -5,6 +5,11 @@ import $ from 'jquery';
 const apiHost = config.APP.API_HOST;
 const socket = io(config.APP.SOCKET_HOST);
 const urlRegex = /(?:^|\s)((https?:\/\/)?(?:localhost|[\w-]+(?:\.[\w-]+)+)(:\d+)?(\/\S*)?)/;
+const logColours = {
+  log: 'blue',
+  warn: 'orange',
+  error: 'red'
+};
 
 export default Component.extend({
   urls: '',
@@ -30,6 +35,15 @@ export default Component.extend({
     return this.get('inFlight') || this.get('socketDisconnected') || this.get('format') !== 'none';
   }),
   progress: 0,
+  progressWidth: Ember.computed('downloadError', 'progress', function() {
+    let progress;
+    if (this.get('downloadError')) {
+      progress = 100;
+    } else {
+      progress = this.get('progress');
+    }
+    return new Ember.String.htmlSafe(`width: ${progress}%`);
+  }),
   displayedProgress: Ember.computed('progress', 'downloadError', function() {
     if (this.get('downloadError')) {
       return 'Error';
@@ -107,6 +121,10 @@ export default Component.extend({
 
     socket.on('file title', (title, index) => {
       $(`#name-input-${index + 1}`).attr('placeholder', title);
+    });
+
+    socket.on('server log', (level, message, data) => {
+      console.log(`%c[${level.toUpperCase()}]`, `color: ${logColours[level]}`, message, data);
     });
   },
 
