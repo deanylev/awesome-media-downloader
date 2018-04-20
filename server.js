@@ -114,14 +114,14 @@ http.listen(PORT, () => {
     let transcodingError;
 
     socket.on('environment check', () => {
-      io.emit('environment details', environment);
+      socket.emit('environment details', environment);
     });
 
     if (ALLOW_REQUESTED_NAME) {
       socket.on('file title', (url, index) => {
         youtubedl.getInfo(url, (err, info) => {
           let title = err ? 'Not a valid URL' : info.title;
-          io.emit('file title', title, index);
+          socket.emit('file title', title, index);
         });
       });
     }
@@ -183,7 +183,7 @@ http.listen(PORT, () => {
           requestedFormat,
           requestedQuality
         });
-        io.emit('file details', {
+        socket.emit('file details', {
           fileName: fileName.slice(0, -((requestedFormat || info.ext).length + 1)),
           id
         });
@@ -230,7 +230,7 @@ http.listen(PORT, () => {
       file.on('error', (err) => {
         logger.error('error while downloading file', err.toString());
         fs.unlink(tempFile);
-        io.emit('download error');
+        socket.emit('download error');
       });
 
       file.pipe(fs.createWriteStream(tempFile));
