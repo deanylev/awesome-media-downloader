@@ -9,7 +9,9 @@ setInterval(() => {
   db.query('SELECT 1');
 }, 10000);
 
-let createDefaults = () => {
+function Database() {}
+
+Database.prototype.createDefaults = () => {
   db.query(
     'CREATE TABLE IF NOT EXISTS `logs` ( \
     `id` int(11) NOT NULL AUTO_INCREMENT, \
@@ -43,18 +45,12 @@ let createDefaults = () => {
     });
 };
 
+Database.prototype.query = (query, values, callback) => db.query(query, values, callback);
+
+Database.prototype.now = () => moment().format('YYYY-MM-DD HH:mm:ss');
+
+let { createDefaults } = Database.prototype;
+
 createDefaults();
-
-function Database() {}
-
-Database.prototype.query = (query, values, callback) => {
-  db.query(query, values, callback);
-};
-
-Database.prototype.createDefaults = createDefaults;
-
-Database.prototype.now = () => {
-  return moment().format('YYYY-MM-DD HH:mm:ss');
-};
 
 module.exports = Database;
