@@ -73,7 +73,7 @@ http.listen(PORT, () => {
   logger.log('started server on port', PORT);
 });
 
-(() => {
+{
   let environment;
   let files = {};
 
@@ -457,4 +457,4 @@ http.listen(PORT, () => {
     fs.unlink(`bak/db/${req.body.id}`);
     res.sendStatus(200);
   });
-})();
+}
