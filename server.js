@@ -9,6 +9,7 @@ const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
+const childProcess = require('child_process');
 const globals = require('./globals');
 
 const Heroku = require('heroku-client');
@@ -77,17 +78,22 @@ http.listen(PORT, () => {
   let environment;
   let files = {};
 
-  commandExists('ffmpeg', (err, commandExists) => {
-    environment = {
-      environment: ENV,
-      ffmpeg: commandExists,
-      onHeroku: ON_HEROKU,
-      allowFormatSelection: ALLOW_FORMAT_SELECTION,
-      allowQualitySelection: ALLOW_QUALITY_SELECTION,
-      videoFormats: VIDEO_FORMATS,
-      audioFormats: AUDIO_FORMATS,
-      allowRequestedName: ALLOW_REQUESTED_NAME
-    };
+  childProcess.exec('git log -n1 --format="%h"', (error, stdout, stderr) => {
+    let buildNumber = stdout;
+    logger.log('build', buildNumber);
+    commandExists('ffmpeg', (err, commandExists) => {
+      environment = {
+        buildNumber,
+        environment: ENV,
+        ffmpeg: commandExists,
+        onHeroku: ON_HEROKU,
+        allowFormatSelection: ALLOW_FORMAT_SELECTION,
+        allowQualitySelection: ALLOW_QUALITY_SELECTION,
+        videoFormats: VIDEO_FORMATS,
+        audioFormats: AUDIO_FORMATS,
+        allowRequestedName: ALLOW_REQUESTED_NAME
+      };
+    });
   });
 
   app.get('/', (req, res) => {
