@@ -76,6 +76,12 @@ export default Component.extend({
     }, 10);
   }),
 
+  setStatus(text, bsClass) {
+    bsClass = bsClass || 'dark';
+    this.set('status', text);
+    this.set('statusClass', bsClass);
+  },
+
   init() {
     this._super(...arguments);
 
@@ -86,7 +92,6 @@ export default Component.extend({
       socket.emit('environment check');
 
       socket.on('environment details', (details) => {
-        console.debug('build', details.buildNumber);
         this.set('environment', details);
         this.set('initialSocketConnection', true);
         this.set('formats', ['none', {
@@ -121,12 +126,6 @@ export default Component.extend({
     socket.on('server log', (level, message, data) => {
       console.log(`%c[${level.toUpperCase()}]`, `color: ${logColours[level]}`, message, data);
     });
-  },
-
-  setStatus(text, bsClass) {
-    bsClass = bsClass || 'dark';
-    this.set('status', text);
-    this.set('statusClass', bsClass);
   },
 
   actions: {
