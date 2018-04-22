@@ -129,6 +129,13 @@ http.listen(PORT, () => {
 
     socket.on('download file', (url, requestedFormat, requestedQuality, requestedName) => {
       id = uuidv4();
+      logger.log(16, {
+        id,
+        url,
+        requestedFormat,
+        requestedQuality,
+        requestedName
+      });
       requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
       requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
       let tempFile = `files/${id}.${TMP_EXT}`;
@@ -179,6 +186,7 @@ http.listen(PORT, () => {
         };
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
         logger.log(4, {
+          id,
           url,
           fileName,
           requestedFormat,
@@ -229,7 +237,10 @@ http.listen(PORT, () => {
       });
 
       file.on('error', (err) => {
-        logger.error(1, err.toString());
+        logger.error(1, {
+          id,
+          err: err.toString()
+        });
         fs.unlink(tempFile);
         socket.emit('download error');
       });

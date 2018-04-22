@@ -27,7 +27,8 @@ const MESSAGES = {
     'deleted db dump',
     'deleted all db dumps',
     'dumped database to file',
-    'deleting old downloaded files'
+    'deleting old downloaded files',
+    'received download request'
   ],
   warn: [
     'client disconnected, cancelling download',
