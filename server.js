@@ -387,33 +387,43 @@ http.listen(PORT, () => {
   }, true);
 
   forceAuth('get', '/api/admin/info', (req, res) => {
-    os.cpuUsage((cpuUsage) => {
+    let getCpuUsage = new Promise((resolve, reject) => {
+      os.cpuUsage(resolve);
+    });
+    let getLogs = new Promise((resolve, reject) => {
       db.query('SELECT * FROM logs ORDER BY datetime DESC', (err, logs) => {
-        logs.forEach((log, index) => {
-          logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
+        logs.forEach((log, index) => logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a'));
+        resolve(logs);
+      });
+    });
+    let getDownloads = new Promise((resolve, reject) => {
+      db.query('SELECT * FROM downloads ORDER BY datetime DESC', (err, downloads) => {
+        downloads.forEach((download, index) => {
+          downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
+          downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
         });
-        db.query('SELECT * FROM downloads ORDER BY datetime DESC', (err, downloads) => {
-          downloads.forEach((download, index) => {
-            downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
-            downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
-          });
-          fs.readdir('bak/db', (err, dbs) => {
-            dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
-              datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
-              id: db
-            }));
-            res.json({
-              environment,
-              usage: {
-                cpu: cpuUsage,
-                memory: 1 - os.freememPercentage()
-              },
-              dbs,
-              downloads,
-              logs
-            });
-          });
-        });
+        resolve(downloads);
+      });
+    });
+    let getDbs = new Promise((resolve, reject) => {
+      fs.readdir('bak/db', (err, dbs) => {
+        dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
+          datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
+          id: db
+        }));
+        resolve(dbs);
+      });
+    });
+    Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
+      res.json({
+        environment,
+        usage: {
+          cpu: values[0],
+          memory: 1 - os.freememPercentage()
+        },
+        logs: values[1],
+        downloads: values[2],
+        dbs: values[3]
       });
     });
   });
