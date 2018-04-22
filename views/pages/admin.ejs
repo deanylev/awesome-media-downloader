@@ -43,9 +43,14 @@
         </div>
         <br><br>
         <h4>DB Dumps ({{ dbs.length }})</h4>
-        <button class="btn btn-link text-primary text-center" v-on:click="dbDump()" v-bind:disabled="inFlight.dbs">
-          <span v-if="inFlight.dbs">Dumping...</span>
+        <button class="btn btn-link text-primary text-center" v-on:click="dbDump()" v-bind:disabled="inFlight.dbs === 'dumping'">
+          <span v-if="inFlight.dbs === 'dumping'">Dumping...</span>
           <span v-else>Dump DB</span>
+        </button>
+        <br>
+        <button class="btn btn-link text-danger text-center" v-on:click="dbDump('delete')" v-bind:disabled="inFlight.dbs === 'deleting'">
+          <span v-if="inFlight.dbs === 'deleting'">Deleting...</span>
+          <span v-else>Delete All DB Dumps</span>
         </button>
         <br><br>
         <div class="table-responsive">
@@ -188,7 +193,9 @@
         dbDump: (action, id) => {
           if (action !== 'delete' || confirm('Are you sure? This cannot be undone.')) {
             method = action || 'POST';
-            app.inFlight.dbs = !id;
+            if (!id) {
+              app.inFlight.dbs = action === 'delete' ? 'deleting' : 'dumping';
+            }
             $.ajax({
               method,
               url: '/api/admin/actions/db_dump',

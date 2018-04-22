@@ -467,7 +467,19 @@ http.listen(PORT, () => {
   });
 
   forceAuth('delete', '/api/admin/actions/db_dump', (req, res) => {
-    fs.unlink(`bak/db/${req.body.id}`);
+    if (req.body.id) {
+      fs.unlink(`bak/db/${req.body.id}`);
+      logger.log('deleted db dump', id);
+    } else {
+      fs.readdir('bak/db', (err, files) => {
+        for (const file of files) {
+          if (file !== '.gitkeep') {
+            fs.unlink(`bak/db/${file}`);  
+          }
+        }
+      });
+      logger.log('deleted all db dumps');
+    }
     res.sendStatus(200);
   });
 }
