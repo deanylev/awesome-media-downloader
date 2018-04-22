@@ -17,7 +17,7 @@ Database.prototype.createDefaults = () => {
     `id` int(11) NOT NULL AUTO_INCREMENT, \
     `datetime` datetime NOT NULL, \
     `level` varchar(10) NOT NULL, \
-    `message` mediumtext NOT NULL, \
+    `message` int(5) NOT NULL, \
     `data` mediumtext, \
     PRIMARY KEY (`id`), \
     UNIQUE KEY `id_UNIQUE` (`id`) \

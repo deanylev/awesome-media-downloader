@@ -26,13 +26,13 @@ BackgroundTasks.prototype.dbDump = () => {
       throw err;
     }
 
-    logger.log('dumped database to file', id);
+    logger.log(14, id);
   });
 };
 
 // delete downloaded files older than the specified time
 BackgroundTasks.prototype.clearFiles = () => {
-  logger.log('deleting old downloaded files');
+  logger.log(15);
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
       let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
