@@ -259,16 +259,19 @@ http.listen(PORT, () => {
         });
         let command;
         let outputFile = `files/${id}.transcoding.${format || originalFormat}`;
+        let handleTranscodingError = (err) => {
+          err = err.toString();
+          // XXX string matching isn't great, but no way to avoid the error
+          if (err !== 'Error: ffmpeg was killed with signal SIGKILL') {
+            logger.error(2, err);
+            transcodingError = true;
+          }
+        };
+        let handleTranscodingProgress = (progress) => {
+          transcodingProgress = progress.percent / 100;
+        };
         if (format) {
           logger.log(6, format);
-          let conversionError = (err) => {
-            err = err.toString();
-            // XXX string matching isn't great, but no way to avoid the error
-            if (err !== 'Error: ffmpeg was killed with signal SIGKILL') {
-              logger.error(2, err);
-              transcodingError = true;
-            }
-          };
           let finishConversion = () => {
             fs.unlink(tempFile);
             fs.rename(outputFile, filePath);
@@ -279,12 +282,8 @@ http.listen(PORT, () => {
             case 'mkv':
               command = ffmpeg(tempFile)
                 .videoCodec('libx264')
-                .on('progress', (progress) => {
-                  transcodingProgress = progress.percent / 100;
-                })
-                .on('error', (err) => {
-                  conversionError(err);
-                })
+                .on('progress', handleTranscodingProgress)
+                .on('error', handleTranscodingError)
                 .on('end', finishConversion)
                 .save(outputFile);
               break;
@@ -294,12 +293,8 @@ http.listen(PORT, () => {
                 .audioBitrate('192k')
                 .audioChannels(2)
                 .audioCodec('libmp3lame')
-                .on('progress', (progress) => {
-                  transcodingProgress = progress.percent / 100;
-                })
-                .on('error', (err) => {
-                  conversionError(err);
-                })
+                .on('progress', handleTranscodingProgress)
+                .on('error', handleTranscodingError)
                 .on('end', finishConversion)
                 .save(outputFile);
               break;
@@ -309,12 +304,8 @@ http.listen(PORT, () => {
                 .audioFrequency(44100)
                 .audioChannels(2)
                 .audioCodec('pcm_s16le')
-                .on('progress', (progress) => {
-                  transcodingProgress = progress.percent / 100;
-                })
-                .on('error', (err) => {
-                  conversionError(err);
-                })
+                .on('progress', handleTranscodingProgress)
+                .on('error', handleTranscodingError)
                 .on('end', finishConversion)
                 .save(outputFile);
               break;
@@ -324,31 +315,36 @@ http.listen(PORT, () => {
         } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
           logger.log(8);
           let videoCodec = originalFormat === 'webm' ? 'libvpx' : 'libx264';
-          command = ffmpeg().videoCodec(videoCodec).input(tempFile).input(tempFileAudio).on('progress', (progress) => {
-            transcodingProgress = progress.percent / 100;
-          }).on('error', (err) => {
-            logger.error(3, err);
-            transcodingError = true;
-          }).on('end', () => {
+          let finishCombining = () => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
             fs.rename(outputFile, filePath);
             logger.log(7);
-          }).save(outputFile);
+          };
+          command = ffmpeg()
+            .videoCodec(videoCodec)
+            .input(tempFile)
+            .input(tempFileAudio)
+            .on('progress', handleTranscodingProgress)
+            .on('error', handleTranscodingError)
+            .on('end', finishCombining)
+            .save(outputFile);
         } else {
           fs.rename(tempFile, filePath);
         }
 
-        if (command) {
-          socket.on('disconnect', () => {
-            logger.warn(1);
-            command.kill('SIGKILL');
-            [filePath, tempFile, tempFileAudio].forEach((file) => {
-              if (fs.existsSync(file)) {
-                fs.unlink(file);
-              }
-            });
+        let killTranscoder = () => {
+          logger.warn(1);
+          command.kill('SIGKILL');
+          [filePath, tempFile, tempFileAudio].forEach((file) => {
+            if (fs.existsSync(file)) {
+              fs.unlink(file);
+            }
           });
+        };
+
+        if (command) {
+          socket.once('disconnect', killTranscoder);
         }
       });
     });
