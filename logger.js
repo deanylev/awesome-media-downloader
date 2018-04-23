@@ -53,15 +53,15 @@ function Logger(env, io) {
     data = data || '';
 
     if (this.env === 'development') {
-      this.io.emit('server log', level, MESSAGES[level][message], data);
+      this.io.emit('server log', level, message, data);
     }
 
-    console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${MESSAGES[level][message]}`, data);
+    console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
 
     let sqlValues = {
       datetime: db.now(),
       level,
-      message,
+      message: MESSAGES[level].indexOf(message),
       data: JSON.stringify(data)
     };
 

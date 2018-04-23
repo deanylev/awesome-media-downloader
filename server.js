@@ -54,7 +54,7 @@ app.use(bodyParser.urlencoded({
 }));
 
 if (ENV === 'development') {
-  logger.log(0);
+  logger.log('dev mode, allowing any origin to access API');
   app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     next();
@@ -65,13 +65,13 @@ http.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
     console.error(`port ${PORT} is in use. ${process.env.PORT ? '' : `kill whatever is running on port ${PORT} or set the PORT env variable to something different.`}`);
   } else {
-    logger.error(0, err);
+    logger.error('an error occured', err);
   }
   process.exit();
 });
 
 http.listen(PORT, () => {
-  logger.log(1, PORT);
+  logger.log('started server on port', PORT);
 });
 
 {
@@ -98,13 +98,13 @@ http.listen(PORT, () => {
   io.on('connection', (socket) => {
     let ipAddress = socket.client.request.headers['cf-connecting-ip'] || socket.request.connection.remoteAddress;
     let clientId = socket.id;
-    logger.log(2, {
+    logger.log('client connected', {
       clientId,
       ipAddress
     });
 
     socket.on('disconnect', () => {
-      logger.log(3, {
+      logger.log('client disconnected', {
         clientId,
         ipAddress
       });
@@ -129,7 +129,7 @@ http.listen(PORT, () => {
 
     socket.on('download file', (url, requestedFormat, requestedQuality, requestedName) => {
       id = uuidv4();
-      logger.log(16, {
+      logger.log('received download request', {
         id,
         url,
         requestedFormat,
@@ -158,7 +158,7 @@ http.listen(PORT, () => {
       let originalFormat;
       let cancelDownload = () => {
         if (fs.existsSync(`${FILE_DIR}/${id}.${TMP_EXT}`)) {
-          logger.warn(0);
+          logger.warn('client disconnected, cancelling download');
           fs.unlink(`${FILE_DIR}/${id}.${TMP_EXT}`);
           file.pause();
           file.unpipe();
@@ -185,7 +185,7 @@ http.listen(PORT, () => {
           fileSize: info.size
         };
         filePath = `${FILE_DIR}/${id}.${FINAL_EXT}`;
-        logger.log(4, {
+        logger.log('downloading file', {
           id,
           url,
           fileName,
@@ -237,7 +237,7 @@ http.listen(PORT, () => {
       });
 
       file.on('error', (err) => {
-        logger.error(1, {
+        logger.error('error while downloading file', {
           id,
           err: err.toString()
         });
@@ -249,7 +249,7 @@ http.listen(PORT, () => {
 
       file.on('end', () => {
         socket.removeListener('disconnect', cancelDownload);
-        logger.log(5, fileName);
+        logger.log('file finished downloading', fileName);
         db.query('INSERT INTO downloads SET ?', {
           id,
           datetime: db.now(),
@@ -263,7 +263,7 @@ http.listen(PORT, () => {
           err = err.toString();
           // XXX string matching isn't great, but no way to avoid the error
           if (err !== 'Error: ffmpeg was killed with signal SIGKILL') {
-            logger.error(2, err);
+            logger.error('error when transcoding', err);
             transcodingError = true;
           }
         };
@@ -271,11 +271,11 @@ http.listen(PORT, () => {
           transcodingProgress = progress.percent / 100;
         };
         if (format) {
-          logger.log(6, format);
+          logger.log('transcoding to', format);
           let finishConversion = () => {
             fs.unlink(tempFile);
             fs.rename(outputFile, filePath);
-            logger.log(7);
+            logger.log('transcoding finished');
           };
           switch (format) {
             case 'mp4':
@@ -313,13 +313,13 @@ http.listen(PORT, () => {
               transcodingError = true;
           }
         } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
-          logger.log(8);
+          logger.log('combining video and audio files');
           let videoCodec = originalFormat === 'webm' ? 'libvpx' : 'libx264';
           let finishCombining = () => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
             fs.rename(outputFile, filePath);
-            logger.log(7);
+            logger.log('transcoding finished');
           };
           command = ffmpeg()
             .videoCodec(videoCodec)
@@ -334,7 +334,7 @@ http.listen(PORT, () => {
         }
 
         let killTranscoder = () => {
-          logger.warn(1);
+          logger.warn('client disconnected, killing ffmpeg');
           command.kill('SIGKILL');
           [filePath, tempFile, tempFileAudio].forEach((file) => {
             if (fs.existsSync(file)) {
@@ -357,7 +357,7 @@ http.listen(PORT, () => {
       let fileName = files[id].name;
       let file = fs.createReadStream(path);
       let stat = fs.statSync(path);
-      logger.log(9, fileName);
+      logger.log('providing file to browser for download', fileName);
       res.setHeader('Content-Length', stat.size);
       res.setHeader('Content-Type', mime.lookup(fileName));
       res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
@@ -373,7 +373,7 @@ http.listen(PORT, () => {
       let credentials = auth(req);
       if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
         if (log) {
-          logger.log(10, {
+          logger.log('successful admin login', {
             ipAddress,
             user: credentials.name
           });
@@ -382,7 +382,7 @@ http.listen(PORT, () => {
       } else {
         res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
         res.sendStatus(401);
-        logger.warn(2, {
+        logger.warn('admin login attempt', {
           ipAddress,
           user: credentials ? credentials.name : ''
         });
@@ -402,7 +402,7 @@ http.listen(PORT, () => {
       db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
         logs.forEach((log, index) => {
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-          logs[index].message = MESSAGES[log.level][log.message];
+          logs[index].message = MESSAGES[log.level][log.message] || 'unknown message';
         });
         resolve(logs);
       });
@@ -445,7 +445,7 @@ http.listen(PORT, () => {
     if (fs.existsSync(path)) {
       let file = fs.createReadStream(path);
       let stat = fs.statSync(path);
-      logger.log(11, id);
+      logger.log('providing db to browser for download', id);
       res.setHeader('Content-Length', stat.size);
       res.setHeader('Content-Type', mime.lookup('sql'));
       res.setHeader('Content-Disposition', `attachment; filename=db_${id}.sql`);
@@ -480,7 +480,7 @@ http.listen(PORT, () => {
   forceAuth('delete', '/api/admin/actions/db_dump', (req, res) => {
     if (req.body.id) {
       fs.unlink(`bak/db/${req.body.id}`);
-      logger.log(12, id);
+      logger.log('deleted db dump', id);
     } else {
       fs.readdir('bak/db', (err, files) => {
         for (const file of files) {
@@ -489,7 +489,7 @@ http.listen(PORT, () => {
           }
         }
       });
-      logger.log(13);
+      logger.log('deleted all db dumps');
     }
     res.sendStatus(200);
   });
