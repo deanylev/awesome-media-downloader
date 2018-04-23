@@ -95,7 +95,7 @@ http.listen(PORT, () => {
     res.render('pages/index');
   });
 
-  io.on('connection', (socket) => {
+  io.of('/user').on('connection', (socket) => {
     let ipAddress = socket.client.request.headers['cf-connecting-ip'] || socket.request.connection.remoteAddress;
     let clientId = socket.id;
     logger.log('client connected', {
@@ -391,53 +391,11 @@ http.listen(PORT, () => {
   };
 
   forceAuth('get', '/api/admin', (req, res) => {
-    res.render('pages/admin');
+    res.render('pages/admin', {
+      username: ADMIN_USERNAME,
+      password: ADMIN_PASSWORD
+    });
   }, true);
-
-  forceAuth('get', '/api/admin/info', (req, res) => {
-    let getCpuUsage = new Promise((resolve, reject) => {
-      os.cpuUsage(resolve);
-    });
-    let getLogs = new Promise((resolve, reject) => {
-      db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
-        logs.forEach((log, index) => {
-          logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-          logs[index].message = MESSAGES[log.level][log.message] || 'unknown message';
-        });
-        resolve(logs);
-      });
-    });
-    let getDownloads = new Promise((resolve, reject) => {
-      db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
-        downloads.forEach((download, index) => {
-          downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
-          downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
-        });
-        resolve(downloads);
-      });
-    });
-    let getDbs = new Promise((resolve, reject) => {
-      fs.readdir('bak/db', (err, dbs) => {
-        dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
-          datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
-          id: db
-        }));
-        resolve(dbs);
-      });
-    });
-    Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
-      res.json({
-        environment,
-        usage: {
-          cpu: values[0],
-          memory: 1 - os.freememPercentage()
-        },
-        logs: values[1],
-        downloads: values[2],
-        dbs: values[3]
-      });
-    });
-  });
 
   forceAuth('get', '/api/admin/download/db/:id', (req, res) => {
     let id = req.params.id;
@@ -455,43 +413,97 @@ http.listen(PORT, () => {
     }
   });
 
-  forceAuth('delete', '/api/admin/actions/delete', (req, res) => {
-    if (req.body.id) {
-      db.query(`DELETE FROM ${req.body.table} WHERE id = '${req.body.id}'`);
-    } else {
-      db.query(`DROP TABLE ${req.body.table}`);
-    }
-    db.createDefaults();
-    res.sendStatus(200);
-  });
+  io.of('/admin').on('connection', (socket) => {
+    logger.log('client connected to admin socket', socket.id);
+    socket.on('credentials', (username, password) => {
+      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        setInterval(() => {
+          let getCpuUsage = new Promise((resolve, reject) => {
+            os.cpuUsage(resolve);
+          });
+          let getLogs = new Promise((resolve, reject) => {
+            db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
+              logs.forEach((log, index) => {
+                logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
+                logs[index].message = MESSAGES[log.level][log.message] || 'unknown message';
+              });
+              resolve(logs);
+            });
+          });
+          let getDownloads = new Promise((resolve, reject) => {
+            db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
+              downloads.forEach((download, index) => {
+                downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
+                downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
+              });
+              resolve(downloads);
+            });
+          });
+          let getDbs = new Promise((resolve, reject) => {
+            fs.readdir('bak/db', (err, dbs) => {
+              dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
+                datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
+                id: db
+              }));
+              resolve(dbs);
+            });
+          });
+          Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
+            socket.emit('info', {
+              environment,
+              usage: {
+                cpu: values[0],
+                memory: 1 - os.freememPercentage()
+              },
+              logs: values[1],
+              downloads: values[2],
+              dbs: values[3]
+            });
+          });
+        }, 1000);
 
-  forceAuth('post', '/api/admin/actions/reboot', (req, res) => {
-    if (ON_HEROKU) {
-      // Can't provide a response, since we're killing the process
-      heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
-    }
-  });
-
-  forceAuth('post', '/api/admin/actions/db_dump', (req, res) => {
-    backgroundTasks.dbDump();
-    res.sendStatus(200);
-  });
-
-  forceAuth('delete', '/api/admin/actions/db_dump', (req, res) => {
-    let { id } = req.body;
-    if (id) {
-      fs.unlink(`bak/db/${id}`);
-      logger.log('deleted db dump', id);
-    } else {
-      fs.readdir('bak/db', (err, files) => {
-        for (const file of files) {
-          if (file !== '.gitkeep') {
-            fs.unlink(`bak/db/${file}`);
+        socket.on('delete', (table, id) => {
+          if (id) {
+            db.query(`DELETE FROM ${table} WHERE id = '${id}'`);
+          } else {
+            db.query(`DROP TABLE ${table}`);
           }
-        }
-      });
-      logger.log('deleted all db dumps');
-    }
-    res.sendStatus(200);
+          db.createDefaults();
+          socket.emit('delete success');
+        });
+
+        socket.on('reboot', () => {
+          socket.emit('reboot success');
+          if (ON_HEROKU) {
+            // Can't provide a response, since we're killing the process
+            heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
+          }
+        });
+
+        socket.on('db dump', () => {
+          backgroundTasks.dbDump();
+          socket.emit('db dump success');
+        });
+
+        socket.on('db dump delete', (id) => {
+          if (id) {
+            fs.unlink(`bak/db/${id}`);
+            logger.log('deleted db dump', id);
+          } else {
+            fs.readdir('bak/db', (err, files) => {
+              for (const file of files) {
+                if (file !== '.gitkeep') {
+                  fs.unlink(`bak/db/${file}`);
+                }
+              }
+            });
+            socket.emit('db dump success');
+            logger.log('deleted all db dumps');
+          }
+        });
+      } else {
+        socket.disconnect();
+      }
+    });
   });
 }
