@@ -478,8 +478,9 @@ http.listen(PORT, () => {
   });
 
   forceAuth('delete', '/api/admin/actions/db_dump', (req, res) => {
-    if (req.body.id) {
-      fs.unlink(`bak/db/${req.body.id}`);
+    let { id } = req.body;
+    if (id) {
+      fs.unlink(`bak/db/${id}`);
       logger.log('deleted db dump', id);
     } else {
       fs.readdir('bak/db', (err, files) => {
