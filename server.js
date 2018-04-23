@@ -22,7 +22,6 @@ const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
 const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
 const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
 const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
-const ON_HEROKU = !!process.env.ON_HEROKU;
 const {
   ADMIN_USERNAME,
   ADMIN_PASSWORD,
@@ -82,7 +81,7 @@ http.listen(PORT, () => {
     environment = {
       environment: ENV,
       ffmpeg: commandExists,
-      onHeroku: ON_HEROKU,
+      onHeroku: !!HEROKU_APP_NAME,
       allowFormatSelection: ALLOW_FORMAT_SELECTION,
       allowQualitySelection: ALLOW_QUALITY_SELECTION,
       videoFormats: VIDEO_FORMATS,
@@ -474,7 +473,7 @@ http.listen(PORT, () => {
 
         socket.on('reboot', () => {
           socket.emit('reboot success');
-          if (ON_HEROKU) {
+          if (HEROKU_APP_NAME) {
             // Can't provide a response, since we're killing the process
             heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
           }
