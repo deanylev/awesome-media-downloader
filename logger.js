@@ -65,11 +65,7 @@ function Logger(env, io) {
       data: JSON.stringify(data)
     };
 
-    db.query('INSERT INTO logs SET ?', sqlValues, (err) => {
-      if (err) {
-        throw err;
-      }
-    });
+    db.query('INSERT INTO logs SET ?', sqlValues);
   };
 });
 

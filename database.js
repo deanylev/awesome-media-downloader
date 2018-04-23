@@ -45,7 +45,17 @@ Database.prototype.createDefaults = () => {
     });
 };
 
-Database.prototype.query = (query, values, callback) => db.query(query, values, callback);
+Database.prototype.query = (query, values) => {
+  return new Promise((resolve, reject) => {
+    db.query(query, values, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
 
 Database.prototype.now = () => moment().format('YYYY-MM-DD HH:mm:ss');
 

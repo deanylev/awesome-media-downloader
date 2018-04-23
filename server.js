@@ -399,7 +399,7 @@ http.listen(PORT, () => {
       os.cpuUsage(resolve);
     });
     let getLogs = new Promise((resolve, reject) => {
-      db.query('SELECT * FROM logs ORDER BY datetime DESC', (err, logs) => {
+      db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
         logs.forEach((log, index) => {
           logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
           logs[index].message = MESSAGES[log.level][log.message];
@@ -408,7 +408,7 @@ http.listen(PORT, () => {
       });
     });
     let getDownloads = new Promise((resolve, reject) => {
-      db.query('SELECT * FROM downloads ORDER BY datetime DESC', (err, downloads) => {
+      db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
         downloads.forEach((download, index) => {
           downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
           downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
