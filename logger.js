@@ -29,7 +29,8 @@ const MESSAGES = {
     'dumped database to file',
     'deleting old downloaded files',
     'received download request',
-    'client connected to admin socket'
+    'client connected to admin socket',
+    'set config var'
   ],
   warn: [
     'client disconnected, cancelling download',

@@ -42,6 +42,30 @@
               <span>&nbsp;</span>
               <i class="fa fa-refresh" v-bind:class="{ 'fa-spin': restarting, 'fa-pulse': restarting }"></i>
             </button>
+            <br><br><br>
+            <h5>Format Selection</h5>
+            <button class="btn btn-danger" v-if="environment.allowFormatSelection" v-on:click="setConfigVar('ALLOW_FORMAT_SELECTION', null)">
+              <span>Disable</span>
+            </button>
+            <button class="btn btn-success" v-else v-on:click="setConfigVar('ALLOW_FORMAT_SELECTION', 'true')">
+              <span>Enable</span>
+            </button>
+            <br><br>
+            <h5>Quality Selection</h5>
+            <button class="btn btn-danger" v-if="environment.allowQualitySelection" v-on:click="setConfigVar('ALLOW_QUALITY_SELECTION', null)">
+              <span>Disable</span>
+            </button>
+            <button class="btn btn-success" v-else v-on:click="setConfigVar('ALLOW_QUALITY_SELECTION', 'true')">
+              <span>Enable</span>
+            </button>
+            <br><br>
+            <h5>Filename Selection</h5>
+            <button class="btn btn-danger" v-if="environment.allowRequestedName" v-on:click="setConfigVar('ALLOW_REQUESTED_NAME', null)">
+              <span>Disable</span>
+            </button>
+            <button class="btn btn-success" v-else v-on:click="setConfigVar('ALLOW_REQUESTED_NAME', 'true')">
+              <span>Enable</span>
+            </button>
           </div>
           <br><br>
         </div>
@@ -202,6 +226,11 @@
             socket.once('db dump success', () => {
               app.inFlight.dbs = false;
             });
+          }
+        },
+        setConfigVar: (key, value) => {
+          if (confirm('Are you sure? The server will restart to apply this change.')) {
+            socket.emit('set config var', key, value);
           }
         },
         usageClass: (type) => {

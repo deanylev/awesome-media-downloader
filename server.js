@@ -500,6 +500,26 @@ http.listen(PORT, () => {
             logger.log('deleted all db dumps');
           }
         });
+
+        socket.on('set config var', (key, value) => {
+          let allowedKeys = [
+            'ALLOW_FORMAT_SELECTION',
+            'ALLOW_QUALITY_SELECTION',
+            'ALLOW_REQUESTED_NAME'
+          ];
+          if (allowedKeys.includes(key)) {
+            let body = {};
+            body[key] = value;
+            heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
+              body
+            }).then(() => {
+              logger.log('set config var', {
+                key,
+                value
+              });
+            });
+          }
+        });
       } else {
         socket.disconnect();
       }
