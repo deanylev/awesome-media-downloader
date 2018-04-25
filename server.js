@@ -143,7 +143,7 @@ http.listen(PORT, () => {
       let tempFileAudio;
       let options = [];
       if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
-        options.push('-f', 'bestvideo[ext=mp4]');
+        options.push('-f', 'bestvideo[ext=mp4]/bestvideo');
         let audio = youtubedl(url, ['-f', 'bestaudio']);
         tempFileAudio = `${tempFile}audio`;
         audio.pipe(fs.createWriteStream(tempFileAudio));
