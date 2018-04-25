@@ -9,6 +9,7 @@ const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
+const md5 = require('md5');
 const globals = require('./globals');
 
 const Heroku = require('heroku-client');
@@ -414,6 +415,9 @@ http.listen(PORT, () => {
 
   io.of('/admin').on('connection', (socket) => {
     logger.log('client connected to admin socket', socket.id);
+    fs.readFile('views/pages/admin.ejs', (err, buffer) => {
+      socket.emit('page hash', md5(buffer));
+    });
     socket.on('credentials', (username, password) => {
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         setInterval(() => {

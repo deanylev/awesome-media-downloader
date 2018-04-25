@@ -251,6 +251,7 @@
     });
 
     let socket = io('/admin');
+    let pageHash;
 
     socket.on('connect', () => {
       app.socketDisconnected = false;
@@ -271,6 +272,13 @@
       app.downloads = info.downloads;
       app.logs = info.logs;
       app.initialLoad = true;
+    });
+
+    socket.on('page hash', (hash) => {
+      if (pageHash && pageHash !== hash) {
+        window.location.reload();
+      }
+      pageHash = hash;
     });
   </script>
 </body>
