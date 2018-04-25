@@ -20,7 +20,8 @@ export default Component.extend({
   format: 'none',
   formats: null,
   formatLabels: {
-    'none': 'Original'
+    'none': 'Original',
+    'webm': 'WebM'
   },
   disableFormat: Ember.computed('inFlight', 'socketDisconnected', 'quality', function() {
     return this.get('inFlight') || this.get('socketDisconnected') || this.get('quality') !== 'none';

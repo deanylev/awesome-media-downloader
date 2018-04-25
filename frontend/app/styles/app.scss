@@ -43,6 +43,10 @@ form {
   color: #212529 !important;
 }
 
+.ember-power-select-options[role="listbox"] {
+  max-height: none;
+}
+
 .card,
 .status {
   margin-top: 20px;

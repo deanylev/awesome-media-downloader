@@ -32,7 +32,8 @@ const MESSAGES = {
     'client connected to admin socket',
     'set config var',
     'downloading audio track',
-    'audio track finished downloading'
+    'audio track finished downloading',
+    'requested format is audio, requesting audio only'
   ],
   warn: [
     'client disconnected, cancelling download',

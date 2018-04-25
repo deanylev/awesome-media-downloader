@@ -30,7 +30,7 @@ const {
 } = process.env;
 
 const VIDEO_FORMATS = ['mp4', 'mkv'];
-const AUDIO_FORMATS = ['mp3', 'wav'];
+const AUDIO_FORMATS = ['mp3', 'wav', 'webm'];
 
 const FILE_DIR = globals.FileDir;
 const TMP_EXT = globals.TmpExt;
@@ -138,6 +138,7 @@ http.listen(PORT, () => {
       });
       requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
       requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
+      let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
       let tempFile = `files/${id}.${TMP_EXT}`;
       let tempFileAudio;
       let options = [];
@@ -157,6 +158,9 @@ http.listen(PORT, () => {
         audio.on('end', () => {
           logger.log('audio track finished downloading', id);
         });
+      } else if (format && AUDIO_FORMATS.includes(format)) {
+        logger.log('requested format is audio, requesting audio only');
+        options.push('-f', `bestaudio[ext=${format}]/bestaudio[ext=m4a]/bestaudio/best`);
       }
       let file = youtubedl(url, options, {
         cwd: __dirname,
@@ -164,7 +168,6 @@ http.listen(PORT, () => {
       });
       let fileName;
       let filePath;
-      let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
       let x264Formats = ['mp4', 'mkv'];
       let originalFormat;
       let cancelDownload = () => {
@@ -179,7 +182,7 @@ http.listen(PORT, () => {
       file.on('info', (info) => {
         socket.on('disconnect', cancelDownload);
         fileName = requestedName && ALLOW_REQUESTED_NAME ? `${requestedName}.` : `${info.title}.`;
-        if (format && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
+        if (format && format !== info.ext && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
           fileName += format;
           if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {
             format = '';
@@ -315,6 +318,16 @@ http.listen(PORT, () => {
                 .audioFrequency(44100)
                 .audioChannels(2)
                 .audioCodec('pcm_s16le')
+                .on('progress', handleTranscodingProgress)
+                .on('error', handleTranscodingError)
+                .on('end', finishConversion)
+                .save(outputFile);
+              break;
+            case 'webm':
+              command = ffmpeg(tempFile)
+                .noVideo()
+                .audioChannels(2)
+                .audioCodec('libvorbis')
                 .on('progress', handleTranscodingProgress)
                 .on('error', handleTranscodingError)
                 .on('end', finishConversion)
