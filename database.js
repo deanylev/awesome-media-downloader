@@ -32,7 +32,7 @@ Database.prototype.createDefaults = () => {
     'CREATE TABLE IF NOT EXISTS `downloads` ( \
     `id` varchar(36) NOT NULL, \
     `datetime` datetime NOT NULL, \
-    `clientId` varchar(20) NOT NULL, \
+    `clientId` varchar(40) NOT NULL, \
     `url` varchar(255) NOT NULL, \
     `name` varchar(255) NOT NULL, \
     PRIMARY KEY (`id`), \
