@@ -142,7 +142,7 @@ http.listen(PORT, () => {
       let tempFileAudio;
       let options = [];
       if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
-        options.push('-f', 'bestvideo');
+        options.push('-f', 'bestvideo[ext=mp4]');
         let audio = youtubedl(url, ['-f', 'bestaudio']);
         tempFileAudio = `${tempFile}audio`;
         audio.pipe(fs.createWriteStream(tempFileAudio));
@@ -314,7 +314,6 @@ http.listen(PORT, () => {
           }
         } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
           logger.log('combining video and audio files');
-          let videoCodec = originalFormat === 'webm' ? 'libvpx' : 'libx264';
           let finishCombining = () => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
@@ -322,7 +321,7 @@ http.listen(PORT, () => {
             logger.log('transcoding finished');
           };
           command = ffmpeg()
-            .videoCodec(videoCodec)
+            .videoCodec('copy')
             .input(tempFile)
             .input(tempFileAudio)
             .on('progress', handleTranscodingProgress)
