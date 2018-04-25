@@ -204,7 +204,8 @@ http.listen(PORT, () => {
           url,
           fileName,
           requestedFormat,
-          requestedQuality
+          requestedQuality,
+          actualFormat: info.ext
         });
         socket.emit('file details', {
           fileName: fileName.slice(0, -((requestedFormat || info.ext).length + 1)),
