@@ -30,7 +30,9 @@ const MESSAGES = {
     'deleting old downloaded files',
     'received download request',
     'client connected to admin socket',
-    'set config var'
+    'set config var',
+    'downloading audio track',
+    'audio track finished downloading'
   ],
   warn: [
     'client disconnected, cancelling download',

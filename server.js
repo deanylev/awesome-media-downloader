@@ -146,6 +146,17 @@ http.listen(PORT, () => {
         let audio = youtubedl(url, ['-f', 'bestaudio']);
         tempFileAudio = `${tempFile}audio`;
         audio.pipe(fs.createWriteStream(tempFileAudio));
+
+        audio.on('info', (info) => {
+          logger.log('downloading audio track', {
+            fileId: id,
+            format: info.ext
+          });
+        });
+
+        audio.on('end', () => {
+          logger.log('audio track finished downloading', id);
+        });
       }
       let file = youtubedl(url, options, {
         cwd: __dirname,
