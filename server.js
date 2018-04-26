@@ -177,7 +177,10 @@ http.listen(PORT, () => {
           }
         } else {
           fileName += info.ext;
-          format = '';
+
+          if (format !== 'audio') {
+            format = '';
+          }
         }
         originalFormat = info.ext;
         files[id] = {
@@ -196,7 +199,7 @@ http.listen(PORT, () => {
           actualFormat: info.ext
         });
         socket.emit('file details', {
-          fileName: fileName.slice(0, -((requestedFormat || info.ext).length + 1)),
+          fileName: fileName.slice(0, -(((requestedFormat === 'audio' ? null : requestedFormat) || info.ext).length + 1)),
           id
         });
 
@@ -261,7 +264,11 @@ http.listen(PORT, () => {
           name: fileName
         });
         let command;
-        let outputFile = `files/${id}.transcoding.${format || originalFormat}`;
+        let outputFormat = format === 'audio' || !format ? originalFormat : format;
+        let outputFile = `files/${id}.transcoding.`;
+        if (format !== 'audio') {
+          outputFile += outputFormat;
+        }
         let handleTranscodingError = (err) => {
           err = err.toString();
           // XXX string matching isn't great, but no way to avoid the error
@@ -281,6 +288,22 @@ http.listen(PORT, () => {
             logger.log('transcoding finished');
           };
           switch (format) {
+            case 'audio':
+              ffmpeg.ffprobe(tempFile, (err, metadata) => {
+                files[id].name = fileName.slice(0, -(outputFormat.length));
+                outputFormat = metadata.streams.find((stream) => stream.codec_type === 'audio').codec_name;
+                files[id].name += outputFormat;
+                outputFile += outputFormat;
+                command = ffmpeg(tempFile)
+                  .noVideo()
+                  .audioChannels(2)
+                  .audioCodec('copy')
+                  .on('progress', handleTranscodingProgress)
+                  .on('error', handleTranscodingError)
+                  .on('end', finishConversion)
+                  .save(outputFile);
+              });
+              break;
             case 'mp4':
             case 'mkv':
               command = ffmpeg(tempFile)

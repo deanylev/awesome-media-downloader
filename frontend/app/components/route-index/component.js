@@ -21,6 +21,7 @@ export default Component.extend({
   formats: null,
   formatLabels: {
     'none': 'Original',
+    'audio': 'Original (Audio Only)',
     'webm': 'WebM'
   },
   disableFormat: Ember.computed('inFlight', 'socketDisconnected', 'quality', function() {
@@ -88,7 +89,7 @@ export default Component.extend({
       socket.on('environment details', (details) => {
         this.set('environment', details);
         this.set('initialSocketConnection', true);
-        this.set('formats', ['none', {
+        this.set('formats', ['none', 'audio', {
             groupName: 'Video',
             options: details.videoFormats
           },
