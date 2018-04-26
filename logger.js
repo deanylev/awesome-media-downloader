@@ -33,7 +33,8 @@ const MESSAGES = {
     'set config var',
     'downloading audio track',
     'audio track finished downloading',
-    'requested format is audio, requesting audio only'
+    'requested format is audio, requesting audio only',
+    'extracting audio'
   ],
   warn: [
     'client disconnected, cancelling download',

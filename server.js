@@ -2,7 +2,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const youtubedl = require('youtube-dl');
 const fs = require('fs');
-const ffmpeg = require('fluent-ffmpeg');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
 const auth = require('basic-auth');
@@ -103,6 +102,9 @@ http.listen(PORT, () => {
       ipAddress
     });
 
+    const Transcoder = require('./transcoder');
+    const transcoder = new Transcoder();
+
     socket.on('disconnect', () => {
       logger.log('client disconnected', {
         clientId,
@@ -111,7 +113,6 @@ http.listen(PORT, () => {
     });
 
     let id;
-    let transcodingProgress = 0;
     let transcodingError;
 
     socket.on('environment check', () => {
@@ -130,7 +131,7 @@ http.listen(PORT, () => {
       requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
       requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
       let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
-      let tempFile = `files/${id}.${TMP_EXT}`;
+      let tempFile = `${FILE_DIR}/${id}.${TMP_EXT}`;
       let tempFileAudio;
       let options = [];
       if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
@@ -224,7 +225,7 @@ http.listen(PORT, () => {
             clearInterval(statusCheck);
           }
 
-          let progress = status === 'transcoding' ? transcodingProgress : actualSize / totalSize;
+          let progress = status === 'transcoding' ? transcoder.getProgress() : actualSize / totalSize;
           progress = progress > 1 ? 1 : progress;
 
           files[id].status = status;
@@ -263,12 +264,6 @@ http.listen(PORT, () => {
           url,
           name: fileName
         });
-        let command;
-        let outputFormat = format === 'audio' || !format ? originalFormat : format;
-        let outputFile = `files/${id}.transcoding.`;
-        if (format !== 'audio') {
-          outputFile += outputFormat;
-        }
         let handleTranscodingError = (err) => {
           err = err.toString();
           // XXX string matching isn't great, but no way to avoid the error
@@ -277,110 +272,34 @@ http.listen(PORT, () => {
             transcodingError = true;
           }
         };
-        let handleTranscodingProgress = (progress) => {
-          transcodingProgress = progress.percent / 100;
-        };
         if (format) {
-          logger.log('transcoding to', format);
-          let finishConversion = () => {
-            fs.unlink(tempFile);
-            fs.rename(outputFile, filePath);
-            logger.log('transcoding finished');
-          };
-          switch (format) {
-            case 'audio':
-              ffmpeg.ffprobe(tempFile, (err, metadata) => {
-                files[id].name = fileName.slice(0, -(outputFormat.length));
-                outputFormat = metadata.streams.find((stream) => stream.codec_type === 'audio').codec_name;
-                files[id].name += outputFormat;
-                outputFile += outputFormat;
-                command = ffmpeg(tempFile)
-                  .noVideo()
-                  .audioChannels(2)
-                  .audioCodec('copy')
-                  .on('progress', handleTranscodingProgress)
-                  .on('error', handleTranscodingError)
-                  .on('end', finishConversion)
-                  .save(outputFile);
-              });
-              break;
-            case 'mp4':
-            case 'mkv':
-              command = ffmpeg(tempFile)
-                .videoCodec('libx264')
-                .on('progress', handleTranscodingProgress)
-                .on('error', handleTranscodingError)
-                .on('end', finishConversion)
-                .save(outputFile);
-              break;
-            case 'mp3':
-              command = ffmpeg(tempFile)
-                .noVideo()
-                .audioBitrate('192k')
-                .audioChannels(2)
-                .audioCodec('libmp3lame')
-                .on('progress', handleTranscodingProgress)
-                .on('error', handleTranscodingError)
-                .on('end', finishConversion)
-                .save(outputFile);
-              break;
-            case 'wav':
-              command = ffmpeg(tempFile)
-                .noVideo()
-                .audioFrequency(44100)
-                .audioChannels(2)
-                .audioCodec('pcm_s16le')
-                .on('progress', handleTranscodingProgress)
-                .on('error', handleTranscodingError)
-                .on('end', finishConversion)
-                .save(outputFile);
-              break;
-            case 'webm':
-              command = ffmpeg(tempFile)
-                .noVideo()
-                .audioChannels(2)
-                .audioCodec('libvorbis')
-                .on('progress', handleTranscodingProgress)
-                .on('error', handleTranscodingError)
-                .on('end', finishConversion)
-                .save(outputFile);
-              break;
-            default:
-              transcodingError = true;
+          if (format === 'audio') {
+            transcoder.getAudioFormat(tempFile).then((audioFormat) => {
+              files[id].name = `${fileName.slice(0, -(originalFormat.length))}${audioFormat}`;
+              return transcoder.extractAudio(id, tempFile, audioFormat);
+            }).then((outputFile) => {
+              fs.unlink(tempFile);
+              fs.rename(outputFile, filePath);
+            }).catch(handleTranscodingError);
+          } else {
+            transcoder.convert(id, tempFile, format).then((outputFile) => {
+              fs.unlink(tempFile);
+              fs.rename(outputFile, filePath);
+            }).catch(handleTranscodingError);
           }
         } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
-          logger.log('combining video and audio files');
-          let finishCombining = () => {
+          transcoder.combine(id, tempFile, tempFileAudio, originalFormat).then((outputFile) => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
             fs.rename(outputFile, filePath);
-            logger.log('transcoding finished');
-          };
-          command = ffmpeg()
-            .videoCodec('copy')
-            .input(tempFile)
-            .input(tempFileAudio)
-            .on('progress', handleTranscodingProgress)
-            .on('error', handleTranscodingError)
-            .on('end', finishCombining)
-            .save(outputFile);
+          }).catch(handleTranscodingError);
         } else {
           fs.rename(tempFile, filePath);
         }
 
-        let killTranscoder = () => {
-          logger.warn('client disconnected, killing ffmpeg');
-          command.kill('SIGKILL');
-          [filePath, tempFile, tempFileAudio].forEach((file) => {
-            if (fs.existsSync(file)) {
-              fs.unlink(file);
-            }
-          });
-        };
-
-        if (command) {
-          socket.once('disconnect', killTranscoder);
-        }
+        socket.once('disconnect', () => {
+          transcoder.kill([filePath, tempFile, tempFileAudio]);
+        });
       });
     });
   });
