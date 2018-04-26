@@ -149,9 +149,6 @@ http.listen(PORT, () => {
         audio.on('end', () => {
           logger.log('audio track finished downloading', id);
         });
-      } else if (format && AUDIO_FORMATS.includes(format)) {
-        logger.log('requested format is audio, requesting audio only');
-        options.push('-f', `bestaudio[ext=${format}]/bestaudio[ext=m4a]/bestaudio/best`);
       }
       let file = youtubedl(url, options, {
         cwd: __dirname,
