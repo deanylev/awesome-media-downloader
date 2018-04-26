@@ -4,3 +4,4 @@ files/*
 !files/.gitkeep
 bak/db/*
 !bak/db/.gitkeep
+public/robots.txt
