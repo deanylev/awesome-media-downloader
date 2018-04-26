@@ -60,13 +60,6 @@ export default Component.extend({
   initialSocketConnection: false,
   socketConnected: false,
   socketDisconnected: Ember.computed.not('socketConnected'),
-  getFileTitles: Ember.observer('urlArray', function() {
-    if (this.get('environment.allowRequestedName')) {
-      this.get('urlArray').forEach((url, index) => {
-        socket.emit('file title', url, index);
-      });
-    }
-  }),
   documentReady: Ember.observer('initialSocketConnection', function() {
     setTimeout(() => {
       $('textarea').keyup(function(e) {
@@ -118,10 +111,6 @@ export default Component.extend({
         this.set('downloadError', true);
       }
       this.set('inFlight', false);
-    });
-
-    socket.on('file title', (title, index) => {
-      $(`#name-input-${index + 1}`).attr('placeholder', title);
     });
 
     socket.on('server log', (level, message, data) => {

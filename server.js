@@ -118,15 +118,6 @@ http.listen(PORT, () => {
       socket.emit('environment details', environment);
     });
 
-    if (ALLOW_REQUESTED_NAME) {
-      socket.on('file title', (url, index) => {
-        youtubedl.getInfo(url, (err, info) => {
-          let title = err ? 'Not a valid URL' : info.title;
-          socket.emit('file title', title, index);
-        });
-      });
-    }
-
     socket.on('download file', (url, requestedFormat, requestedQuality, requestedName) => {
       id = uuidv4();
       logger.log('received download request', {

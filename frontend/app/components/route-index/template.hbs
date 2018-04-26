@@ -10,7 +10,7 @@
           {{#each urlArray as |url index|}}
             <div class="form-group">
               <label for="name-input-{{add index 1}}">Filename for Video {{add index 1}}</label>
-              {{input id=(concat "name-input-" (add index 1)) class="form-control" placeholder="Loading..." disabled=(or inFlight socketDisconnected)}}
+              {{input id=(concat "name-input-" (add index 1)) class="form-control" placeholder="(Unchanged)" disabled=(or inFlight socketDisconnected)}}
             </div>
           {{/each}}
         {{/if}}
