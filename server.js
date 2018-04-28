@@ -4,12 +4,12 @@ const youtubedl = require('youtube-dl');
 const fs = require('fs');
 const commandExists = require('command-exists');
 const uuidv4 = require('uuid/v4');
-const auth = require('basic-auth');
 const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
 const md5 = require('md5');
 const globals = require('./globals');
+const Protector = require('./protector');
 
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
@@ -42,6 +42,7 @@ const io = require('socket.io')(http);
 const logger = new Logger(ENV, io);
 const db = new Database();
 const backgroundTasks = new BackgroundTasks();
+const protector = new Protector();
 const heroku = new Heroku({
   token: process.env.HEROKU_API_TOKEN
 });
@@ -321,37 +322,134 @@ http.listen(PORT, () => {
     }
   });
 
-  let forceAuth = (method, url, callback, log) => {
-    app[method](url, (req, res) => {
-      let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-      let credentials = auth(req);
-      if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
-        if (log) {
-          logger.log('successful admin login', {
-            ipAddress,
-            user: credentials.name
-          });
-        }
-        callback(req, res);
-      } else {
-        res.setHeader('WWW-Authenticate', 'Basic realm="Admin area"');
-        res.sendStatus(401);
-        logger.warn('admin login attempt', {
-          ipAddress,
-          user: credentials ? credentials.name : ''
-        });
-      }
-    });
-  };
+  protector.basicAuth(app, 'get', '/api/admin', (req, res) => {
+    let key = uuidv4();
 
-  forceAuth('get', '/api/admin', (req, res) => {
     res.render('pages/admin', {
-      username: ADMIN_USERNAME,
-      password: ADMIN_PASSWORD
+      username: protector.encryptString(ADMIN_USERNAME, key),
+      password: protector.encryptString(ADMIN_PASSWORD, key)
+    });
+
+    io.of('/admin').once('connection', (socket) => {
+      logger.log('client connected to admin socket', socket.id);
+      fs.readFile('views/pages/admin.ejs', (err, buffer) => {
+        socket.emit('page hash', md5(buffer));
+      });
+
+      socket.on('credentials', (username, password) => {
+        if (protector.decryptString(username, key) === ADMIN_USERNAME && protector.decryptString(password, key) === ADMIN_PASSWORD) {
+          setInterval(() => {
+            let getCpuUsage = new Promise((resolve, reject) => {
+              os.cpuUsage(resolve);
+            });
+            let getLogs = new Promise((resolve, reject) => {
+              db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
+                logs.forEach((log, index) => {
+                  logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
+                  logs[index].message = MESSAGES[log.level][log.message] || 'unknown message';
+                });
+                resolve(logs);
+              });
+            });
+            let getDownloads = new Promise((resolve, reject) => {
+              db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
+                downloads.forEach((download, index) => {
+                  downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
+                  downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
+                });
+                resolve(downloads);
+              });
+            });
+            let getDbs = new Promise((resolve, reject) => {
+              fs.readdir('bak/db', (err, dbs) => {
+                dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
+                  datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
+                  id: db
+                }));
+                resolve(dbs);
+              });
+            });
+            Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
+              socket.emit('info', {
+                environment,
+                usage: {
+                  cpu: values[0],
+                  memory: 1 - os.freememPercentage()
+                },
+                logs: values[1],
+                downloads: values[2],
+                dbs: values[3]
+              });
+            });
+          }, 1000);
+
+          socket.on('delete', (table, id) => {
+            if (id) {
+              db.query(`DELETE FROM ${table} WHERE id = '${id}'`);
+            } else {
+              db.query(`DROP TABLE ${table}`);
+            }
+            db.createDefaults();
+            socket.emit('delete success');
+          });
+
+          socket.on('reboot', () => {
+            socket.emit('reboot success');
+            if (HEROKU_APP_NAME) {
+              // Can't provide a response, since we're killing the process
+              heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
+            }
+          });
+
+          socket.on('db dump', () => {
+            backgroundTasks.dbDump();
+            socket.emit('db dump success');
+          });
+
+          socket.on('db dump delete', (id) => {
+            if (id) {
+              fs.unlink(`bak/db/${id}`);
+              logger.log('deleted db dump', id);
+            } else {
+              fs.readdir('bak/db', (err, files) => {
+                for (const file of files) {
+                  if (file !== '.gitkeep') {
+                    fs.unlink(`bak/db/${file}`);
+                  }
+                }
+              });
+              socket.emit('db dump success');
+              logger.log('deleted all db dumps');
+            }
+          });
+
+          socket.on('set config var', (key, value) => {
+            let allowedKeys = [
+              'ALLOW_FORMAT_SELECTION',
+              'ALLOW_QUALITY_SELECTION',
+              'ALLOW_REQUESTED_NAME'
+            ];
+            if (allowedKeys.includes(key)) {
+              let body = {};
+              body[key] = value;
+              heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
+                body
+              }).then(() => {
+                logger.log('set config var', {
+                  key,
+                  value
+                });
+              });
+            }
+          });
+        } else {
+          socket.disconnect();
+        }
+      });
     });
   }, true);
 
-  forceAuth('get', '/api/admin/download/db/:id', (req, res) => {
+  protector.basicAuth(app, 'get', '/api/admin/download/db/:id', (req, res) => {
     let id = req.params.id;
     let path = `bak/db/${id}`;
     if (fs.existsSync(path)) {
@@ -365,122 +463,5 @@ http.listen(PORT, () => {
     } else {
       res.sendStatus(404);
     }
-  });
-
-  io.of('/admin').on('connection', (socket) => {
-    logger.log('client connected to admin socket', socket.id);
-    fs.readFile('views/pages/admin.ejs', (err, buffer) => {
-      socket.emit('page hash', md5(buffer));
-    });
-    socket.on('credentials', (username, password) => {
-      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        setInterval(() => {
-          let getCpuUsage = new Promise((resolve, reject) => {
-            os.cpuUsage(resolve);
-          });
-          let getLogs = new Promise((resolve, reject) => {
-            db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
-              logs.forEach((log, index) => {
-                logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-                logs[index].message = MESSAGES[log.level][log.message] || 'unknown message';
-              });
-              resolve(logs);
-            });
-          });
-          let getDownloads = new Promise((resolve, reject) => {
-            db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
-              downloads.forEach((download, index) => {
-                downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
-                downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
-              });
-              resolve(downloads);
-            });
-          });
-          let getDbs = new Promise((resolve, reject) => {
-            fs.readdir('bak/db', (err, dbs) => {
-              dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
-                datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
-                id: db
-              }));
-              resolve(dbs);
-            });
-          });
-          Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
-            socket.emit('info', {
-              environment,
-              usage: {
-                cpu: values[0],
-                memory: 1 - os.freememPercentage()
-              },
-              logs: values[1],
-              downloads: values[2],
-              dbs: values[3]
-            });
-          });
-        }, 1000);
-
-        socket.on('delete', (table, id) => {
-          if (id) {
-            db.query(`DELETE FROM ${table} WHERE id = '${id}'`);
-          } else {
-            db.query(`DROP TABLE ${table}`);
-          }
-          db.createDefaults();
-          socket.emit('delete success');
-        });
-
-        socket.on('reboot', () => {
-          socket.emit('reboot success');
-          if (HEROKU_APP_NAME) {
-            // Can't provide a response, since we're killing the process
-            heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
-          }
-        });
-
-        socket.on('db dump', () => {
-          backgroundTasks.dbDump();
-          socket.emit('db dump success');
-        });
-
-        socket.on('db dump delete', (id) => {
-          if (id) {
-            fs.unlink(`bak/db/${id}`);
-            logger.log('deleted db dump', id);
-          } else {
-            fs.readdir('bak/db', (err, files) => {
-              for (const file of files) {
-                if (file !== '.gitkeep') {
-                  fs.unlink(`bak/db/${file}`);
-                }
-              }
-            });
-            socket.emit('db dump success');
-            logger.log('deleted all db dumps');
-          }
-        });
-
-        socket.on('set config var', (key, value) => {
-          let allowedKeys = [
-            'ALLOW_FORMAT_SELECTION',
-            'ALLOW_QUALITY_SELECTION',
-            'ALLOW_REQUESTED_NAME'
-          ];
-          if (allowedKeys.includes(key)) {
-            let body = {};
-            body[key] = value;
-            heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
-              body
-            }).then(() => {
-              logger.log('set config var', {
-                key,
-                value
-              });
-            });
-          }
-        });
-      } else {
-        socket.disconnect();
-      }
-    });
   });
 }
