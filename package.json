@@ -13,7 +13,6 @@
     "express": "^4.16.2",
     "fluent-ffmpeg": "^2.1.2",
     "heroku-client": "^3.0.6",
-    "http": "0.0.0",
     "md5": "^2.2.1",
     "mime-types": "^2.1.18",
     "moment": "^2.21.0",
