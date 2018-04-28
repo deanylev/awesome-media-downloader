@@ -4,6 +4,7 @@ const globals = require('./globals');
 
 const { DbCreds } = globals;
 const Logger = require('./logger');
+const Database = require('./database');
 
 const DB_DUMP_INTERVAL = process.env.DB_DUMP_INTERVAL || 3600000;
 const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
@@ -13,6 +14,7 @@ const TMP_EXT = globals.TmpExt;
 const FINAL_EXT = globals.FinalExt;
 
 const logger = new Logger();
+const db = new Database();
 
 function BackgroundTasks() {}
 
@@ -44,8 +46,23 @@ BackgroundTasks.prototype.clearFiles = () => {
 };
 
 let { dbDump, clearFiles } = BackgroundTasks.prototype;
+let tasks = [
+  {
+    func: dbDump,
+    int: DB_DUMP_INTERVAL
+  },
+  {
+    func: clearFiles,
+    int: FILE_DELETION_INTERVAL
+  },
+  {
+    func: db.keepAlive,
+    int: 10000
+  }
+];
 
-setInterval(dbDump, DB_DUMP_INTERVAL);
-setInterval(clearFiles, FILE_DELETION_INTERVAL);
+tasks.forEach((task) => {
+  setInterval(task.func, task.int);
+});
 
 module.exports = BackgroundTasks;

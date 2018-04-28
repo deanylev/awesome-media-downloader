@@ -64,14 +64,12 @@ function Logger(env, io) {
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
 
-    let sqlValues = {
+    db.query('INSERT INTO logs SET ?', {
       datetime: db.now(),
       level,
       message: MESSAGES[level].indexOf(message),
       data: JSON.stringify(data)
-    };
-
-    db.query('INSERT INTO logs SET ?', sqlValues);
+    });
   };
 });
 
