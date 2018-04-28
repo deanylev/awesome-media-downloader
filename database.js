@@ -27,7 +27,7 @@ function Database() {
       `id` varchar(36) NOT NULL, \
       `datetime` datetime NOT NULL, \
       `clientId` varchar(40) NOT NULL, \
-      `url` varchar(255) NOT NULL, \
+      `url` mediumtext NOT NULL, \
       `name` varchar(255) NOT NULL, \
       PRIMARY KEY (`id`), \
       UNIQUE KEY `id_UNIQUE` (`id`) \
