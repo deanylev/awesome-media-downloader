@@ -16,10 +16,10 @@ const FINAL_EXT = globals.FinalExt;
 const logger = new Logger();
 const db = new Database();
 
-function BackgroundTasks() {}
+function TaskManager() {}
 
 // dump the database to a backup file
-BackgroundTasks.prototype.dbDump = () => {
+TaskManager.prototype.dbDump = () => {
   let dumpCreds = DbCreds;
   let id = Date.now();
   dumpCreds.dest = `bak/db/${id}`;
@@ -33,7 +33,7 @@ BackgroundTasks.prototype.dbDump = () => {
 };
 
 // delete downloaded files older than the specified time
-BackgroundTasks.prototype.clearFiles = () => {
+TaskManager.prototype.clearFiles = () => {
   logger.log('deleting old downloaded files');
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
@@ -45,7 +45,7 @@ BackgroundTasks.prototype.clearFiles = () => {
   });
 };
 
-let { dbDump, clearFiles } = BackgroundTasks.prototype;
+let { dbDump, clearFiles } = TaskManager.prototype;
 let tasks = [
   {
     func: dbDump,
@@ -65,4 +65,4 @@ tasks.forEach((task) => {
   setInterval(task.func, task.int);
 });
 
-module.exports = BackgroundTasks;
+module.exports = TaskManager;

@@ -14,7 +14,7 @@ const Protector = require('./protector');
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
 const Database = require('./database');
-const BackgroundTasks = require('./background-tasks');
+const TaskManager = require('./task-manager');
 
 const PORT = process.env.PORT || 8080;
 const ENV = process.env.ENV || 'production';
@@ -41,7 +41,7 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger(ENV, io);
 const db = new Database();
-const backgroundTasks = new BackgroundTasks();
+const taskManager = new TaskManager();
 const protector = new Protector();
 const heroku = new Heroku({
   token: process.env.HEROKU_API_TOKEN
@@ -402,7 +402,7 @@ http.listen(PORT, () => {
           });
 
           socket.on('db dump', () => {
-            backgroundTasks.dbDump();
+            taskManager.dbDump();
             socket.emit('db dump success');
           });
 
