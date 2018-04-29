@@ -33,8 +33,6 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `ENV` - What environment the backend will run in. Either development or production. (default production)
 
-`STATUS_INTERVAL` - How often the progress bar will update, in milliseconds. (default 1000)
-
 `FILE_DELETION_INTERVAL` - How often video files will get deleted, in milliseconds. (default 3600000)
 
 `DB_DUMP_INTERVAL` = How often the DB will be backed up to a file, in milliseconds. (default 3600000)

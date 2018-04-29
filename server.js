@@ -8,43 +8,36 @@ const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
 const md5 = require('md5');
-const globals = require('./globals');
-const Protector = require('./protector');
-
+const db = require('./database');
+const taskManager = require('./task-manager');
+const protector = require('./protector');
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
-const Database = require('./database');
-const TaskManager = require('./task-manager');
 
-const PORT = process.env.PORT || 8080;
-const ENV = process.env.ENV || 'production';
-const STATUS_INTERVAL = process.env.STATUS_INTERVAL || 1000;
-const ALLOW_FORMAT_SELECTION = !!process.env.ALLOW_FORMAT_SELECTION;
-const ALLOW_QUALITY_SELECTION = !!process.env.ALLOW_QUALITY_SELECTION;
-const ALLOW_REQUESTED_NAME = !!process.env.ALLOW_REQUESTED_NAME;
+const { MESSAGES } = Logger;
 const {
+  PORT,
+  ENV,
+  ALLOW_FORMAT_SELECTION,
+  ALLOW_QUALITY_SELECTION,
+  ALLOW_REQUESTED_NAME,
   ADMIN_USERNAME,
   ADMIN_PASSWORD,
-  HEROKU_APP_NAME
-} = process.env;
-
-const VIDEO_FORMATS = ['mp4', 'mkv'];
-const AUDIO_FORMATS = ['mp3', 'wav', 'webm'];
-
-const FILE_DIR = globals.FileDir;
-const TMP_EXT = globals.TmpExt;
-const FINAL_EXT = globals.FinalExt;
-const MESSAGES = Logger.Messages;
+  HEROKU_APP_NAME,
+  HEROKU_API_TOKEN,
+  FILE_DIR,
+  TMP_EXT,
+  FINAL_EXT,
+  VIDEO_FORMATS,
+  AUDIO_FORMATS
+} = require('./globals');
 
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger(ENV, io);
-const db = new Database();
-const taskManager = new TaskManager();
-const protector = new Protector();
 const heroku = new Heroku({
-  token: process.env.HEROKU_API_TOKEN
+  token: HEROKU_API_TOKEN
 });
 
 app.set('view engine', 'ejs');
@@ -241,7 +234,7 @@ http.listen(PORT, () => {
               status
             });
           }
-        }, STATUS_INTERVAL);
+        }, 1000);
       });
 
       file.on('error', (err) => {

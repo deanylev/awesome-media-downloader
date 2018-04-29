@@ -1,8 +1,5 @@
 const chalk = require('chalk');
-
-const Database = require('./database');
-
-const db = new Database();
+const db = require('./database');
 
 const COLOURS = {
   log: 'blue',
@@ -74,4 +71,4 @@ function Logger(env, io) {
 });
 
 module.exports = Logger;
-module.exports.Messages = MESSAGES;
+module.exports.MESSAGES = MESSAGES;

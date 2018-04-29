@@ -1,25 +1,21 @@
 const mysqlDump = require('mysqldump');
 const fs = require('fs');
-const globals = require('./globals');
-
-const { DbCreds } = globals;
+const db = require('./database');
 const Logger = require('./logger');
-const Database = require('./database');
 
-const DB_DUMP_INTERVAL = process.env.DB_DUMP_INTERVAL || 3600000;
-const FILE_DELETION_INTERVAL = process.env.FILE_DELETION_INTERVAL || 3600000;
-
-const FILE_DIR = globals.FileDir;
-const TMP_EXT = globals.TmpExt;
-const FINAL_EXT = globals.FinalExt;
+const {
+  DB_CREDS,
+  DB_DUMP_INTERVAL,
+  FILE_DELETION_INTERVAL,
+  FILE_DIR,
+  TMP_EXT,
+  FINAL_EXT
+} = require('./globals');
 
 const logger = new Logger();
-const db = new Database();
-
-function TaskManager() {}
 
 // dump the database to a backup file
-TaskManager.prototype.dbDump = () => {
+function dbDump() {
   let dumpCreds = DbCreds;
   let id = Date.now();
   dumpCreds.dest = `bak/db/${id}`;
@@ -30,10 +26,10 @@ TaskManager.prototype.dbDump = () => {
 
     logger.log('dumped database to file', id);
   });
-};
+}
 
 // delete downloaded files older than the specified time
-TaskManager.prototype.clearFiles = () => {
+function clearFiles() {
   logger.log('deleting old downloaded files');
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
@@ -43,9 +39,8 @@ TaskManager.prototype.clearFiles = () => {
       }
     }
   });
-};
+}
 
-let { dbDump, clearFiles } = TaskManager.prototype;
 let tasks = [
   {
     func: dbDump,
@@ -65,4 +60,5 @@ tasks.forEach((task) => {
   setInterval(task.func, task.int);
 });
 
-module.exports = TaskManager;
+module.exports.dbDump = dbDump;
+module.exports.clearFiles = clearFiles;

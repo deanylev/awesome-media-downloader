@@ -1,8 +1,8 @@
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
-
 const Logger = require('./logger');
-const { FileDir } = require('./globals');
+
+const { FILE_DIR } = require('./globals');
 
 const logger = new Logger();
 
@@ -33,7 +33,7 @@ Transcoder.prototype.convert = function(id, inputFile, format) {
   return new Promise((resolve, reject) => {
     logger.log('transcoding to', format);
 
-    let outputFile = `${FileDir}/${id}.transcoding.${format}`;
+    let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
     let handleEnd = () => {
       logger.log('transcoding finished');
       resolve(outputFile);
@@ -91,7 +91,7 @@ Transcoder.prototype.combine = function(id, inputVideoFile, inputAudioFile, form
   return new Promise((resolve, reject) => {
     logger.log('combining video and audio files');
 
-    let outputFile = `${FileDir}/${id}.transcoding.${format}`;
+    let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
     let handleEnd = () => {
       logger.log('transcoding finished');
       resolve(outputFile);
@@ -129,7 +129,7 @@ Transcoder.prototype.extractAudio = function(id, inputFile, format) {
   return new Promise((resolve, reject) => {
     logger.log('extracting audio');
 
-    let outputFile = `${FileDir}/${id}.transcoding.${format}`;
+    let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
     let handleEnd = () => {
       logger.log('transcoding finished');
       resolve(outputFile);
