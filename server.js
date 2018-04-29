@@ -291,9 +291,7 @@ http.listen(PORT, () => {
           fs.rename(tempFile, filePath);
         }
 
-        socket.once('disconnect', () => {
-          transcoder.kill([filePath, tempFile, tempFileAudio]);
-        });
+        socket.once('disconnect', () => transcoder.kill([filePath, tempFile, tempFileAudio]));
       });
     });
   });
@@ -338,8 +336,8 @@ http.listen(PORT, () => {
             let getLogs = new Promise((resolve, reject) => {
               db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
                 logs.forEach((log, index) => {
-                  logs[index].datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-                  logs[index].message = MESSAGES[log.level][log.message] || 'unknown message';
+                  log.datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
+                  log.message = MESSAGES[log.level][log.message] || 'unknown message';
                 });
                 resolve(logs);
               });
@@ -347,8 +345,8 @@ http.listen(PORT, () => {
             let getDownloads = new Promise((resolve, reject) => {
               db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
                 downloads.forEach((download, index) => {
-                  downloads[index].datetime = moment(downloads[index].datetime).format('MMMM Do YYYY, h:mm:ss a');
-                  downloads[index].exists = fs.existsSync(`${FILE_DIR}/${downloads[index].id}.${FINAL_EXT}`) && files[downloads[index].id];
+                  download.datetime = moment(download.datetime).format('MMMM Do YYYY, h:mm:ss a');
+                  download.exists = fs.existsSync(`${FILE_DIR}/${download.id}.${FINAL_EXT}`) && files[download.id];
                 });
                 resolve(downloads);
               });

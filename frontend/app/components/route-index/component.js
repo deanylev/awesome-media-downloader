@@ -171,7 +171,7 @@ export default Component.extend({
           });
 
           socket.on('transcoding error', () => {
-            this.setStatus(`Error during conversion. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
+            this.setStatus(`Error during processing. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
             this.set('downloadError', true);
             this.set('inFlight', false);
             fails++;

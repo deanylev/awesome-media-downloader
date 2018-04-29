@@ -218,7 +218,7 @@
         },
         dbDump: (action, id) => {
           if (action !== 'delete' || confirm('Are you sure? This cannot be undone.')) {
-            eventName = action === 'delete' ? 'db dump delete' : 'db dump';
+            let eventName = action === 'delete' ? 'db dump delete' : 'db dump';
             if (!id) {
               app.inFlight.dbs = action === 'delete' ? 'deleting' : 'dumping';
             }
