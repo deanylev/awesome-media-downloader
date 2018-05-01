@@ -1,9 +1,12 @@
 const mysql = require('mysql');
+const mysqlDump = require('mysqldump');
 const moment = require('moment');
+const Logger = require('./logger');
 
 const { DB_CREDS } = require('./globals');
 
 const db = mysql.createConnection(DB_CREDS);
+const logger = new Logger();
 
 function createDefaults() {
   db.query(
@@ -59,7 +62,20 @@ function keepAlive() {
   db.query('SELECT 1');
 }
 
+function dump() {
+  let id = Date.now();
+  DB_CREDS.dest = `bak/db/${id}`;
+  mysqlDump(DB_CREDS, (err) => {
+    if (err) {
+      throw err;
+    }
+
+    logger.log('dumped database to file', id);
+  });
+}
+
 module.exports.createDefaults = createDefaults;
 module.exports.query = query;
 module.exports.now = now;
 module.exports.keepAlive = keepAlive;
+module.exports.dump = dump;

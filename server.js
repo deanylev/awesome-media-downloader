@@ -393,7 +393,7 @@ http.listen(PORT, () => {
           });
 
           socket.on('db dump', () => {
-            taskManager.dbDump();
+            db.dump();
             socket.emit('db dump success');
           });
 

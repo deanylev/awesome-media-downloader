@@ -1,10 +1,8 @@
-const mysqlDump = require('mysqldump');
 const fs = require('fs');
 const db = require('./database');
 const Logger = require('./logger');
 
 const {
-  DB_CREDS,
   DB_DUMP_INTERVAL,
   FILE_DELETION_INTERVAL,
   FILE_DIR,
@@ -13,20 +11,6 @@ const {
 } = require('./globals');
 
 const logger = new Logger();
-
-// dump the database to a backup file
-function dbDump() {
-  let dumpCreds = DbCreds;
-  let id = Date.now();
-  dumpCreds.dest = `bak/db/${id}`;
-  mysqlDump(dumpCreds, (err) => {
-    if (err) {
-      throw err;
-    }
-
-    logger.log('dumped database to file', id);
-  });
-}
 
 // delete downloaded files older than the specified time
 function clearFiles() {
@@ -43,16 +27,16 @@ function clearFiles() {
 
 let tasks = [
   {
-    func: dbDump,
+    func: db.keepAlive,
+    int: 10000
+  },
+  {
+    func: db.dump,
     int: DB_DUMP_INTERVAL
   },
   {
     func: clearFiles,
     int: FILE_DELETION_INTERVAL
-  },
-  {
-    func: db.keepAlive,
-    int: 10000
   }
 ];
 
@@ -60,5 +44,4 @@ tasks.forEach((task) => {
   setInterval(task.func, task.int);
 });
 
-module.exports.dbDump = dbDump;
 module.exports.clearFiles = clearFiles;
