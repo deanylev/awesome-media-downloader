@@ -9,9 +9,9 @@ const logger = new Logger('transcoder');
 function Transcoder() {
   this.command = null;
   this.progress = 0;
-
-  this.handleProgress = (prog) => this.progress = prog.percent / 100;
 }
+
+// public
 
 Transcoder.prototype.getProgress = function() {
   return this.progress;
@@ -30,82 +30,56 @@ Transcoder.prototype.kill = function(files) {
 };
 
 Transcoder.prototype.convert = function(id, inputFile, format) {
-  return new Promise((resolve, reject) => {
-    logger.log('transcoding to', format);
+  logger.log('transcoding to', format);
 
-    let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
-    let handleEnd = () => {
-      logger.log('transcoding finished');
-      resolve(outputFile);
-    };
+  let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
+  let options = null;
 
-    switch (format) {
-      case 'mp4':
-      case 'mkv':
-         this.command = ffmpeg(inputFile)
-          .videoCodec('libx264')
-          .on('progress', this.handleProgress)
-          .on('error', reject)
-          .on('end', handleEnd)
-          .save(outputFile);
-        break;
-      case 'mp3':
-         this.command = ffmpeg(inputFile)
-          .noVideo()
-          .audioBitrate('192k')
-          .audioChannels(2)
-          .audioCodec('libmp3lame')
-          .on('progress', this.handleProgress)
-          .on('error', reject)
-          .on('end', handleEnd)
-          .save(outputFile);
-        break;
-      case 'wav':
-         this.command = ffmpeg(inputFile)
-          .noVideo()
-          .audioFrequency(44100)
-          .audioChannels(2)
-          .audioCodec('pcm_s16le')
-          .on('progress', this.handleProgress)
-          .on('error', reject)
-          .on('end', handleEnd)
-          .save(outputFile);
-        break;
-      case 'webm':
-         this.command = ffmpeg(inputFile)
-          .noVideo()
-          .audioChannels(2)
-          .audioCodec('libvorbis')
-          .on('progress', this.handleProgress)
-          .on('error', reject)
-          .on('end', handleEnd)
-          .save(outputFile);
-        break;
-      default:
-        transcodingError = true;
-    }
-  });
+  switch (format) {
+    case 'mp4':
+    case 'mkv':
+      options = {
+        videoCodec: 'libx264'
+      };
+      break;
+    case 'mp3':
+      options = {
+        noVideo: '',
+        audioBitrate: '192k',
+        audioCodec: 'libmp3lame',
+      };
+      break;
+    case 'wav':
+      options = {
+        noVideo: '',
+        audioFrequency: 44100,
+        audioChannels: 2,
+        audioCodec: 'pcm_s16le'
+      };
+      break;
+    case 'webm':
+      options = {
+        noVideo: '',
+        audioChannels: 2,
+        audioCodec: 'libvorbis'
+      };
+      break;
+    default:
+      return;
+  }
+
+  return this._ffmpeg([inputFile], options, outputFile);
 };
 
 Transcoder.prototype.combine = function(id, inputVideoFile, inputAudioFile, format) {
-  return new Promise((resolve, reject) => {
-    logger.log('combining video and audio files');
+  logger.log('combining video and audio files');
 
-    let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
-    let handleEnd = () => {
-      logger.log('transcoding finished');
-      resolve(outputFile);
-    };
+  let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
+  let options = {
+    videoCodec: 'copy'
+  };
 
-    this.command = ffmpeg()
-      .videoCodec('copy')
-      .input(inputVideoFile)
-      .input(inputAudioFile)
-      .on('progress', this.handleProgress)
-      .on('error', reject)
-      .on('end', handleEnd)
-      .save(outputFile);
-  });
+  return this._ffmpeg([inputVideoFile, inputAudioFile], options, outputFile);
 };
 
 Transcoder.prototype.getAudioFormat = (inputFile) => {
@@ -126,23 +100,40 @@ Transcoder.prototype.getAudioFormat = (inputFile) => {
 };
 
 Transcoder.prototype.extractAudio = function(id, inputFile, format) {
+  logger.log('extracting audio');
+
+  let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
+  let options = {
+    noVideo: '',
+    audioChannels: 2,
+    audioCodec: 'copy'
+  };
+
+  return this._ffmpeg([inputFile], options, outputFile);
+};
+
+// private
+
+Transcoder.prototype._handleProgress = function(prog) {
+  this.progress = prog.percent / 100;
+};
+
+Transcoder.prototype._handleEnd = function(callback) {
+  logger.log('transcoding finished');
+  callback();
+};
+
+Transcoder.prototype._ffmpeg = function(inputs, options, output) {
   return new Promise((resolve, reject) => {
-    logger.log('extracting audio');
-
-    let outputFile = `${FILE_DIR}/${id}.transcoding.${format}`;
-    let handleEnd = () => {
-      logger.log('transcoding finished');
-      resolve(outputFile);
-    };
-
-     this.command = ffmpeg(inputFile)
-      .noVideo()
-      .audioChannels(2)
-      .audioCodec('copy')
-      .on('progress', this.handleProgress)
+    this.command = ffmpeg()
+      .on('progress', this._handleProgress.bind(this))
       .on('error', reject)
-      .on('end', handleEnd)
-      .save(outputFile);
+      .on('end', this._handleEnd.bind(null, resolve.bind(null, output)));
+
+    inputs.forEach((input) => this.command.input(input));
+    Object.keys(options).forEach((option) => this.command[option](options[option]));
+
+    this.command.save(output);
   });
 };
 
