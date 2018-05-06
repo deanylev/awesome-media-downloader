@@ -8,6 +8,7 @@ const mime = require('mime-types');
 const os = require('os-utils');
 const moment = require('moment');
 const md5 = require('md5');
+const logUpdate = require('log-update');
 const db = require('./database');
 const taskManager = require('./task-manager');
 const protector = require('./protector');
@@ -221,6 +222,17 @@ http.listen(PORT, () => {
 
           let progress = status === 'transcoding' ? transcoder.getProgress() : actualSize / totalSize;
           progress = progress > 1 ? 1 : progress;
+
+          if (status !== 'complete' && !HEROKU_APP_NAME) {
+            let i = 0;
+            let string = '';
+
+            for (i = 0; i < progress * 100; i++) {
+              string += '=';
+            }
+
+            logUpdate(`${status === 'downloading' ? 'Download' : 'Transcoding'} Progress: ${string}${string.length ? '>' : ''} ${(progress * 100).toFixed(2)}%`);
+          }
 
           files[id].status = status;
           files[id].progress = progress;
