@@ -4,7 +4,7 @@ const Logger = require('./logger');
 
 const { FILE_DIR } = require('./globals');
 
-const logger = new Logger();
+const logger = new Logger('transcoder');
 
 function Transcoder() {
   this.command = null;

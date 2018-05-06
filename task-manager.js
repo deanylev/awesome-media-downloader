@@ -10,7 +10,7 @@ const {
   FINAL_EXT
 } = require('./globals');
 
-const logger = new Logger();
+const logger = new Logger('task manager');
 
 // delete downloaded files older than the specified time
 function clearFiles() {

@@ -6,7 +6,7 @@ const Logger = require('./logger');
 const { DB_CREDS } = require('./globals');
 
 const db = mysql.createConnection(DB_CREDS);
-const logger = new Logger();
+const logger = new Logger('database');
 
 function createDefaults() {
   db.query(
@@ -14,6 +14,7 @@ function createDefaults() {
     `id` int(11) NOT NULL AUTO_INCREMENT, \
     `datetime` datetime NOT NULL, \
     `level` varchar(10) NOT NULL, \
+    `originator` varchar(30) NOT NULL, \
     `message` int(5) NOT NULL, \
     `data` mediumtext, \
     PRIMARY KEY (`id`), \

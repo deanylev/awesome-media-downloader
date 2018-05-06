@@ -144,6 +144,7 @@
               <tr>
                 <th>Datetime</th>
                 <th>Level</th>
+                <th>Originator</th>
                 <th>Message</th>
                 <th>Data</th>
                 <th>Actions</th>
@@ -153,6 +154,7 @@
               <tr v-for="log in logs">
                 <td>{{ log.datetime }}</td>
                 <td>{{ log.level }}</td>
+                <td>{{ log.originator }}</td>
                 <td>{{ log.message }}</td>
                 <td>{{ log.data }}</td>
                 <td>

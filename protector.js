@@ -8,7 +8,7 @@ const {
   ADMIN_PASSWORD
 } = require('./globals');
 
-const logger = new Logger();
+const logger = new Logger('protector');
 
 function basicAuth(expressInstance, method, url, callback, log) {
   expressInstance[method](url, (req, res) => {

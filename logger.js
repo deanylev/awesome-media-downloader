@@ -46,7 +46,8 @@ const MESSAGES = {
   ]
 };
 
-function Logger(env, io) {
+function Logger(originator, env, io) {
+  this.originator = originator;
   this.env = env;
   this.io = io;
 }
@@ -56,14 +57,15 @@ function Logger(env, io) {
     data = data || '';
 
     if (this.env === 'development') {
-      this.io.emit('server log', level, message, data);
+      this.io.emit('server log', level, this.originator, message, data);
     }
 
-    console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${message}`, data);
+    console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${this.originator}: ${message}`, data);
 
     db.query('INSERT INTO logs SET ?', {
       datetime: db.now(),
       level,
+      originator: this.originator,
       message: MESSAGES[level].indexOf(message),
       data: JSON.stringify(data)
     });
