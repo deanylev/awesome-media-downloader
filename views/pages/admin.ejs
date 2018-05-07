@@ -100,38 +100,6 @@
           </table>
         </div>
         <br>
-        <h4>Downloaded Files ({{ downloads.length }})</h4>
-        <button class="btn btn-link text-danger text-center" v-on:click="remove('downloads')" v-bind:disabled="socketDisconnected || inFlight.downloads">
-          <span v-if="inFlight.downloads">Deleting...</span>
-          <span v-else>Delete All Files</span>
-        </button>
-        <br><br>
-        <div class="table-responsive">
-          <table class="table table-bordered">
-            <thead class="thead-light">
-              <tr>
-                <th>Datetime</th>
-                <th>Client ID</th>
-                <th>Name</th>
-                <th>URL</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="download in downloads">
-                <td>{{ download.datetime }}</td>
-                <td>{{ download.clientId }}</td>
-                <td>{{ download.name }}</td>
-                <td>{{ download.url }}</td>
-                <td>
-                  <a class="btn btn-link text-primary" v-if="download.exists" v-bind:href="'/api/download_file/' + download.id" v-bind:class="{ disabled: socketDisconnected }"><i class="fa fa-download"></i></a>
-                  <button class="btn btn-link text-danger" v-on:click="remove('downloads', download.id)" v-bind:disabled="socketDisconnected"><i class="fa fa-trash"></i></button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <br>
         <h4>Logs ({{ logs.length }})</h4>
         <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="socketDisconnected || inFlight.logs">
           <span v-if="inFlight.logs">Deleting...</span>
@@ -159,6 +127,38 @@
                 <td>{{ log.data }}</td>
                 <td>
                   <button class="btn btn-link text-danger" v-on:click="remove('logs', log.id)" v-bind:disabled="socketDisconnected"><i class="fa fa-trash"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <br>
+        <h4>Downloaded Files ({{ downloads.length }})</h4>
+        <button class="btn btn-link text-danger text-center" v-on:click="remove('downloads')" v-bind:disabled="socketDisconnected || inFlight.downloads">
+          <span v-if="inFlight.downloads">Deleting...</span>
+          <span v-else>Delete All Files</span>
+        </button>
+        <br><br>
+        <div class="table-responsive">
+          <table class="table table-bordered">
+            <thead class="thead-light">
+              <tr>
+                <th>Datetime</th>
+                <th>Client ID</th>
+                <th>Name</th>
+                <th>URL</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="download in downloads">
+                <td>{{ download.datetime }}</td>
+                <td>{{ download.clientId }}</td>
+                <td>{{ download.name }}</td>
+                <td>{{ download.url }}</td>
+                <td>
+                  <a class="btn btn-link text-primary" v-if="download.exists" v-bind:href="'/api/download_file/' + download.id" v-bind:class="{ disabled: socketDisconnected }"><i class="fa fa-download"></i></a>
+                  <button class="btn btn-link text-danger" v-on:click="remove('downloads', download.id)" v-bind:disabled="socketDisconnected"><i class="fa fa-trash"></i></button>
                 </td>
               </tr>
             </tbody>
