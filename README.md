@@ -48,3 +48,5 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 `HEROKU_APP_NAME` = The name of the Heroku app, if running on Heroku. (default null)
 
 `ADMIN_USERNAME`, `ADMIN_PASSWORD` - Credentials which will be allowed to access the admin area (/api/admin, just a list of downloads for now). (default null)
+
+`PROXY_HOST` - Optional proxy host to pass into youtube-dl when downloading videos. (default null)

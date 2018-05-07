@@ -14,6 +14,7 @@ const taskManager = require('./task-manager');
 const protector = require('./protector');
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
+const Transcoder = require('./transcoder');
 
 const { MESSAGES } = Logger;
 const {
@@ -26,6 +27,7 @@ const {
   ADMIN_PASSWORD,
   HEROKU_APP_NAME,
   HEROKU_API_TOKEN,
+  PROXY_HOST,
   FILE_DIR,
   TMP_EXT,
   FINAL_EXT,
@@ -97,9 +99,6 @@ http.listen(PORT, () => {
       ipAddress
     });
 
-    const Transcoder = require('./transcoder');
-    const transcoder = new Transcoder();
-
     socket.on('disconnect', () => {
       logger.log('client disconnected', {
         clientId,
@@ -108,7 +107,7 @@ http.listen(PORT, () => {
     });
 
     let id;
-    let transcodingError;
+    let transcodingError = false;
 
     socket.on('environment check', () => {
       socket.emit('environment details', environment);
@@ -125,13 +124,18 @@ http.listen(PORT, () => {
       });
       requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
       requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
+      let transcoder;
       let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
       let tempFile = `${FILE_DIR}/${id}.${TMP_EXT}`;
       let tempFileAudio;
       let options = [];
       if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
         options.push('-f', 'bestvideo[ext=mp4]/bestvideo');
-        let audio = youtubedl(url, ['-f', 'bestaudio']);
+        let audioOptions = ['-f', 'bestaudio'];
+        if (PROXY_HOST) {
+          audioOptions.push(`--proxy=${PROXY_HOST}`);
+        }
+        let audio = youtubedl(url, audioOptions);
         tempFileAudio = `${tempFile}audio`;
         audio.pipe(fs.createWriteStream(tempFileAudio));
 
@@ -146,6 +150,11 @@ http.listen(PORT, () => {
           logger.log('audio track finished downloading', id);
         });
       }
+
+      if (PROXY_HOST) {
+        options.push(`--proxy=${PROXY_HOST}`);
+      }
+
       let file = youtubedl(url, options, {
         cwd: __dirname,
         maxBuffer: Infinity
@@ -199,7 +208,12 @@ http.listen(PORT, () => {
           id
         });
 
-        transcodingError = false;
+        let inputs = [tempFile];
+        if (tempFileAudio) {
+          inputs.push(tempFileAudio);
+        }
+
+        transcoder = new Transcoder(id, inputs, format || originalFormat);
 
         let statusCheck = setInterval(() => {
           let totalSize = files[id].fileSize;
@@ -280,21 +294,22 @@ http.listen(PORT, () => {
         };
         if (format) {
           if (format === 'audio') {
-            transcoder.getAudioFormat(tempFile).then((audioFormat) => {
+            transcoder.getAudioFormat().then((audioFormat) => {
               files[id].name = `${fileName.slice(0, -(originalFormat.length))}${audioFormat}`;
-              return transcoder.extractAudio(id, tempFile, audioFormat);
+              transcoder.setFormat(audioFormat);
+              return transcoder.extractAudio();
             }).then((outputFile) => {
               fs.unlink(tempFile);
               fs.rename(outputFile, filePath);
             }).catch(handleTranscodingError);
           } else {
-            transcoder.convert(id, tempFile, format).then((outputFile) => {
+            transcoder.convert().then((outputFile) => {
               fs.unlink(tempFile);
               fs.rename(outputFile, filePath);
             }).catch(handleTranscodingError);
           }
         } else if (requestedQuality === 'best' && ALLOW_QUALITY_SELECTION) {
-          transcoder.combine(id, tempFile, tempFileAudio, originalFormat).then((outputFile) => {
+          transcoder.combine().then((outputFile) => {
             fs.unlink(tempFile);
             fs.unlink(tempFileAudio);
             fs.rename(outputFile, filePath);
