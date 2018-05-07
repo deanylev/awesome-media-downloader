@@ -10,8 +10,12 @@ const {
 
 const logger = new Logger('protector');
 
-function basicAuth(expressInstance, method, url, callback, log) {
-  expressInstance[method](url, (req, res) => {
+function Protector(app) {
+  this.app = app;
+}
+
+Protector.prototype.basicAuth = function(method, url, callback, log) {
+  this.app[method](url, (req, res) => {
     let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     let credentials = auth(req);
     if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
@@ -31,22 +35,20 @@ function basicAuth(expressInstance, method, url, callback, log) {
       });
     }
   });
-}
+};
 
-function encryptString(string, key) {
+Protector.prototype.encryptString = (string, key) => {
   let cipher = crypto.createCipher(ALGORITHM, key);
   return `${cipher.update(string, 'utf8', 'hex')}${cipher.final('hex')}`;
-}
+};
 
-function decryptString(string, key) {
+Protector.prototype.decryptString = (string, key) => {
   let decipher = crypto.createDecipher(ALGORITHM, key);
   try {
     return `${decipher.update(string, 'hex', 'utf8')}${decipher.final('utf8')}`;
   } catch (err) {
     return err;
   }
-}
+};
 
-module.exports.basicAuth = basicAuth;
-module.exports.encryptString = encryptString;
-module.exports.decryptString = decryptString;
+module.exports = Protector;

@@ -11,10 +11,10 @@ const md5 = require('md5');
 const logUpdate = require('log-update');
 const db = require('./database');
 const taskManager = require('./task-manager');
-const protector = require('./protector');
 const Heroku = require('heroku-client');
 const Logger = require('./logger');
 const Transcoder = require('./transcoder');
+const Protector = require('./protector');
 
 const { MESSAGES } = Logger;
 const {
@@ -39,6 +39,7 @@ const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger('server', ENV, io);
+const protector = new Protector(app);
 const heroku = new Heroku({
   token: HEROKU_API_TOKEN
 });
@@ -340,7 +341,7 @@ http.listen(PORT, () => {
     }
   });
 
-  protector.basicAuth(app, 'get', '/api/admin', (req, res) => {
+  protector.basicAuth('get', '/api/admin', (req, res) => {
     let key = uuidv4();
 
     res.render('pages/admin', {
@@ -467,7 +468,7 @@ http.listen(PORT, () => {
     });
   }, true);
 
-  protector.basicAuth(app, 'get', '/api/admin/download/db/:id', (req, res) => {
+  protector.basicAuth('get', '/api/admin/download/db/:id', (req, res) => {
     let id = req.params.id;
     let path = `bak/db/${id}`;
     if (fs.existsSync(path)) {
