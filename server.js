@@ -12,6 +12,7 @@ const logUpdate = require('log-update');
 const db = require('./database');
 const taskManager = require('./task-manager');
 const Heroku = require('heroku-client');
+const Raven = require('raven');
 const Logger = require('./logger');
 const Transcoder = require('./transcoder');
 const Protector = require('./protector');
@@ -28,6 +29,7 @@ const {
   HEROKU_APP_NAME,
   HEROKU_API_TOKEN,
   PROXY_HOST,
+  SENTRY_URL,
   FILE_DIR,
   TMP_EXT,
   FINAL_EXT,
@@ -70,6 +72,11 @@ http.on('error', (err) => {
 http.listen(PORT, () => {
   logger.log('started server on port', PORT);
 });
+
+if (SENTRY_URL) {
+  Raven.config(SENTRY_URL).install();
+}
+
 
 {
   let environment;

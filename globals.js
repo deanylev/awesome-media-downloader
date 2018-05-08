@@ -23,7 +23,8 @@ let configVars = {
   HEROKU_API_TOKEN: null,
   DB_DUMP_INTERVAL: 3600000,
   FILE_DELETION_INTERVAL: 3600000,
-  PROXY_HOST: null
+  PROXY_HOST: null,
+  SENTRY_URL: null
 };
 
 Object.keys(configVars).forEach((configVar) => module.exports[configVar] = process.env[configVar] || configVars[configVar]);
