@@ -70,17 +70,20 @@
           <br><br>
         </div>
         <h4>DB Dumps ({{ dbs.length }})</h4>
+        <button class="btn btn-link text-dark text-center" v-on:click="toggle('Dbs')">
+          <span v-if="hideDbs">Show</span>
+          <span v-else>Hide</span>
+        </button>
         <button class="btn btn-link text-primary text-center" v-on:click="dbDump()" v-bind:disabled="socketDisconnected || inFlight.dbs === 'dumping'">
           <span v-if="inFlight.dbs === 'dumping'">Dumping...</span>
           <span v-else>Dump DB</span>
         </button>
-        <br>
         <button class="btn btn-link text-danger text-center" v-on:click="dbDump('delete')" v-bind:disabled="socketDisconnected || inFlight.dbs === 'deleting'">
           <span v-if="inFlight.dbs === 'deleting'">Deleting...</span>
           <span v-else>Delete All DB Dumps</span>
         </button>
         <br><br>
-        <div class="table-responsive">
+        <div class="table-responsive" v-bind:class="{ 'd-none': hideDbs }">
           <table class="table table-bordered">
             <thead class="thead-light">
               <tr>
@@ -101,12 +104,16 @@
         </div>
         <br>
         <h4>Logs ({{ logs.length }})</h4>
+        <button class="btn btn-link text-dark text-center" v-on:click="toggle('Logs')">
+          <span v-if="hideLogs">Show</span>
+          <span v-else>Hide</span>
+        </button>
         <button class="btn btn-link text-danger text-center" v-on:click="remove('logs')" v-bind:disabled="socketDisconnected || inFlight.logs">
           <span v-if="inFlight.logs">Deleting...</span>
           <span v-else>Delete All Logs</span>
         </button>
         <br><br>
-        <div class="table-responsive">
+        <div class="table-responsive" v-bind:class="{ 'd-none': hideLogs }">
           <table class="table table-bordered">
             <thead class="thead-light">
               <tr>
@@ -134,12 +141,16 @@
         </div>
         <br>
         <h4>Downloaded Files ({{ downloads.length }})</h4>
+        <button class="btn btn-link text-dark text-center" v-on:click="toggle('Downloads')">
+          <span v-if="hideDownloads">Show</span>
+          <span v-else>Hide</span>
+        </button>
         <button class="btn btn-link text-danger text-center" v-on:click="remove('downloads')" v-bind:disabled="socketDisconnected || inFlight.downloads">
           <span v-if="inFlight.downloads">Deleting...</span>
           <span v-else>Delete All Files</span>
         </button>
         <br><br>
-        <div class="table-responsive">
+        <div class="table-responsive" v-bind:class="{ 'd-none': hideDownloads }">
           <table class="table table-bordered">
             <thead class="thead-light">
               <tr>
@@ -189,7 +200,10 @@
         },
         dbs: [],
         downloads: [],
-        logs: []
+        logs: [],
+        hideDbs: false,
+        hideLogs: false,
+        hideDownloads: false
       },
       computed: {
         socketConnected: function() {
@@ -234,6 +248,10 @@
           if (confirm('Are you sure? The server will restart to apply this change.')) {
             socket.emit('set config var', key, value);
           }
+        },
+        toggle: (table) => {
+          let prop = `hide${table}`;
+          app[prop] = !app[prop];
         },
         usageClass: (type) => {
           let object = {};
