@@ -182,7 +182,7 @@ export default Component.extend({
             this.set('downloadError', false);
             this.set('progress', 0);
 
-            let id = details.id;
+            let { id } = details;
             let fileStatus = `"${details.fileName}" (File ${fileNumber}/${totalFiles})`;
             this.setStatus(`Downloading ${fileStatus}`);
 
