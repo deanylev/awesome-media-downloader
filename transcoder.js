@@ -62,15 +62,10 @@ Transcoder.prototype.setFormat = function(format) {
   this.format = format;
 };
 
-Transcoder.prototype.kill = function(files) {
+Transcoder.prototype.kill = function() {
   if (this.command) {
     logger.warn('client disconnected, killing ffmpeg');
     this.command.kill('SIGKILL');
-    files.forEach((file) => {
-      if (fs.existsSync(file)) {
-        fs.unlink(file);
-      }
-    });
   }
 };
 

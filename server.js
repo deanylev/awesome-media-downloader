@@ -326,7 +326,14 @@ if (SENTRY_URL) {
           fs.rename(tempFile, filePath);
         }
 
-        socket.once('disconnect', () => transcoder.kill([filePath, tempFile, tempFileAudio]));
+        socket.once('disconnect', () => {
+          transcoder.kill();
+          [filePath, tempFile, tempFileAudio].forEach((file) => {
+            if (fs.existsSync(file)) {
+              fs.unlink(file);
+            }
+          });
+        });
       });
     });
   });
