@@ -2,13 +2,19 @@ const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const Logger = require('./logger');
 
-const { FILE_DIR } = require('./globals');
+const {
+  FILE_DIR,
+  FORMAT_ALIASES
+} = require('./globals');
 const OPTIONS = {
   mp4: {
     videoCodec: 'libx264'
   },
   mkv: {
     videoCodec: 'libx264'
+  },
+  webm_video: {
+    videoCodec: 'libvpx'
   },
   mp3: {
     noVideo: '',
@@ -21,7 +27,7 @@ const OPTIONS = {
     audioChannels: 2,
     audioCodec: 'pcm_s16le'
   },
-  webm: {
+  webm_audio: {
     noVideo: '',
     audioChannels: 2,
     audioCodec: 'libvorbis'
@@ -72,7 +78,7 @@ Transcoder.prototype.convert = function() {
   logger.log('transcoding to', this.format);
 
   if (!OPTIONS[this.format]) {
-    return;
+    return Promise.reject('Invalid format');
   }
 
   return this._ffmpeg(OPTIONS[this.format]);
@@ -84,17 +90,13 @@ Transcoder.prototype.combine = function() {
 };
 
 Transcoder.prototype.getAudioFormat = function() {
-  let aliases = {
-    vorbis: 'ogg'
-  };
-
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(this.inputs[0], (err, metadata) => {
       if (err) {
         reject(err);
       } else {
         let format = metadata.streams.find((stream) => stream.codec_type === 'audio').codec_name;
-        resolve(aliases[format] || format);
+        resolve(FORMAT_ALIASES[format] || format);
       }
     });
   });
@@ -108,7 +110,7 @@ Transcoder.prototype.extractAudio = function() {
 // private
 
 Transcoder.prototype._ffmpeg = function(options) {
-  let output = `${FILE_DIR}/${this.id}.transcoding.${this.format}`;
+  let output = `${FILE_DIR}/${this.id}.transcoding.${FORMAT_ALIASES[this.format] || this.format}`;
   return new Promise((resolve, reject) => {
     this.command = ffmpeg()
       .on('progress', (prog) => this.progress = prog.percent / 100)

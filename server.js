@@ -33,7 +33,8 @@ const {
   TMP_EXT,
   FINAL_EXT,
   VIDEO_FORMATS,
-  AUDIO_FORMATS
+  AUDIO_FORMATS,
+  FORMAT_ALIASES
 } = require('./globals');
 
 const app = express();
@@ -179,8 +180,8 @@ if (SENTRY_URL) {
       file.on('info', (info) => {
         socket.on('disconnect', cancelDownload);
         fileName = requestedName && ALLOW_REQUESTED_NAME ? `${requestedName}.` : `${info.title}.`;
-        if (format && format !== info.ext && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
-          fileName += format;
+        if (format && format !== info.ext && FORMAT_ALIASES[format] !== info.ext && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
+          fileName += FORMAT_ALIASES[format] || format;
           if (x264Formats.includes(info.ext) && x264Formats.includes(format)) {
             format = '';
           }

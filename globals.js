@@ -8,8 +8,13 @@ module.exports.DB_CREDS = {
 module.exports.FILE_DIR = 'files';
 module.exports.TMP_EXT = 'inprogress';
 module.exports.FINAL_EXT = 'complete';
-module.exports.VIDEO_FORMATS = ['mp4', 'mkv'];
-module.exports.AUDIO_FORMATS = ['mp3', 'wav', 'webm'];
+module.exports.VIDEO_FORMATS = ['mp4', 'mkv'/*, 'webm_video'*/];
+module.exports.AUDIO_FORMATS = ['mp3', 'wav', 'webm_audio'];
+module.exports.FORMAT_ALIASES = {
+  webm_video: 'webm',
+  webm_audio: 'webm',
+  vorbis: 'ogg'
+};
 
 let configVars = {
   PORT: 8080,

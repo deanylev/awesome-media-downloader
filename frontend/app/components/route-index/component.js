@@ -22,7 +22,8 @@ export default Component.extend({
   formatLabels: {
     'none': 'Original',
     'audio': 'Original (Audio Only)',
-    'webm': 'WebM'
+    'webm_video': 'WebM',
+    'webm_audio': 'WebM'
   },
   disableFormat: Ember.computed('inFlight', 'socketDisconnected', 'quality', function() {
     return this.get('inFlight') || this.get('socketDisconnected') || this.get('quality') !== 'none';
