@@ -68,12 +68,15 @@ http.on('error', (err) => {
 
 http.listen(PORT, () => {
   logger.log('started server on port', PORT);
+
+  if (PROXY_HOST) {
+    logger.log('using proxy host', PROXY_HOST);
+  }
 });
 
 if (SENTRY_URL) {
   Raven.config(SENTRY_URL).install();
 }
-
 
 {
   let environment;

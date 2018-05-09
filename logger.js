@@ -31,7 +31,8 @@ const MESSAGES = {
     'downloading audio track',
     'audio track finished downloading',
     'requested format is audio, requesting audio only',
-    'extracting audio'
+    'extracting audio',
+    'using proxy host'
   ],
   warn: [
     'client disconnected, cancelling download',
