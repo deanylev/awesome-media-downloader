@@ -11,7 +11,7 @@ const md5 = require('md5');
 const logUpdate = require('log-update');
 const db = require('./database');
 const taskManager = require('./task-manager');
-const Heroku = require('heroku-client');
+const heroku = require('./heroku');
 const Raven = require('raven');
 const Logger = require('./logger');
 const Transcoder = require('./transcoder');
@@ -27,7 +27,6 @@ const {
   ADMIN_USERNAME,
   ADMIN_PASSWORD,
   HEROKU_APP_NAME,
-  HEROKU_API_TOKEN,
   PROXY_HOST,
   SENTRY_URL,
   FILE_DIR,
@@ -42,9 +41,6 @@ const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const logger = new Logger('server', ENV, io);
 const protector = new Protector(app);
-const heroku = new Heroku({
-  token: HEROKU_API_TOKEN
-});
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -421,10 +417,7 @@ if (SENTRY_URL) {
 
           socket.on('reboot', () => {
             socket.emit('reboot success');
-            if (HEROKU_APP_NAME) {
-              // Can't provide a response, since we're killing the process
-              heroku.delete(`/apps/${HEROKU_APP_NAME}/dynos`);
-            }
+            heroku.restartDynos();
           });
 
           socket.on('db dump', () => {
@@ -456,11 +449,7 @@ if (SENTRY_URL) {
               'ALLOW_REQUESTED_NAME'
             ];
             if (allowedKeys.includes(key)) {
-              let body = {};
-              body[key] = value;
-              heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
-                body
-              }).then(() => {
+              heroku.setConfigVar(key, value).then(() => {
                 logger.log('set config var', {
                   key,
                   value
