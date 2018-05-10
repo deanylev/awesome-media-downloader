@@ -40,8 +40,6 @@ let tasks = [
   }
 ];
 
-tasks.forEach((task) => {
-  setInterval(task.func, task.int);
-});
+tasks.forEach((task) => setInterval(task.func, task.int));
 
 module.exports.clearFiles = clearFiles;
