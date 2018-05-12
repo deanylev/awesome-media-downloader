@@ -168,6 +168,7 @@ if (SENTRY_URL) {
         maxBuffer: Infinity
       });
       let fileName;
+      let fileTitle;
       let filePath;
       let x264Formats = ['mp4', 'mkv'];
       let originalFormat;
@@ -182,6 +183,7 @@ if (SENTRY_URL) {
 
       file.on('info', (info) => {
         socket.on('disconnect', cancelDownload);
+        fileTitle = info.title;
         fileName = requestedName && ALLOW_REQUESTED_NAME ? `${requestedName}.` : `${info.title}.`;
         if (format && format !== info.ext && FORMAT_ALIASES[format] !== info.ext && (VIDEO_FORMATS.includes(format) || AUDIO_FORMATS.includes(format))) {
           fileName += FORMAT_ALIASES[format] || format;
@@ -212,7 +214,7 @@ if (SENTRY_URL) {
           actualFormat: info.ext
         });
         socket.emit('file details', {
-          fileName: fileName.slice(0, -(((requestedFormat === 'audio' ? null : requestedFormat) || info.ext).length + 1)),
+          fileTitle,
           id
         });
 

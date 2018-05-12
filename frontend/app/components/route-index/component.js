@@ -184,7 +184,7 @@ export default Component.extend({
             this.set('progress', 0);
 
             let { id } = details;
-            let fileStatus = `"${details.fileName}" (File ${fileNumber}/${totalFiles})`;
+            let fileStatus = `"${details.fileTitle}" (File ${fileNumber}/${totalFiles})`;
             this.setStatus(`Downloading ${fileStatus}`);
 
             fileNumber++;
