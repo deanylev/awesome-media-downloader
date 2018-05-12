@@ -18,7 +18,7 @@ function clearFiles() {
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
       let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
-      if ((file.endsWith(`.${FINAL_EXT}`) || file.endsWith(`.${TMP_EXT}`) || file.endsWith(`.${TMP_EXT}audio`)) && Date.now() - createdAt >= FILE_DELETION_INTERVAL) {
+      if (file !== '.gitkeep' && Date.now() - createdAt >= FILE_DELETION_INTERVAL) {
         fs.unlink(`${FILE_DIR}/${file}`);
       }
     }
