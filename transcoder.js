@@ -4,43 +4,9 @@ const Logger = require('./logger');
 
 const {
   FILE_DIR,
-  FORMAT_ALIASES
+  FORMAT_ALIASES,
+  FFMPEG_OPTIONS
 } = require('./globals');
-const OPTIONS = {
-  mp4: {
-    videoCodec: 'libx264'
-  },
-  mkv: {
-    videoCodec: 'libx264'
-  },
-  webm_video: {
-    videoCodec: 'libvpx'
-  },
-  mp3: {
-    noVideo: '',
-    audioBitrate: '192k',
-    audioCodec: 'libmp3lame',
-  },
-  wav: {
-    noVideo: '',
-    audioFrequency: 44100,
-    audioChannels: 2,
-    audioCodec: 'pcm_s16le'
-  },
-  webm_audio: {
-    noVideo: '',
-    audioChannels: 2,
-    audioCodec: 'libvorbis'
-  },
-  audio: {
-    noVideo: '',
-    audioChannels: 2,
-    audioCodec: 'copy'
-  },
-  combine: {
-    videoCodec: 'copy'
-  }
-};
 
 const logger = new Logger('transcoder');
 
@@ -72,16 +38,16 @@ Transcoder.prototype.kill = function() {
 Transcoder.prototype.convert = function() {
   logger.log('transcoding to', this.format);
 
-  if (!OPTIONS[this.format]) {
+  if (!FFMPEG_OPTIONS[this.format]) {
     return Promise.reject('Invalid format');
   }
 
-  return this._ffmpeg(OPTIONS[this.format]);
+  return this._ffmpeg(FFMPEG_OPTIONS[this.format]);
 };
 
 Transcoder.prototype.combine = function() {
   logger.log('combining video and audio files');
-  return this._ffmpeg(OPTIONS.combine);
+  return this._ffmpeg(FFMPEG_OPTIONS.combine);
 };
 
 Transcoder.prototype.getAudioFormat = function() {
@@ -99,7 +65,7 @@ Transcoder.prototype.getAudioFormat = function() {
 
 Transcoder.prototype.extractAudio = function() {
   logger.log('extracting audio');
-  return this._ffmpeg(OPTIONS.audio);
+  return this._ffmpeg(FFMPEG_OPTIONS.audio);
 };
 
 // private

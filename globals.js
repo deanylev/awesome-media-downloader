@@ -34,8 +34,44 @@ module.exports.TMP_EXT = 'inprogress';
 module.exports.FINAL_EXT = 'complete';
 module.exports.VIDEO_FORMATS = VIDEO_FORMATS;
 module.exports.AUDIO_FORMATS = ['mp3', 'wav', 'webm_audio'];
-module.exports.FORMAT_ALIASES = {
+module.exports.FORMAT_ALIASES = Object.freeze({
   webm_video: 'webm',
   webm_audio: 'webm',
   vorbis: 'ogg'
-};
+});
+
+module.exports.FFMPEG_OPTIONS = Object.freeze({
+  mp4: {
+    videoCodec: 'libx264'
+  },
+  mkv: {
+    videoCodec: 'libx264'
+  },
+  webm_video: {
+    videoCodec: 'libvpx'
+  },
+  mp3: {
+    noVideo: '',
+    audioBitrate: '192k',
+    audioCodec: 'libmp3lame',
+  },
+  wav: {
+    noVideo: '',
+    audioFrequency: 44100,
+    audioChannels: 2,
+    audioCodec: 'pcm_s16le'
+  },
+  webm_audio: {
+    noVideo: '',
+    audioChannels: 2,
+    audioCodec: 'libvorbis'
+  },
+  audio: {
+    noVideo: '',
+    audioChannels: 2,
+    audioCodec: 'copy'
+  },
+  combine: {
+    videoCodec: 'copy'
+  }
+});
