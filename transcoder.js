@@ -116,7 +116,11 @@ Transcoder.prototype._ffmpeg = function(options) {
       });
 
     this.inputs.forEach((input) => this.command.input(input));
-    Object.keys(options).forEach((option) => this.command[option](options[option]));
+    this.command.inputOptions(options.params || []);
+
+    Object.keys(options)
+      .filter((option) => option !== 'params')
+      .forEach((option) => this.command[option](options[option]));
 
     this.command.save(output);
   });
