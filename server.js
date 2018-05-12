@@ -283,10 +283,8 @@ if (SENTRY_URL) {
           name: fileName
         });
         let handleTranscodingError = (err) => {
-          err = err.toString();
           // XXX string matching isn't great, but no way to avoid the error
-          if (err !== 'Error: ffmpeg was killed with signal SIGKILL') {
-            logger.error('error when transcoding', err);
+          if (err !== 'ffmpeg was killed with signal SIGKILL') {
             transcodingError = true;
           }
         };

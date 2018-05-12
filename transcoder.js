@@ -109,7 +109,11 @@ Transcoder.prototype._ffmpeg = function(options) {
   return new Promise((resolve, reject) => {
     this.command = ffmpeg()
       .on('progress', (prog) => this.progress = prog.percent / 100)
-      .on('error', reject)
+      .on('error', (err) => {
+        err = err.toString().replace('Error: ', '');
+        logger.error('error when transcoding', err);
+        reject(err);
+      })
       .on('end', () => {
         logger.log('transcoding finished');
         resolve(output);
