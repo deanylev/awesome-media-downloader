@@ -63,11 +63,16 @@ function Logger(originator, env, io) {
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${this.originator}: ${message}`, data);
 
+    let messageIndex = MESSAGES[level].indexOf(message);
+    if (messageIndex === -1) {
+      throw new Error('Message has no defined index');
+    }
+
     db.query('INSERT INTO logs SET ?', {
       datetime: db.now(),
       level,
       originator: this.originator,
-      message: MESSAGES[level].indexOf(message),
+      message: messageIndex,
       data: JSON.stringify(data)
     });
   };
