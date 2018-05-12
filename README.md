@@ -52,3 +52,5 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 `PROXY_HOST` - Proxy host to pass into youtube-dl when downloading videos. (default null)
 
 `SENTRY_URL` - URL for Sentry monitoring. (default null)
+
+`ENABLE_VP8` - Enable VP8 video conversion as a user option. Off by default because it's extremely slow. (default false)
