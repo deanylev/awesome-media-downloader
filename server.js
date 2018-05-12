@@ -39,7 +39,7 @@ const {
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const logger = new Logger('server', ENV, io);
+const logger = new Logger('server');
 const protector = new Protector(app);
 
 app.set('view engine', 'ejs');

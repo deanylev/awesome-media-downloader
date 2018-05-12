@@ -47,19 +47,12 @@ const MESSAGES = {
   ]
 };
 
-function Logger(originator, env, io) {
+function Logger(originator) {
   this.originator = originator;
-  this.env = env;
-  this.io = io;
 }
 
 ['log', 'warn', 'error'].forEach((level) => {
-  Logger.prototype[level] = function(message, data) {
-    data = data || '';
-
-    if (this.env === 'development') {
-      this.io.emit('server log', level, this.originator, message, data);
-    }
+  Logger.prototype[level] = function(message, data = '') {
 
     console[level](`${chalk.bold[COLOURS[level]](`[${level.toUpperCase()}]`)} ${this.originator}: ${message}`, data);
 

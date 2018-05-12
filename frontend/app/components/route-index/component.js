@@ -114,10 +114,6 @@ export default Component.extend({
       }
       this.set('inFlight', false);
     });
-
-    socket.on('server log', (level, originator, message, data) => {
-      console.log(`%c[${level.toUpperCase()}]`, `color: ${logColours[level]}`, `${originator}:`, message, data);
-    });
   },
 
   actions: {
