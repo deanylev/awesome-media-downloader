@@ -56,8 +56,13 @@ Transcoder.prototype.getAudioFormat = function() {
       if (err) {
         reject(err);
       } else {
-        let format = metadata.streams.find((stream) => stream.codec_type === 'audio').codec_name;
-        resolve(FORMAT_ALIASES[format] || format);
+        let audioStream = metadata.streams.find((stream) => stream.codec_type === 'audio');
+        if (audioStream) {
+          let { codec_name } = audioStream;
+          resolve(FORMAT_ALIASES[codec_name] || codec_name);
+        } else {
+          reject('File has no audio track');
+        }
       }
     });
   });

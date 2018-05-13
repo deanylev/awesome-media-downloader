@@ -290,7 +290,7 @@ if (SENTRY_URL) {
         };
         if (format) {
           if (format === 'audio') {
-            transcoder.getAudioFormat().then((audioFormat) => {
+            transcoder.getAudioFormat().catch(handleTranscodingError).then((audioFormat) => {
               files[id].name = `${fileName.slice(0, -(originalFormat.length))}${audioFormat}`;
               transcoder.setFormat(audioFormat);
               return transcoder.extractAudio();
