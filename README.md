@@ -41,8 +41,6 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `ALLOW_QUALITY_SELECTION` - Whether to allow quality selection on the frontend. (default false)
 
-`ALLOW_REQUESTED_NAME` - Whether to allow the user to name their files on the frontend. (default false)
-
 `HEROKU_API_TOKEN` = The API token of the Heroku account, if running on Heroku. (default null)
 
 `HEROKU_APP_NAME` = The name of the Heroku app, if running on Heroku. (default null)

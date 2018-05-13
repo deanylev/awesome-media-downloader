@@ -1,18 +1,25 @@
-const auth = require('basic-auth');
+// node libraries
 const crypto = require('crypto');
-const Logger = require('./logger');
 
+// third party libraries
+const auth = require('basic-auth');
+
+// globals
 const ALGORITHM = 'aes-256-cbc';
 const {
   ADMIN_USERNAME,
   ADMIN_PASSWORD
 } = require('./globals');
 
+// config
+const Logger = require('./logger');
 const logger = new Logger('protector');
 
 function Protector(app) {
   this.app = app;
 }
+
+// public
 
 Protector.prototype.basicAuth = function(method, url, callback, log) {
   this.app[method](url, (req, res) => {
@@ -37,12 +44,12 @@ Protector.prototype.basicAuth = function(method, url, callback, log) {
   });
 };
 
-Protector.prototype.encryptString = (string, key) => {
+Protector.encryptString = (string, key) => {
   let cipher = crypto.createCipher(ALGORITHM, key);
   return `${cipher.update(string, 'utf8', 'hex')}${cipher.final('hex')}`;
 };
 
-Protector.prototype.decryptString = (string, key) => {
+Protector.decryptString = (string, key) => {
   let decipher = crypto.createDecipher(ALGORITHM, key);
   try {
     return `${decipher.update(string, 'hex', 'utf8')}${decipher.final('utf8')}`;

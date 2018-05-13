@@ -168,7 +168,7 @@
                 <td>{{ download.name }}</td>
                 <td>{{ download.url }}</td>
                 <td>
-                  <a class="btn btn-link text-primary" v-if="download.exists" v-bind:href="'/api/download_file/' + download.id" v-bind:class="{ disabled: socketDisconnected }"><i class="fa fa-download"></i></a>
+                  <a class="btn btn-link text-primary" v-if="download.exists" v-bind:href="'/api/download/' + download.id" v-bind:class="{ disabled: socketDisconnected }"><i class="fa fa-download"></i></a>
                   <button class="btn btn-link text-danger" v-on:click="remove('downloads', download.id)" v-bind:disabled="socketDisconnected"><i class="fa fa-trash"></i></button>
                 </td>
               </tr>

@@ -179,8 +179,7 @@ export default Component.extend({
             this.set('downloadError', false);
             this.set('progress', 0);
 
-            let { id } = details;
-            let fileStatus = `"${details.fileTitle}" (File ${fileNumber}/${totalFiles})`;
+            let fileStatus = `"${details.title}" (File ${fileNumber}/${totalFiles})`;
             this.setStatus(`Downloading ${fileStatus}`);
 
             fileNumber++;
@@ -189,7 +188,7 @@ export default Component.extend({
               switch (response.status) {
                 case 'complete':
                   this.set('progress', 100);
-                  window.location.href = `${apiHost}/download_file/${id}`;
+                  window.location.href = `${apiHost}/download/${details.id}`;
                   downloadFile();
                   break;
                 case 'transcoding':
@@ -203,7 +202,7 @@ export default Component.extend({
           let url = urls.shift();
           this.set('inFlight', true);
 
-          socket.emit('download file', url, format, quality, $(`#name-input-${fileNumber}`).val());
+          socket.emit('download file', url, format, quality);
         }
 
         downloadFile();

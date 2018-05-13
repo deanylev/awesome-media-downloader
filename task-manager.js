@@ -1,7 +1,10 @@
+// node libraries
 const fs = require('fs');
-const db = require('./database');
-const Logger = require('./logger');
 
+// our libraries
+const db = require('./database');
+
+// globals
 const {
   DB_DUMP_INTERVAL,
   FILE_DELETION_INTERVAL,
@@ -10,11 +13,13 @@ const {
   FINAL_EXT
 } = require('./globals');
 
+// config
+const Logger = require('./logger');
 const logger = new Logger('task manager');
 
-// delete downloaded files older than the specified time
+// delete unused files
 function clearFiles() {
-  logger.log('deleting old downloaded files');
+  logger.log('deleting unused files');
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
       let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
@@ -25,7 +30,11 @@ function clearFiles() {
   });
 }
 
-let tasks = [
+// one off startup tasks
+[db.createDefaults, clearFiles].forEach((callback) => callback());
+
+// repeating tasks
+let repeat = [
   {
     func: db.keepAlive,
     int: 10000
@@ -40,6 +49,6 @@ let tasks = [
   }
 ];
 
-tasks.forEach((task) => setInterval(task.func, task.int));
+repeat.forEach((task) => setInterval(task.func, task.int));
 
 module.exports.clearFiles = clearFiles;

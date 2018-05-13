@@ -1,10 +1,12 @@
-const Heroku = require('heroku-client');
-
+// globals
 const {
   HEROKU_API_TOKEN,
-  HEROKU_APP_NAME
+  HEROKU_APP_NAME,
+  ALLOWED_CONFIG_KEYS
 } = require('./globals');
 
+// config
+const Heroku = require('heroku-client');
 const heroku = new Heroku({
   token: HEROKU_API_TOKEN
 });
@@ -17,11 +19,15 @@ function restartDynos() {
 }
 
 function setConfigVar(key, value) {
-  let body = {};
-  body[key] = value;
-  return heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
-    body
-  });
+  if (ALLOWED_CONFIG_KEYS.includes(key)) {
+    let body = {};
+    body[key] = value;
+    return heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
+      body
+    });
+  } else {
+    return Promise.reject();
+  }
 }
 
 module.exports.restartDynos = restartDynos;

@@ -1,13 +1,18 @@
-const ffmpeg = require('fluent-ffmpeg');
+// node libraries
 const fs = require('fs');
-const Logger = require('./logger');
 
+// third party libraries
+const ffmpeg = require('fluent-ffmpeg');
+
+// globals
 const {
   FILE_DIR,
   FORMAT_ALIASES,
   FFMPEG_OPTIONS
 } = require('./globals');
 
+// config
+const Logger = require('./logger');
 const logger = new Logger('transcoder');
 
 function Transcoder(id, inputs, format) {
@@ -30,7 +35,7 @@ Transcoder.prototype.setFormat = function(format) {
 
 Transcoder.prototype.kill = function() {
   if (this.command) {
-    logger.warn('client disconnected, killing ffmpeg');
+    logger.warn('killing ffmpeg');
     this.command.kill('SIGKILL');
   }
 };

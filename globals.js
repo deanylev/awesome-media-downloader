@@ -1,11 +1,15 @@
-let configVars = {
+// third party libraries
+const commandExistsSync = require('command-exists').sync;
+
+// globals
+const VIDEO_FORMATS = ['mp4', 'mkv'];
+const CONFIG_VARS = {
   ENV: 'production',
   PORT: 8080,
   DB_DUMP_INTERVAL: 3600000,
   FILE_DELETION_INTERVAL: 3600000,
   ALLOW_FORMAT_SELECTION: false,
   ALLOW_QUALITY_SELECTION: false,
-  ALLOW_REQUESTED_NAME: false,
   ENABLE_VP8: false,
   ADMIN_USERNAME: null,
   ADMIN_PASSWORD: null,
@@ -15,9 +19,8 @@ let configVars = {
   SENTRY_URL: null
 };
 
-Object.keys(configVars).forEach((configVar) => module.exports[configVar] = process.env[configVar] || configVars[configVar]);
+Object.keys(CONFIG_VARS).forEach((configVar) => module.exports[configVar] = process.env[configVar] || CONFIG_VARS[configVar]);
 
-let VIDEO_FORMATS = ['mp4', 'mkv'];
 if (module.exports.ENABLE_VP8) {
   VIDEO_FORMATS.push('webm_video');
 }
@@ -34,6 +37,9 @@ module.exports.TMP_EXT = 'inprogress';
 module.exports.FINAL_EXT = 'complete';
 module.exports.VIDEO_FORMATS = VIDEO_FORMATS;
 module.exports.AUDIO_FORMATS = ['mp3', 'wav', 'webm_audio'];
+module.exports.FORMAT_GROUPS = {
+  x264: ['mp4', 'mkv']
+}
 module.exports.FORMAT_ALIASES = Object.freeze({
   webm_video: 'webm',
   webm_audio: 'webm',
@@ -75,3 +81,66 @@ module.exports.FFMPEG_OPTIONS = Object.freeze({
     videoCodec: 'copy'
   }
 });
+
+module.exports.LOGGER_COLOURS = {
+  log: 'blue',
+  warn: 'yellow',
+  error: 'red'
+};
+
+module.exports.LOGGER_MESSAGES = {
+  log: [
+    'dev mode, allowing any origin to access API',
+    'started server on port',
+    'client connected',
+    'client disconnected',
+    'downloading file',
+    'file finished downloading',
+    'transcoding to',
+    'transcoding finished',
+    'combining video and audio files',
+    'providing file download',
+    'successful admin login',
+    'providing db download',
+    'deleted db dump',
+    'deleted all db dumps',
+    'dumped database to file',
+    'deleting unused files',
+    'received download request',
+    'client connected to admin socket',
+    'set config var',
+    'downloading audio track',
+    'audio track finished downloading',
+    'requested format is audio, requesting audio only',
+    'extracting audio',
+    'using proxy host'
+  ],
+  warn: [
+    'cancelling download',
+    'killing ffmpeg',
+    'admin login attempt'
+  ],
+  error: [
+    'an error occured',
+    'error while downloading file',
+    'error when transcoding',
+    'error when combining files',
+    'port in use'
+  ]
+};
+
+module.exports.ALLOWED_CONFIG_KEYS = [
+  'ALLOW_FORMAT_SELECTION',
+  'ALLOW_QUALITY_SELECTION',
+  'ALLOW_REQUESTED_NAME'
+];
+
+module.exports.ENVIRONMENT = {
+  environment: module.exports.ENV,
+  ffmpeg: commandExistsSync('ffmpeg'),
+  onHeroku: !!module.exports.HEROKU_APP_NAME,
+  allowFormatSelection: module.exports.ALLOW_FORMAT_SELECTION,
+  allowQualitySelection: module.exports.ALLOW_QUALITY_SELECTION,
+  videoFormats: module.exports.VIDEO_FORMATS,
+  audioFormats: module.exports.AUDIO_FORMATS
+};
