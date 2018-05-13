@@ -18,12 +18,12 @@ const Logger = require('./logger');
 const logger = new Logger('task manager');
 
 // delete unused files
-function clearFiles() {
+function clearFiles(clearAll) {
   logger.log('deleting unused files');
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
       let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
-      if (file !== '.gitkeep' && Date.now() - createdAt >= FILE_DELETION_INTERVAL) {
+      if (file !== '.gitkeep' && (clearAll || Date.now() - createdAt >= FILE_DELETION_INTERVAL)) {
         fs.unlink(`${FILE_DIR}/${file}`);
       }
     }
@@ -31,7 +31,7 @@ function clearFiles() {
 }
 
 // one off startup tasks
-[db.createDefaults, clearFiles].forEach((callback) => callback());
+[db.createDefaults, () => clearFiles(true)].forEach((callback) => callback());
 
 // repeating tasks
 let repeat = [
