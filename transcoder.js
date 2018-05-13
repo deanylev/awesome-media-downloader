@@ -82,7 +82,9 @@ Transcoder.prototype._ffmpeg = function(options) {
       .on('progress', (prog) => this.progress = prog.percent / 100)
       .on('error', (err) => {
         err = err.toString().replace('Error: ', '');
-        logger.error('error when transcoding', err);
+        if (err !== 'ffmpeg was killed with signal SIGKILL') {
+          logger.error('error when transcoding', err);
+        }
         reject(err);
       })
       .on('end', () => {

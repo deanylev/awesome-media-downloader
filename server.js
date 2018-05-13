@@ -132,6 +132,7 @@ if (SENTRY_URL) {
       requestedFormat = requestedFormat === 'none' ? '' : requestedFormat;
       requestedQuality = requestedQuality === 'none' ? '' : requestedQuality;
       let transcoder;
+      let killTranscoder;
       let format = environment.ffmpeg && ALLOW_FORMAT_SELECTION ? requestedFormat : '';
       let tempFile = `${FILE_DIR}/${id}.${TMP_EXT}`;
       let tempFileAudio;
@@ -223,6 +224,14 @@ if (SENTRY_URL) {
         }
 
         transcoder = new Transcoder(id, inputs, format || originalFormat);
+        killTranscoder = () => {
+          transcoder.kill();
+          [filePath, tempFile, tempFileAudio].forEach((file) => {
+            if (fs.existsSync(file)) {
+              fs.unlink(file);
+            }
+          });
+        };
 
         let statusCheck = setInterval(() => {
           let totalSize = files[id].fileSize;
@@ -241,6 +250,8 @@ if (SENTRY_URL) {
             actualSize = totalSize;
             status = 'complete';
             clearInterval(statusCheck);
+
+            socket.removeListener('disconnect', killTranscoder);
           }
 
           let progress = status === 'transcoding' ? transcoder.getProgress() : actualSize / totalSize;
@@ -282,12 +293,7 @@ if (SENTRY_URL) {
           url,
           name: fileName
         });
-        let handleTranscodingError = (err) => {
-          // XXX string matching isn't great, but no way to avoid the error
-          if (err !== 'ffmpeg was killed with signal SIGKILL') {
-            transcodingError = true;
-          }
-        };
+        let handleTranscodingError = () => transcodingError = true;
         if (format) {
           if (format === 'audio') {
             transcoder.getAudioFormat().catch(handleTranscodingError).then((audioFormat) => {
@@ -314,14 +320,7 @@ if (SENTRY_URL) {
           fs.rename(tempFile, filePath);
         }
 
-        socket.once('disconnect', () => {
-          transcoder.kill();
-          [filePath, tempFile, tempFileAudio].forEach((file) => {
-            if (fs.existsSync(file)) {
-              fs.unlink(file);
-            }
-          });
-        });
+        socket.on('disconnect', killTranscoder);
       });
     });
   });
