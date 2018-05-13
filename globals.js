@@ -29,7 +29,7 @@ module.exports.DB_CREDS = {
   database: process.env.DATABASE_NAME || 'awesome_media_downloader'
 };
 
-module.exports.FILE_DIR = 'files';
+module.exports.FILE_DIR = 'downloads';
 module.exports.TMP_EXT = 'inprogress';
 module.exports.FINAL_EXT = 'complete';
 module.exports.VIDEO_FORMATS = VIDEO_FORMATS;

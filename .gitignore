@@ -1,7 +1,7 @@
 node_modules
 .DS_Store
-files/*
-!files/.gitkeep
+downloads/*
+!downloads/.gitkeep
 bak/db/*
 !bak/db/.gitkeep
 public/robots.txt
