@@ -7,13 +7,13 @@ const moment = require('moment');
 const { DB_CREDS } = require('./globals');
 
 // config
-const db = mysql.createConnection(DB_CREDS);
+const pool = mysql.createPool(DB_CREDS);
 
 const Logger = require('./logger');
 const logger = new Logger('database');
 
 function createDefaults() {
-  db.query(
+  [
     'CREATE TABLE IF NOT EXISTS logs ( \
     id int(11) NOT NULL AUTO_INCREMENT, \
     datetime datetime NOT NULL, \
@@ -23,14 +23,8 @@ function createDefaults() {
     data mediumtext, \
     PRIMARY KEY (id), \
     UNIQUE KEY id_UNIQUE (id) \
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
-    (err) => {
-      if (err) {
-        throw err;
-      }
-    });
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 
-  db.query(
     'CREATE TABLE IF NOT EXISTS downloads ( \
     id varchar(36) NOT NULL, \
     datetime datetime NOT NULL, \
@@ -39,22 +33,27 @@ function createDefaults() {
     name varchar(255) NOT NULL, \
     PRIMARY KEY (id), \
     UNIQUE KEY id_UNIQUE (id) \
-  ) ENGINE=InnoDB DEFAULT CHARSET=utf8',
-    (err) => {
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8'
+  ].forEach((sql) => {
+    query(sql).catch((err) => {
       if (err) {
         throw err;
       }
     });
+  });
 }
 
 function query(query, values) {
   return new Promise((resolve, reject) => {
-    db.query(query, values, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
+    pool.getConnection((err, connection) => {
+      connection.query(query, values, (err, results) => {
+        connection.release();
+        if (err) {
+          reject(err);
+        } else {
+          resolve(results);
+        }
+      });
     });
   });
 }
@@ -64,7 +63,7 @@ function now() {
 }
 
 function keepAlive() {
-  db.query('SELECT 1');
+  query('SELECT 1');
 }
 
 function dump() {

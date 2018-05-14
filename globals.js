@@ -26,6 +26,7 @@ if (module.exports.ENABLE_VP8) {
 }
 
 module.exports.DB_CREDS = {
+  connectionLimit: 5,
   host: process.env.CLEARDB_DATABASE_URL || 'localhost',
   user: process.env.DATABASE_USER || 'root',
   password: process.env.DATABASE_PASSWORD || '',
