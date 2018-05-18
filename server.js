@@ -269,6 +269,7 @@ io.of('/user').on('connection', (socket) => {
       });
 
       const handleTranscodingError = () => transcodingError = true;
+
       if (file.transcode) {
         if (file.quality === 'best') {
           transcoder.combine()

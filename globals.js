@@ -114,7 +114,8 @@ module.exports.LOGGER_MESSAGES = {
     'audio track finished downloading',
     'requested format is audio, requesting audio only',
     'extracting audio',
-    'using proxy host'
+    'using proxy host',
+    'identifying audio track format'
   ],
   warn: [
     'cancelling download',
@@ -126,7 +127,8 @@ module.exports.LOGGER_MESSAGES = {
     'error while downloading file',
     'error when transcoding',
     'error when combining files',
-    'port in use'
+    'port in use',
+    'no audio track found'
   ]
 };
 

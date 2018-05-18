@@ -56,6 +56,7 @@ Transcoder.prototype.combine = function() {
 };
 
 Transcoder.prototype.getAudioFormat = function() {
+  logger.log('identifying audio track format');
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(this.inputs[0], (err, metadata) => {
       if (err) {
@@ -66,6 +67,7 @@ Transcoder.prototype.getAudioFormat = function() {
           let { codec_name } = audioStream;
           resolve(FORMAT_ALIASES[codec_name] || codec_name);
         } else {
+          logger.error('no audio track found');
           reject('File has no audio track');
         }
       }
