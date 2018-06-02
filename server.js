@@ -108,7 +108,7 @@ io.of('/user').on('connection', (socket) => {
       requestedQuality,
     });
 
-    let transcoder, killTranscoder, transcodingError, downloadComplete;
+    let transcoder, killTranscoder, transcodingError, downloadCancelled, downloadComplete;
     const options = [];
     const id = uuidv4();
     const file = {
@@ -234,7 +234,11 @@ io.of('/user').on('connection', (socket) => {
         }
 
         const progress = Math.max(0, Math.min(status === 'transcoding' ? transcoder.getProgress() : currentSize / size, 1));
-        if (transcodingError) {
+        if (downloadCancelled) {
+          socket.emit('download cancelled');
+          clearInterval(checkStatus);
+          status === 'transcoding' ? transcoder.kill() : cancelDownload();
+        } else if (transcodingError) {
           socket.emit('transcoding error');
           clearInterval(checkStatus);
         } else {
@@ -309,6 +313,8 @@ io.of('/user').on('connection', (socket) => {
     });
 
     download.pipe(fs.createWriteStream(file.tempPath));
+
+    socket.once('cancel download', () => downloadCancelled = true);
   });
 });
 

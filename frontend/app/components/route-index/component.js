@@ -55,6 +55,7 @@ export default Component.extend({
     }
   }),
   inFlight: false,
+  downloading: false,
   status: '',
   statusClass: 'dark',
   downloadError: false,
@@ -127,30 +128,27 @@ export default Component.extend({
 
     downloadFile() {
       return new Ember.RSVP.Promise((resolve, reject) => {
-        let urls = [];
-        this.get('urlArray').forEach((url) => {
-          urls.push(url);
-        });
-
+        let urls = [...this.get('urlArray')];
         let format = this.get('quality') === 'none' ? this.get('format') : '';
         let quality = this.get('format') === 'none' ? this.get('quality') : '';
         let totalFiles = urls.length;
         let fileNumber = 1;
         let fails = 0;
+        let cancels = 0;
 
         socket.on('disconnect', reject);
 
         this.set('status', '');
 
         let downloadFile = () => {
-          ['download error', 'file details', 'download progress', 'transcoding error'].forEach((listener) => {
+          ['download error', 'file details', 'download progress', 'transcoding error', 'download cancelled'].forEach((listener) => {
             socket.off(listener);
           });
 
           if (!urls.length) {
             setTimeout(() => {
               this.set('inFlight', false);
-              this.setStatus(`Downloading complete.${fails ? ` ${fails} file${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}`);
+              this.setStatus(`Downloading complete.${fails ? ` ${fails} file${fails === 1 ? ' was' : 's were'} unable to be downloaded.` : ''}${cancels ? ` ${cancels} download${cancels === 1 ? ' was' : 's were'} cancelled.` : ''}`);
               this.set('downloadError', false);
               this.set('progress', 0);
             }, 1500);
@@ -162,6 +160,7 @@ export default Component.extend({
 
           socket.on('download error', () => {
             this.setStatus(`Sorry, looks like that URL isn't supported. (File ${fileNumber}/${totalFiles})`, 'danger');
+            this.set('downloading', false);
             fileNumber++;
             fails++;
             downloadFile();
@@ -171,13 +170,23 @@ export default Component.extend({
             this.setStatus(`Error during processing. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
             this.set('downloadError', true);
             this.set('inFlight', false);
+            this.set('downloading', false);
             fails++;
+            downloadFile();
+          });
+
+          socket.on('download cancelled', () => {
+            this.setStatus(`Download cancelled. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
+            this.set('progress', 0);
+            this.set('downloading', false);
+            cancels++;
             downloadFile();
           });
 
           socket.on('file details', (details) => {
             this.set('downloadError', false);
             this.set('progress', 0);
+            this.set('downloading', true);
 
             let fileStatus = `"${details.title}" (File ${fileNumber}/${totalFiles})`;
             this.setStatus(`Downloading ${fileStatus}`);
@@ -188,6 +197,7 @@ export default Component.extend({
               switch (response.status) {
                 case 'complete':
                   this.set('progress', 100);
+                  this.set('downloading', false);
                   window.location.href = `${apiHost}/download/${details.id}`;
                   downloadFile();
                   break;
@@ -207,6 +217,10 @@ export default Component.extend({
 
         downloadFile();
       });
+    },
+
+    cancelDownload() {
+      socket.emit('cancel download');
     }
   }
 });

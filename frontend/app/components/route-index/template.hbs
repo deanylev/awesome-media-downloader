@@ -25,6 +25,9 @@
           {{/if}}
         {{/if}}
         {{#spin-button class="btn btn-dark btn-lg btn-block" buttonStyle="zoom-out" disabled=(or inFlight socketDisconnected noUrls) action=(action "downloadFile")}}Download{{/spin-button}}
+        {{#if downloading}}
+          {{#spin-button class="btn btn-danger btn-lg btn-block" buttonStyle="zoom-out" action=(action "cancelDownload")}}Cancel{{/spin-button}}
+        {{/if}}
         <h4 class="status font-weight-light text-{{statusClass}}">{{status}}</h4>
       </form>
       <div class="progress">
