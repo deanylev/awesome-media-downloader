@@ -5,3 +5,4 @@ downloads/*
 bak/db/*
 !bak/db/.gitkeep
 public/robots.txt
+npm-debug.log
