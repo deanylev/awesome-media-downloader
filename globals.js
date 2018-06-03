@@ -1,5 +1,6 @@
 // third party libraries
 const commandExistsSync = require('command-exists').sync;
+const uuidv4 = require('uuid/v4');
 
 // globals
 const VIDEO_FORMATS = ['mp4', 'mkv'];
@@ -148,3 +149,5 @@ module.exports.ENVIRONMENT = Object.freeze({
   videoFormats: module.exports.VIDEO_FORMATS,
   audioFormats: module.exports.AUDIO_FORMATS
 });
+
+module.exports.ADMIN_SOCKET_KEY = uuidv4();

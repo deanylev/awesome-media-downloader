@@ -35,7 +35,8 @@ const {
   FINAL_EXT,
   FORMAT_ALIASES,
   FORMAT_GROUPS,
-  LOGGER_MESSAGES
+  LOGGER_MESSAGES,
+  ADMIN_SOCKET_KEY
 } = require('./globals');
 
 // config
@@ -337,117 +338,119 @@ app.get('/api/download/:id', (req, res) => {
 });
 
 securityManager.basicAuth('get', '/api/admin', (req, res) => {
-  const key = uuidv4();
-
-  res.render('pages/admin', {
-    username: SecurityManager.encryptString(ADMIN_USERNAME, key),
-    password: SecurityManager.encryptString(ADMIN_PASSWORD, key)
-  });
-
-  io.of('/admin').once('connection', (socket) => {
-    logger.log('client connected to admin socket', socket.id);
-    fs.readFile('views/pages/admin.ejs', (err, buffer) => {
-      socket.emit('page hash', md5(buffer));
-    });
-
-    socket.on('credentials', (username, password) => {
-      if (SecurityManager.decryptString(username, key) === ADMIN_USERNAME && SecurityManager.decryptString(password, key) === ADMIN_PASSWORD) {
-        setInterval(() => {
-          const getCpuUsage = new Promise((resolve, reject) => {
-            os.cpuUsage(resolve);
-          });
-          const getLogs = new Promise((resolve, reject) => {
-            db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
-              logs.forEach((log, index) => {
-                log.datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-                log.message = LOGGER_MESSAGES[log.level][log.message] || 'unknown message';
-              });
-              resolve(logs);
-            });
-          });
-          const getDownloads = new Promise((resolve, reject) => {
-            db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
-              downloads.forEach((download, index) => {
-                download.datetime = moment(download.datetime).format('MMMM Do YYYY, h:mm:ss a');
-                download.exists = fs.existsSync(`${FILE_DIR}/${download.id}.${FINAL_EXT}`) && DOWNLOADS[download.id];
-              });
-              resolve(downloads);
-            });
-          });
-          const getDbs = new Promise((resolve, reject) => {
-            fs.readdir('bak/db', (err, dbs) => {
-              dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
-                datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
-                id: db
-              }));
-              resolve(dbs);
-            });
-          });
-          Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
-            socket.emit('info', {
-              environment: ENVIRONMENT,
-              usage: {
-                cpu: values[0],
-                memory: 1 - os.freememPercentage()
-              },
-              logs: values[1],
-              downloads: values[2],
-              dbs: values[3]
-            });
-          });
-        }, 1000);
-
-        socket.on('delete', (table, id) => {
-          if (id) {
-            db.query(`DELETE FROM ${table} WHERE id = '${id}'`);
-          } else {
-            db.query(`DROP TABLE ${table}`);
-          }
-          db.createDefaults();
-          socket.emit('delete success');
-        });
-
-        socket.on('reboot', () => {
-          socket.emit('reboot success');
-          heroku.restartDynos();
-        });
-
-        socket.on('db dump', () => {
-          db.dump();
-          socket.emit('db dump success');
-        });
-
-        socket.on('db dump delete', (id) => {
-          if (id) {
-            fs.unlink(`bak/db/${id}`);
-            logger.log('deleted db dump', id);
-          } else {
-            fs.readdir('bak/db', (err, files) => {
-              for (const file of files) {
-                if (file !== '.gitkeep') {
-                  fs.unlink(`bak/db/${file}`);
-                }
-              }
-            });
-            socket.emit('db dump success');
-            logger.log('deleted all db dumps');
-          }
-        });
-
-        socket.on('set config var', (key, value) => {
-          heroku.setConfigVar(key, value).then(() => {
-            logger.log('set config var', {
-              key,
-              value
-            });
-          });
-        });
-      } else {
-        socket.disconnect();
-      }
-    });
-  });
+  res.render('pages/admin');
 }, true);
+
+securityManager.basicAuth('get', '/api/admin/creds', (req, res) => {
+  res.json({
+    username: SecurityManager.encryptString(ADMIN_USERNAME, ADMIN_SOCKET_KEY),
+    password: SecurityManager.encryptString(ADMIN_PASSWORD, ADMIN_SOCKET_KEY)
+  });
+});
+
+io.of('/admin').on('connection', (socket) => {
+  logger.log('client connected to admin socket', socket.id);
+  fs.readFile('views/pages/admin.ejs', (err, buffer) => {
+    socket.emit('page hash', md5(buffer));
+  });
+
+  socket.on('credentials', (username, password) => {
+    if (SecurityManager.decryptString(username, ADMIN_SOCKET_KEY) === ADMIN_USERNAME && SecurityManager.decryptString(password, ADMIN_SOCKET_KEY) === ADMIN_PASSWORD) {
+      setInterval(() => {
+        const getCpuUsage = new Promise((resolve, reject) => {
+          os.cpuUsage(resolve);
+        });
+        const getLogs = new Promise((resolve, reject) => {
+          db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
+            logs.forEach((log, index) => {
+              log.datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
+              log.message = LOGGER_MESSAGES[log.level][log.message] || 'unknown message';
+            });
+            resolve(logs);
+          });
+        });
+        const getDownloads = new Promise((resolve, reject) => {
+          db.query('SELECT * FROM downloads ORDER BY datetime DESC').then((downloads) => {
+            downloads.forEach((download, index) => {
+              download.datetime = moment(download.datetime).format('MMMM Do YYYY, h:mm:ss a');
+              download.exists = fs.existsSync(`${FILE_DIR}/${download.id}.${FINAL_EXT}`) && DOWNLOADS[download.id];
+            });
+            resolve(downloads);
+          });
+        });
+        const getDbs = new Promise((resolve, reject) => {
+          fs.readdir('bak/db', (err, dbs) => {
+            dbs = dbs.filter((db) => db !== '.gitkeep').map((db) => ({
+              datetime: moment(parseInt(db)).format('MMMM Do YYYY, h:mm:ss a'),
+              id: db
+            }));
+            resolve(dbs);
+          });
+        });
+        Promise.all([getCpuUsage, getLogs, getDownloads, getDbs]).then((values) => {
+          socket.emit('info', {
+            environment: ENVIRONMENT,
+            usage: {
+              cpu: values[0],
+              memory: 1 - os.freememPercentage()
+            },
+            logs: values[1],
+            downloads: values[2],
+            dbs: values[3]
+          });
+        });
+      }, 1000);
+
+      socket.on('delete', (table, id) => {
+        if (id) {
+          db.query(`DELETE FROM ${table} WHERE id = '${id}'`);
+        } else {
+          db.query(`DROP TABLE ${table}`);
+        }
+        db.createDefaults();
+        socket.emit('delete success');
+      });
+
+      socket.on('reboot', () => {
+        socket.emit('reboot success');
+        heroku.restartDynos();
+      });
+
+      socket.on('db dump', () => {
+        db.dump();
+        socket.emit('db dump success');
+      });
+
+      socket.on('db dump delete', (id) => {
+        if (id) {
+          fs.unlink(`bak/db/${id}`);
+          logger.log('deleted db dump', id);
+        } else {
+          fs.readdir('bak/db', (err, files) => {
+            for (const file of files) {
+              if (file !== '.gitkeep') {
+                fs.unlink(`bak/db/${file}`);
+              }
+            }
+          });
+          socket.emit('db dump success');
+          logger.log('deleted all db dumps');
+        }
+      });
+
+      socket.on('set config var', (key, value) => {
+        heroku.setConfigVar(key, value).then(() => {
+          logger.log('set config var', {
+            key,
+            value
+          });
+        });
+      });
+    } else {
+      socket.disconnect();
+    }
+  });
+});
 
 securityManager.basicAuth('get', '/api/admin/download/db/:id', (req, res) => {
   const { id } = req.params;

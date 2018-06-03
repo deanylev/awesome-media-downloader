@@ -275,7 +275,11 @@
 
     socket.on('connect', () => {
       app.socketDisconnected = false;
-      socket.emit('credentials', '<%= username %>', '<%= password %>');
+      fetch('/api/admin/creds', {
+        credentials: 'same-origin'
+      }).then((response) => response.json()).then((creds) => {
+        socket.emit('credentials', creds.username, creds.password);
+      });
     });
 
     socket.on('disconnect', () => {
