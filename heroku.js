@@ -20,7 +20,7 @@ function restartDynos() {
 
 function setConfigVar(key, value) {
   if (ALLOWED_CONFIG_KEYS.includes(key)) {
-    let body = {};
+    const body = {};
     body[key] = value;
     return heroku.patch(`/apps/${HEROKU_APP_NAME}/config-vars`, {
       body

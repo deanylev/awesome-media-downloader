@@ -67,9 +67,11 @@ function keepAlive() {
 }
 
 function dump() {
-  let id = Date.now();
-  DB_CREDS.dest = `bak/db/${id}`;
-  mysqlDump(DB_CREDS, (err) => {
+  const id = Date.now();
+  const creds = Object.assign({
+    dest: `bak/db/${id}`
+  }, DB_CREDS);
+  mysqlDump(creds, (err) => {
     if (err) {
       throw err;
     }

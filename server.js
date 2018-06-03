@@ -176,7 +176,7 @@ io.of('/user').on('connection', (socket) => {
           file.transcode = true;
           fileExt = ext;
         } else {
-          file.transcode = !(FORMAT_GROUPS.x264.includes(ext) && FORMAT_GROUPS.x264.includes(format))
+          file.transcode = !(FORMAT_GROUPS.h264.includes(ext) && FORMAT_GROUPS.h264.includes(format))
           fileExt = format;
         }
       } else {

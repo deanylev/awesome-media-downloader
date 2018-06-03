@@ -25,22 +25,22 @@ if (module.exports.ENABLE_VP8) {
   VIDEO_FORMATS.push('webm_video');
 }
 
-module.exports.DB_CREDS = {
+module.exports.DB_CREDS = Object.freeze({
   connectionLimit: 5,
   host: process.env.CLEARDB_DATABASE_URL || 'localhost',
   user: process.env.DATABASE_USER || 'root',
   password: process.env.DATABASE_PASSWORD || '',
   database: process.env.DATABASE_NAME || 'awesome_media_downloader'
-};
+});
 
 module.exports.FILE_DIR = 'downloads';
 module.exports.TMP_EXT = 'inprogress';
 module.exports.FINAL_EXT = 'complete';
-module.exports.VIDEO_FORMATS = VIDEO_FORMATS;
-module.exports.AUDIO_FORMATS = ['mp3', 'wav', 'webm_audio'];
-module.exports.FORMAT_GROUPS = {
-  x264: ['mp4', 'mkv']
-}
+module.exports.VIDEO_FORMATS = Object.freeze(VIDEO_FORMATS);
+module.exports.AUDIO_FORMATS = Object.freeze(['mp3', 'wav', 'webm_audio']);
+module.exports.FORMAT_GROUPS = Object.freeze({
+  h264: ['mp4', 'mkv']
+});
 module.exports.FORMAT_ALIASES = Object.freeze({
   webm_video: 'webm',
   webm_audio: 'webm',
@@ -83,13 +83,13 @@ module.exports.FFMPEG_OPTIONS = Object.freeze({
   }
 });
 
-module.exports.LOGGER_COLOURS = {
+module.exports.LOGGER_COLOURS = Object.freeze({
   log: 'blue',
   warn: 'yellow',
   error: 'red'
-};
+});
 
-module.exports.LOGGER_MESSAGES = {
+module.exports.LOGGER_MESSAGES = Object.freeze({
   log: [
     'dev mode, allowing any origin to access API',
     'started server on port',
@@ -130,15 +130,15 @@ module.exports.LOGGER_MESSAGES = {
     'port in use',
     'no audio track found'
   ]
-};
+});
 
-module.exports.ALLOWED_CONFIG_KEYS = [
+module.exports.ALLOWED_CONFIG_KEYS = Object.freeze([
   'ALLOW_FORMAT_SELECTION',
   'ALLOW_QUALITY_SELECTION',
-  'ALLOW_REQUESTED_NAME'
-];
+  'ALLOW_VP8_FORMAT'
+]);
 
-module.exports.ENVIRONMENT = {
+module.exports.ENVIRONMENT = Object.freeze({
   environment: module.exports.ENV,
   ffmpeg: commandExistsSync('ffmpeg'),
   onHeroku: !!module.exports.HEROKU_APP_NAME,
@@ -146,4 +146,4 @@ module.exports.ENVIRONMENT = {
   allowQualitySelection: module.exports.ALLOW_QUALITY_SELECTION,
   videoFormats: module.exports.VIDEO_FORMATS,
   audioFormats: module.exports.AUDIO_FORMATS
-};
+});

@@ -19,7 +19,7 @@ function Logger(originator) {
 
     console[level](`${chalk.bold[LOGGER_COLOURS[level]](`[${level.toUpperCase()}]`)} ${this.originator}: ${message}`, data);
 
-    let messageIndex = LOGGER_MESSAGES[level].indexOf(message);
+    const messageIndex = LOGGER_MESSAGES[level].indexOf(message);
     if (messageIndex === -1) {
       throw new Error('Message has no defined index');
     }

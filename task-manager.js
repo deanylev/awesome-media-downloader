@@ -22,7 +22,7 @@ function clearFiles(clearAll) {
   logger.log('deleting unused files');
   fs.readdir(FILE_DIR, (err, files) => {
     for (const file of files) {
-      let createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
+      const createdAt = new Date(fs.statSync(`${FILE_DIR}/${file}`).mtime).getTime();
       if (file !== '.gitkeep' && (clearAll || Date.now() - createdAt >= FILE_DELETION_INTERVAL)) {
         fs.unlink(`${FILE_DIR}/${file}`);
       }
@@ -34,7 +34,7 @@ function clearFiles(clearAll) {
 [db.createDefaults, () => clearFiles(true)].forEach((callback) => callback());
 
 // repeating tasks
-let repeat = [
+const repeat = [
   {
     func: db.keepAlive,
     int: 10000

@@ -23,8 +23,8 @@ function SecurityManager(app) {
 
 SecurityManager.prototype.basicAuth = function(method, url, callback, log) {
   this.app[method](url, (req, res) => {
-    let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    let credentials = auth(req);
+    const ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const credentials = auth(req);
     if (ADMIN_USERNAME && ADMIN_PASSWORD && credentials && credentials.name === ADMIN_USERNAME && credentials.pass === ADMIN_PASSWORD) {
       if (log) {
         logger.log('successful admin login', {
@@ -45,12 +45,12 @@ SecurityManager.prototype.basicAuth = function(method, url, callback, log) {
 };
 
 SecurityManager.encryptString = (string, key) => {
-  let cipher = crypto.createCipher(ALGORITHM, key);
+  const cipher = crypto.createCipher(ALGORITHM, key);
   return `${cipher.update(string, 'utf8', 'hex')}${cipher.final('hex')}`;
 };
 
 SecurityManager.decryptString = (string, key) => {
-  let decipher = crypto.createDecipher(ALGORITHM, key);
+  const decipher = crypto.createDecipher(ALGORITHM, key);
   try {
     return `${decipher.update(string, 'hex', 'utf8')}${decipher.final('utf8')}`;
   } catch (err) {

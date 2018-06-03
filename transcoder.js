@@ -62,9 +62,9 @@ Transcoder.prototype.getAudioFormat = function() {
       if (err) {
         reject(err);
       } else {
-        let audioStream = metadata.streams.find((stream) => stream.codec_type === 'audio');
+        const audioStream = metadata.streams.find((stream) => stream.codec_type === 'audio');
         if (audioStream) {
-          let { codec_name } = audioStream;
+          const { codec_name } = audioStream;
           resolve(FORMAT_ALIASES[codec_name] || codec_name);
         } else {
           logger.error('no audio track found');
@@ -83,7 +83,7 @@ Transcoder.prototype.extractAudio = function() {
 // private
 
 Transcoder.prototype._ffmpeg = function(options) {
-  let output = `${FILE_DIR}/${this.id}.transcoding.${FORMAT_ALIASES[this.format] || this.format}`;
+  const output = `${FILE_DIR}/${this.id}.transcoding.${FORMAT_ALIASES[this.format] || this.format}`;
   return new Promise((resolve, reject) => {
     this.command = ffmpeg()
       .on('progress', (prog) => this.progress = prog.percent / 100)
