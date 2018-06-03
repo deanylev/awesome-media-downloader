@@ -1,13 +1,13 @@
 <div class="bg-light main-section">
   <div class="container">
     <h1 class="title text-center display-4">Awesome Media Downloader</h1>
-    {{#if initialSocketConnection}}
+    {{#liquid-if initialSocketConnection}}
       <form>
         <div class="form-group">
           {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
         </div>
-        {{#if environment.ffmpeg}}
-          {{#if environment.allowFormatSelection}}
+        {{#liquid-if environment.ffmpeg}}
+          {{#liquid-if environment.allowFormatSelection}}
             <label>File Format</label>
             {{#power-select selected=format searchEnabled=false disabled=disableFormat options=formats onchange=(action "setFormat") as |format|}}
               {{#if (get formatLabels format)}}
@@ -16,18 +16,18 @@
                 {{uppercase format}}
               {{/if}}
             {{/power-select}}
-          {{/if}}
-          {{#if environment.allowQualitySelection}}
+          {{/liquid-if}}
+          {{#liquid-if environment.allowQualitySelection}}
             <label>File Quality</label>
             {{#power-select selected=quality searchEnabled=false disabled=disableQuality options=qualities onchange=(action "setQuality") as |quality|}}
               {{get qualityLabels quality}}
             {{/power-select}}
-          {{/if}}
-        {{/if}}
+          {{/liquid-if}}
+        {{/liquid-if}}
         {{#spin-button class="btn btn-dark btn-lg btn-block" buttonStyle="zoom-out" disabled=(or inFlight socketDisconnected noUrls) action=(action "downloadFile")}}Download{{/spin-button}}
-        {{#if downloading}}
-          {{#spin-button class="btn btn-danger btn-lg btn-block" buttonStyle="zoom-out" action=(action "cancelDownload")}}Cancel{{/spin-button}}
-        {{/if}}
+        {{#liquid-if downloading}}
+          {{#spin-button id="cancel-button" class="btn btn-danger btn-lg btn-block" buttonStyle="zoom-out" action=(action "cancelDownload")}}Cancel{{/spin-button}}
+        {{/liquid-if}}
         <h4 class="status font-weight-light text-{{statusClass}}">{{status}}</h4>
       </form>
       <div class="progress">
@@ -37,6 +37,6 @@
       </div>
     {{else}}
       <p class="text-center">Loading...</p>
-    {{/if}}
+    {{/liquid-if}}
   </div>
 </div>
