@@ -13,15 +13,15 @@ const {
 
 // config
 const Logger = require('./logger');
-const logger = new Logger('protector');
+const logger = new Logger('security manager');
 
-function Protector(app) {
+function SecurityManager(app) {
   this.app = app;
 }
 
 // public
 
-Protector.prototype.basicAuth = function(method, url, callback, log) {
+SecurityManager.prototype.basicAuth = function(method, url, callback, log) {
   this.app[method](url, (req, res) => {
     let ipAddress = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
     let credentials = auth(req);
@@ -44,12 +44,12 @@ Protector.prototype.basicAuth = function(method, url, callback, log) {
   });
 };
 
-Protector.encryptString = (string, key) => {
+SecurityManager.encryptString = (string, key) => {
   let cipher = crypto.createCipher(ALGORITHM, key);
   return `${cipher.update(string, 'utf8', 'hex')}${cipher.final('hex')}`;
 };
 
-Protector.decryptString = (string, key) => {
+SecurityManager.decryptString = (string, key) => {
   let decipher = crypto.createDecipher(ALGORITHM, key);
   try {
     return `${decipher.update(string, 'hex', 'utf8')}${decipher.final('utf8')}`;
@@ -58,4 +58,4 @@ Protector.decryptString = (string, key) => {
   }
 };
 
-module.exports = Protector;
+module.exports = SecurityManager;

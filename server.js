@@ -45,8 +45,8 @@ const io = require('socket.io')(http);
 
 const Logger = require('./logger');
 const logger = new Logger('server');
-const Protector = require('./protector');
-const protector = new Protector(app);
+const SecurityManager = require('./security-manager');
+const securityManager = new SecurityManager(app);
 const Transcoder = require('./transcoder');
 
 app.set('view engine', 'ejs');
@@ -336,12 +336,12 @@ app.get('/api/download/:id', (req, res) => {
   }
 });
 
-protector.basicAuth('get', '/api/admin', (req, res) => {
+securityManager.basicAuth('get', '/api/admin', (req, res) => {
   const key = uuidv4();
 
   res.render('pages/admin', {
-    username: Protector.encryptString(ADMIN_USERNAME, key),
-    password: Protector.encryptString(ADMIN_PASSWORD, key)
+    username: SecurityManager.encryptString(ADMIN_USERNAME, key),
+    password: SecurityManager.encryptString(ADMIN_PASSWORD, key)
   });
 
   io.of('/admin').once('connection', (socket) => {
@@ -351,7 +351,7 @@ protector.basicAuth('get', '/api/admin', (req, res) => {
     });
 
     socket.on('credentials', (username, password) => {
-      if (Protector.decryptString(username, key) === ADMIN_USERNAME && Protector.decryptString(password, key) === ADMIN_PASSWORD) {
+      if (SecurityManager.decryptString(username, key) === ADMIN_USERNAME && SecurityManager.decryptString(password, key) === ADMIN_PASSWORD) {
         setInterval(() => {
           const getCpuUsage = new Promise((resolve, reject) => {
             os.cpuUsage(resolve);
@@ -449,7 +449,7 @@ protector.basicAuth('get', '/api/admin', (req, res) => {
   });
 }, true);
 
-protector.basicAuth('get', '/api/admin/download/db/:id', (req, res) => {
+securityManager.basicAuth('get', '/api/admin/download/db/:id', (req, res) => {
   const { id } = req.params;
   const path = `bak/db/${id}`;
   if (fs.existsSync(path)) {
