@@ -20,10 +20,10 @@ export default Component.extend({
   format: 'none',
   formats: null,
   formatLabels: {
-    'none': 'Original',
-    'audio': 'Original (Audio Only)',
-    'webm_video': 'WebM',
-    'webm_audio': 'WebM'
+    none: 'Original',
+    audio: 'Original (Audio Only)',
+    webm_video: 'WebM',
+    webm_audio: 'WebM'
   },
   disableFormat: Ember.computed('inFlight', 'socketDisconnected', 'quality', function() {
     return this.get('inFlight') || this.get('socketDisconnected') || this.get('quality') !== 'none';
@@ -31,8 +31,8 @@ export default Component.extend({
   quality: 'none',
   qualities: ['none', 'best'],
   qualityLabels: {
-    'none': 'Standard (recommended)',
-    'best': 'Best (takes much longer)'
+    none: 'Standard (recommended)',
+    best: 'Best (takes much longer)'
   },
   disableQuality: Ember.computed('inFlight', 'socketDisconnected', 'format', function() {
     return this.get('inFlight') || this.get('socketDisconnected') || this.get('format') !== 'none';
