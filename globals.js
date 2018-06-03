@@ -10,7 +10,7 @@ const CONFIG_VARS = {
   FILE_DELETION_INTERVAL: 3600000,
   ALLOW_FORMAT_SELECTION: false,
   ALLOW_QUALITY_SELECTION: false,
-  ENABLE_VP8: false,
+  ALLOW_VP8_FORMAT: false,
   ADMIN_USERNAME: null,
   ADMIN_PASSWORD: null,
   HEROKU_APP_NAME: null,
@@ -21,7 +21,7 @@ const CONFIG_VARS = {
 
 Object.keys(CONFIG_VARS).forEach((configVar) => module.exports[configVar] = process.env[configVar] || CONFIG_VARS[configVar]);
 
-if (module.exports.ENABLE_VP8) {
+if (module.exports.ALLOW_VP8_FORMAT) {
   VIDEO_FORMATS.push('webm_video');
 }
 
@@ -143,6 +143,7 @@ module.exports.ENVIRONMENT = Object.freeze({
   ffmpeg: commandExistsSync('ffmpeg'),
   onHeroku: !!module.exports.HEROKU_APP_NAME,
   allowFormatSelection: module.exports.ALLOW_FORMAT_SELECTION,
+  allowVp8Format: module.exports.ALLOW_VP8_FORMAT,
   allowQualitySelection: module.exports.ALLOW_QUALITY_SELECTION,
   videoFormats: module.exports.VIDEO_FORMATS,
   audioFormats: module.exports.AUDIO_FORMATS

@@ -39,6 +39,8 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `ALLOW_FORMAT_SELECTION` - Whether to allow format selection on the frontend. (default false)
 
+`ALLOW_VP8_FORMAT` - Enable VP8 video conversion as a user option. Off by default because it's extremely slow. (default false)
+
 `ALLOW_QUALITY_SELECTION` - Whether to allow quality selection on the frontend. (default false)
 
 `HEROKU_API_TOKEN` = The API token of the Heroku account, if running on Heroku. (default null)
@@ -50,5 +52,3 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 `PROXY_HOST` - Proxy host to pass into youtube-dl when downloading videos. (default null)
 
 `SENTRY_URL` - URL for Sentry monitoring. (default null)
-
-`ENABLE_VP8` - Enable VP8 video conversion as a user option. Off by default because it's extremely slow. (default false)

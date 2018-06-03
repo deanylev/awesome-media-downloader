@@ -51,6 +51,14 @@
               <span>Enable</span>
             </button>
             <br><br>
+            <h5>VP8 Format</h5>
+            <button class="btn btn-danger" v-if="environment.allowVp8Format" v-on:click="setConfigVar('ALLOW_VP8_FORMAT', null)">
+              <span>Disable</span>
+            </button>
+            <button class="btn btn-success" v-else v-on:click="setConfigVar('ALLOW_VP8_FORMAT', 'true')">
+              <span>Enable</span>
+            </button>
+            <br><br>
             <h5>Quality Selection</h5>
             <button class="btn btn-danger" v-if="environment.allowQualitySelection" v-on:click="setConfigVar('ALLOW_QUALITY_SELECTION', null)">
               <span>Disable</span>
