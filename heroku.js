@@ -26,7 +26,11 @@ function setConfigVar(key, value) {
       body
     });
   } else {
-    return Promise.reject();
+    return Promise.reject({
+      err: 'forbidden key',
+      key,
+      value
+    });
   }
 }
 

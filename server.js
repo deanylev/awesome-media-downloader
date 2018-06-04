@@ -444,6 +444,8 @@ io.of('/admin').on('connection', (socket) => {
             key,
             value
           });
+        }).catch((err) => {
+          logger.error('error while setting config var', err);
         });
       });
     } else {

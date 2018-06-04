@@ -129,7 +129,8 @@ module.exports.LOGGER_MESSAGES = Object.freeze({
     'error when transcoding',
     'error when combining files',
     'port in use',
-    'no audio track found'
+    'no audio track found',
+    'error while setting config var'
   ]
 });
 
