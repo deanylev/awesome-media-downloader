@@ -182,7 +182,7 @@
     </div>
   </div>
   <script>
-    let app = new Vue({
+    const app = new Vue({
       el: '#app',
       data: {
         socketDisconnected: true,
@@ -234,7 +234,7 @@
         },
         dbDump: (action, id) => {
           if (action !== 'delete' || confirm('Are you sure? This cannot be undone.')) {
-            let eventName = action === 'delete' ? 'db dump delete' : 'db dump';
+            const eventName = action === 'delete' ? 'db dump delete' : 'db dump';
             if (!id) {
               app.inFlight.dbs = action === 'delete' ? 'deleting' : 'dumping';
             }
@@ -250,12 +250,12 @@
           }
         },
         toggle: (table) => {
-          let prop = `hide${table}`;
+          const prop = `hide${table}`;
           app[prop] = !app[prop];
         },
         usageClass: (type) => {
-          let object = {};
-          let usage = parseInt(app.usage[type].slice(0, -1));
+          const object = {};
+          const usage = parseInt(app.usage[type].slice(0, -1));
           let bsClass;
           if (usage > 40 && usage < 75) {
             bsClass = 'warning';
@@ -270,7 +270,7 @@
       }
     });
 
-    let socket = io('/admin');
+    const socket = io('/admin');
     let pageHash;
 
     socket.on('connect', () => {
@@ -289,7 +289,7 @@
     socket.on('info', (info) => {
       app.environment = info.environment;
       Object.keys(info.usage).forEach((key) => {
-        let val = info.usage[key];
+        const val = info.usage[key];
         app.usage[key] = `${(val * 100).toFixed(2)}%`;
       });
       app.dbs = info.dbs;
