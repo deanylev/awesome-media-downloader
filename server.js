@@ -16,6 +16,7 @@ const os = require('os-utils');
 const moment = require('moment');
 const md5 = require('md5');
 const Raven = require('raven');
+const emojiStrip = require('emoji-strip');
 
 // globals
 const DOWNLOADS = {};
@@ -166,7 +167,7 @@ io.of('/user').on('connection', (socket) => {
     download.on('info', (info) => {
       socket.on('disconnect', cancelDownload);
 
-      file.title = file.fileName = info.title;
+      file.title = file.fileName = emojiStrip(info.title);
       file.size = info.size;
 
       const format = FORMAT_ALIASES[file.format] || file.format;
