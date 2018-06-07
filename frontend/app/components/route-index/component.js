@@ -12,6 +12,11 @@ const logColours = {
 };
 
 export default Component.extend({
+  darkMode: JSON.parse(localStorage.getItem('darkMode')),
+  darkModeDidChange: Ember.observer('darkMode', function() {
+    localStorage.setItem('darkMode', this.get('darkMode'));
+  }),
+  classNameBindings: ['darkMode:dark-mode'],
   urls: '',
   urlArray: Ember.computed('urls', function() {
     return this.get('urls').split('\n').map((url) => url.trim()).filter((url) => url && urlRegex.test(url));
@@ -74,7 +79,7 @@ export default Component.extend({
   }),
 
   setStatus(text, bsClass) {
-    bsClass = bsClass || 'dark';
+    bsClass = bsClass || 'default';
     this.set('status', text);
     this.set('statusClass', bsClass);
   },
@@ -118,6 +123,10 @@ export default Component.extend({
   },
 
   actions: {
+    toggleDarkMode() {
+      this.toggleProperty('darkMode');
+    },
+
     setFormat(format) {
       this.set('format', format);
     },

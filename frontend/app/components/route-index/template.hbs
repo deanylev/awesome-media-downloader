@@ -1,6 +1,6 @@
-<div class="bg-light main-section">
+<div class="{{unless darkMode "bg-light"}} main-section">
   <div class="container">
-    <h1 class="title text-center display-4">Awesome Media Downloader</h1>
+    <h1 class="title text-center display-4" {{action "toggleDarkMode" on="click"}}>Awesome Media Downloader</h1>
     {{#liquid-if initialSocketConnection}}
       <form>
         <div class="form-group">
@@ -36,7 +36,7 @@
         </div>
       </div>
     {{else}}
-      <p class="text-center">Loading...</p>
+      <p class="text-center text-default">Loading...</p>
     {{/liquid-if}}
   </div>
 </div>

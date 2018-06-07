@@ -55,6 +55,7 @@ form {
 .title {
   margin-bottom: 15px;
   font-size: 3rem;
+  cursor: pointer;
 }
 
 .main-section {
@@ -63,6 +64,28 @@ form {
 
 .progress {
   margin-top: 20px;
+}
+
+.text-default {
+  @extend .text-dark;
+
+  .dark-mode & {
+    @extend .text-light;
+  }
+}
+
+.dark-mode {
+  .main-section {
+    background: #000;
+  }
+
+  .title, label, textarea, .ember-power-select-trigger {
+    @extend .text-light;
+  }
+
+  textarea, .ember-power-select-trigger {
+    background: #333 !important;
+  }
 }
 
 #cancel-button {
