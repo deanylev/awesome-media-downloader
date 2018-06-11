@@ -33,6 +33,14 @@ Run `/build_frontend.sh`. It will build the frontend and move the generated file
 
 `ENV` - What environment the backend will run in. Either development or production. (default production)
 
+`DB_HOST` - MySQL host (default 'localhost')
+
+`DB_USER` - MySQL username (default 'root')
+
+`DB_PASS` - MySQL password (default '')
+
+`DB_NAME` - MySQL DB name (default 'awesome_media_downloader')
+
 `FILE_DELETION_INTERVAL` - How often video files will get deleted, in milliseconds. (default 3600000)
 
 `DB_DUMP_INTERVAL` = How often the DB will be backed up to a file, in milliseconds. (default 3600000)

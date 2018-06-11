@@ -28,10 +28,10 @@ if (module.exports.ALLOW_VP8_FORMAT) {
 
 module.exports.DB_CREDS = Object.freeze({
   connectionLimit: 5,
-  host: process.env.CLEARDB_DATABASE_URL || 'localhost',
-  user: process.env.DATABASE_USER || 'root',
-  password: process.env.DATABASE_PASSWORD || '',
-  database: process.env.DATABASE_NAME || 'awesome_media_downloader'
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '',
+  database: process.env.DB_NAME || 'awesome_media_downloader'
 });
 
 module.exports.FILE_DIR = 'downloads';
