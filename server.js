@@ -102,8 +102,8 @@ io.of('/user').on('connection', (socket) => {
   logger.log('client connected', client);
 
   socket.on('disconnect', () => logger.log('client disconnected', client.id));
-  socket.on('environment check', () => socket.emit('environment details', ENVIRONMENT));
-  socket.on('download file', (url, requestedFormat, requestedQuality) => {
+  socket.on('get environment', (callback) => callback(true, ENVIRONMENT));
+  socket.on('download file', (url, requestedFormat, requestedQuality, callback) => {
     logger.log('received download request', {
       url,
       requestedFormat,
@@ -202,7 +202,7 @@ io.of('/user').on('connection', (socket) => {
         quality: file.quality || 'standard'
       });
 
-      socket.emit('file details', {
+      callback(true, {
         id,
         title: file.title
       });
@@ -257,7 +257,7 @@ io.of('/user').on('connection', (socket) => {
         id,
         err: err.toString()
       });
-      socket.emit('download error');
+      callback(false);
     });
 
     download.on('end', () => {

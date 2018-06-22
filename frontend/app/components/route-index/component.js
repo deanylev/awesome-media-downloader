@@ -89,20 +89,18 @@ export default Component.extend({
 
     socket.on('connect', () => {
       this.set('socketConnected', true);
-      this.set('status', '');
+      this.setStatus('');
 
-      socket.emit('environment check');
-
-      socket.on('environment details', (details) => {
-        this.set('environment', details);
+      socket.emit('get environment', (success, data) => {
+        this.set('environment', data);
         this.set('initialSocketConnection', true);
         this.set('formats', ['none', 'audio', {
             groupName: 'Video',
-            options: details.videoFormats
+            options: data.videoFormats
           },
           {
             groupName: 'Audio',
-            options: details.audioFormats
+            options: data.audioFormats
           },
         ]);
       });
@@ -147,10 +145,10 @@ export default Component.extend({
 
         socket.on('disconnect', reject);
 
-        this.set('status', '');
+        this.setStatus('');
 
         let downloadFile = () => {
-          ['download error', 'file details', 'download progress', 'transcoding error', 'download cancelled'].forEach((listener) => {
+          ['download progress', 'transcoding error', 'download cancelled'].forEach((listener) => {
             socket.off(listener);
           });
 
@@ -166,14 +164,6 @@ export default Component.extend({
             resolve();
             return;
           }
-
-          socket.on('download error', () => {
-            this.setStatus(`Sorry, looks like that URL isn't supported. (File ${fileNumber}/${totalFiles})`, 'danger');
-            this.set('downloading', false);
-            fileNumber++;
-            fails++;
-            downloadFile();
-          });
 
           socket.on('transcoding error', () => {
             this.setStatus(`Error during processing. (File ${fileNumber - 1}/${totalFiles})`, 'danger');
@@ -192,36 +182,42 @@ export default Component.extend({
             downloadFile();
           });
 
-          socket.on('file details', (details) => {
-            this.set('downloadError', false);
-            this.set('progress', 0);
-            this.set('downloading', true);
-
-            let fileStatus = `"${details.title}" (File ${fileNumber}/${totalFiles})`;
-            this.setStatus(`Downloading ${fileStatus}`);
-
-            fileNumber++;
-
-            socket.on('download progress', (response) => {
-              switch (response.status) {
-                case 'complete':
-                  this.set('progress', 100);
-                  this.set('downloading', false);
-                  window.location.href = `${apiHost}/download/${details.id}`;
-                  downloadFile();
-                  break;
-                case 'transcoding':
-                  this.setStatus(`Processing ${fileStatus}`);
-                default:
-                  this.set('progress', (response.progress * 100).toFixed(2));
-              }
-            });
-          });
-
           let url = urls.shift();
           this.set('inFlight', true);
 
-          socket.emit('download file', url, format, quality);
+          socket.emit('download file', url, format, quality, (success, data) => {
+            if (success) {
+              this.set('downloadError', false);
+              this.set('progress', 0);
+              this.set('downloading', true);
+
+              let fileStatus = `"${data.title}" (File ${fileNumber}/${totalFiles})`;
+              this.setStatus(`Downloading ${fileStatus}`);
+
+              fileNumber++;
+
+              socket.on('download progress', (response) => {
+                switch (response.status) {
+                  case 'complete':
+                    this.set('progress', 100);
+                    this.set('downloading', false);
+                    window.location.href = `${apiHost}/download/${data.id}`;
+                    downloadFile();
+                    break;
+                  case 'transcoding':
+                    this.setStatus(`Processing ${fileStatus}`);
+                  default:
+                    this.set('progress', (response.progress * 100).toFixed(2));
+                }
+              });
+            } else {
+              this.setStatus(`Sorry, looks like that URL isn't supported. (File ${fileNumber}/${totalFiles})`, 'danger');
+              this.set('downloading', false);
+              fileNumber++;
+              fails++;
+              downloadFile();
+            }
+          });
         }
 
         downloadFile();
