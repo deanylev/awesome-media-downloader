@@ -28,7 +28,6 @@ const {
   ALLOW_QUALITY_SELECTION,
   ADMIN_USERNAME,
   ADMIN_PASSWORD,
-  HEROKU_APP_NAME,
   PROXY_HOST,
   SENTRY_URL,
   FILE_DIR,
@@ -178,7 +177,7 @@ io.of('/user').on('connection', (socket) => {
           file.transcode = true;
           fileExt = ext;
         } else {
-          file.transcode = !(FORMAT_GROUPS.h264.includes(ext) && FORMAT_GROUPS.h264.includes(format))
+          file.transcode = !(FORMAT_GROUPS.h264.includes(ext) && FORMAT_GROUPS.h264.includes(format));
           fileExt = format;
         }
       } else {
@@ -309,7 +308,7 @@ io.of('/user').on('connection', (socket) => {
 
         socket.on('disconnect', killTranscoder);
       } else {
-        fs.rename(file.tempPath, file.path)
+        fs.rename(file.tempPath, file.path);
         downloadComplete = true;
       }
     });

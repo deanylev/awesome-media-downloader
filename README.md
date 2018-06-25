@@ -9,9 +9,10 @@ You must have Node.js installed (preferably the latest version), as well as Yarn
 ### Running the backend
 
 1. Run `yarn` once from the root of the repo to set up dependencies.
-2. Run `npm start` from the root of the repo. The default port is 8080, but you can change this by setting the `PORT` env variable.
-3. Set the `ENV` env variable to `development` if you intend to do work on the frontend (as this opens up the origin header).
-4. Access the app at `http://localhost:PORT` where PORT is whatever you set the port to (the default being 8080).
+2. Run `./install_hooks.sh` to install the necessary git hooks (only needed for development).
+3. Run `npm start` from the root of the repo. The default port is 8080, but you can change this by setting the `PORT` env variable.
+4. Set the `ENV` env variable to `development` if you intend to do work on the frontend (as this opens up the origin header).
+5. Access the app at `http://localhost:PORT` where PORT is whatever you set the port to (the default being 8080).
 
 ### Running the frontend
 
