@@ -17,8 +17,8 @@ function createDefaults() {
     'CREATE TABLE IF NOT EXISTS logs ( \
     id int(11) NOT NULL AUTO_INCREMENT, \
     datetime datetime NOT NULL, \
-    level varchar(10) NOT NULL, \
-    originator varchar(30) NOT NULL, \
+    level int(5) NOT NULL, \
+    originator int(5) NOT NULL, \
     message int(5) NOT NULL, \
     data mediumtext, \
     PRIMARY KEY (id), \

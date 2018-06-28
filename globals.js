@@ -84,54 +84,67 @@ module.exports.FFMPEG_OPTIONS = Object.freeze({
   }
 });
 
-module.exports.LOGGER_COLOURS = Object.freeze({
-  log: 'blue',
-  warn: 'yellow',
-  error: 'red'
-});
-
-module.exports.LOGGER_MESSAGES = Object.freeze({
-  log: [
-    'dev mode, allowing any origin to access API',
-    'started server on port',
-    'client connected',
-    'client disconnected',
-    'downloading file',
-    'file finished downloading',
-    'transcoding to',
-    'transcoding finished',
-    'combining video and audio files',
-    'providing file download',
-    'successful admin login',
-    'providing db download',
-    'deleted db dump',
-    'deleted all db dumps',
-    'dumped database to file',
-    'deleting unused files',
-    'received download request',
-    'client connected to admin socket',
-    'set config var',
-    'downloading audio track',
-    'audio track finished downloading',
-    'requested format is audio, requesting audio only',
-    'extracting audio',
-    'using proxy host',
-    'identifying audio track format'
+module.exports.LOGGER = Object.freeze({
+  colours: {
+    log: 'blue',
+    warn: 'yellow',
+    error: 'red'
+  },
+  levels: [
+    'log',
+    'warn',
+    'error'
   ],
-  warn: [
-    'cancelling download',
-    'killing ffmpeg',
-    'admin login attempt'
+  originators: [
+    'database',
+    'security manager',
+    'server',
+    'task manager',
+    'transcoder'
   ],
-  error: [
-    'an error occured',
-    'error while downloading file',
-    'error when transcoding',
-    'error when combining files',
-    'port in use',
-    'no audio track found',
-    'error while setting config var'
-  ]
+  messages: {
+    log: [
+      'dev mode, allowing any origin to access API',
+      'started server on port',
+      'client connected',
+      'client disconnected',
+      'downloading file',
+      'file finished downloading',
+      'transcoding to',
+      'transcoding finished',
+      'combining video and audio files',
+      'providing file download',
+      'successful admin login',
+      'providing db download',
+      'deleted db dump',
+      'deleted all db dumps',
+      'dumped database to file',
+      'deleting unused files',
+      'received download request',
+      'client connected to admin socket',
+      'set config var',
+      'downloading audio track',
+      'audio track finished downloading',
+      'requested format is audio, requesting audio only',
+      'extracting audio',
+      'using proxy host',
+      'identifying audio track format'
+    ],
+    warn: [
+      'cancelling download',
+      'killing ffmpeg',
+      'admin login attempt'
+    ],
+    error: [
+      'an error occured',
+      'error while downloading file',
+      'error when transcoding',
+      'error when combining files',
+      'port in use',
+      'no audio track found',
+      'error while setting config var'
+    ]
+  }
 });
 
 module.exports.ALLOWED_CONFIG_KEYS = Object.freeze([

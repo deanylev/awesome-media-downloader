@@ -35,7 +35,7 @@ const {
   FINAL_EXT,
   FORMAT_ALIASES,
   FORMAT_GROUPS,
-  LOGGER_MESSAGES,
+  LOGGER,
   ADMIN_SOCKET_KEY
 } = require('./globals');
 
@@ -364,7 +364,11 @@ io.of('/admin').on('connection', (socket) => {
           db.query('SELECT * FROM logs ORDER BY datetime DESC').then((logs) => {
             logs.forEach((log, index) => {
               log.datetime = moment(log.datetime).format('MMMM Do YYYY, h:mm:ss a');
-              log.message = LOGGER_MESSAGES[log.level][log.message] || 'unknown message';
+              log.level = LOGGER.levels[log.level] || 'unknown level';
+              log.originator = LOGGER.originators[log.originator] || 'unknown originator';
+
+              const levelMessages = LOGGER.messages[log.level];
+              log.message = levelMessages && levelMessages[log.message] || 'unknown message';
             });
             resolve(logs);
           });
