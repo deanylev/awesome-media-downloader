@@ -119,7 +119,7 @@ io.of('/user').on('connection', (socket) => {
       quality: requestedQuality !== 'none' && ALLOW_QUALITY_SELECTION ? requestedQuality : null,
       originalFormat: null,
       title: null,
-      size: null,
+      totalSize: null,
       fileName: null,
       path: null,
       tempPath: `${FILE_DIR}/${id}.${TMP_EXT}`
@@ -131,25 +131,8 @@ io.of('/user').on('connection', (socket) => {
 
     if (file.quality === 'best') {
       file.transcode = true;
-      options.push('-f', 'bestvideo[ext=mp4]/bestvideo');
-
-      const audioOptions = ['-f', 'bestaudio'];
-      if (PROXY_HOST) {
-        audioOptions.push(`--proxy=${PROXY_HOST}`);
-      }
-
-      const audioDownload = youtubedl(url, audioOptions);
       file.audioPath = `${file.tempPath}audio`;
-
-      audioDownload.on('info', (info) => {
-        logger.log('downloading audio track', {
-          id,
-          format: info.ext
-        });
-      });
-
-      audioDownload.on('end', () => logger.log('audio track finished downloading', id));
-      audioDownload.pipe(fs.createWriteStream(file.audioPath));
+      options.push('-f', 'bestvideo[ext=mp4]/bestvideo');
     }
 
     const download = youtubedl(url, options, {
@@ -167,7 +150,7 @@ io.of('/user').on('connection', (socket) => {
       socket.on('disconnect', cancelDownload);
 
       file.title = file.fileName = emojiStrip(info.title);
-      file.size = info.size;
+      file.totalSize = info.size;
 
       const format = FORMAT_ALIASES[file.format] || file.format;
       const ext = file.originalFormat = info.ext;
@@ -203,7 +186,8 @@ io.of('/user').on('connection', (socket) => {
 
       callback(true, {
         id,
-        title: file.title
+        title: file.title,
+        quality: file.quality
       });
 
       const inputs = [file.tempPath];
@@ -215,10 +199,12 @@ io.of('/user').on('connection', (socket) => {
       killTranscoder = () => transcoder.kill();
 
       const checkStatus = setInterval(() => {
-        let currentSize, status;
+        let currentSize, currentAudioSize, status;
         const {
-          size,
-          tempPath
+          totalSize,
+          tempPath,
+          audioPath,
+          totalAudioSize
         } = file;
 
         if (downloadComplete) {
@@ -227,14 +213,23 @@ io.of('/user').on('connection', (socket) => {
           socket.removeListener('disconnect', killTranscoder);
         } else {
           currentSize = fs.statSync(tempPath).size;
-          if (currentSize === size) {
-            status = 'transcoding';
+          if (fs.existsSync(audioPath)) {
+            currentAudioSize = fs.statSync(audioPath).size;
+          }
+          if (currentSize >= totalSize) {
+            if (file.quality !== 'best' || currentAudioSize >= totalAudioSize) {
+              status = 'transcoding';
+            } else {
+              status = 'downloading audio';
+            }
           } else {
             status = 'downloading';
           }
         }
 
-        const progress = Math.max(0, Math.min(status === 'transcoding' ? transcoder.getProgress() : currentSize / size, 1));
+        const progress = Math.max(0, Math.min(status === 'transcoding' ? transcoder.getProgress() : status === 'downloading audio' ?
+          currentAudioSize / totalAudioSize  : currentSize / totalSize, 1));
+
         if (downloadCancelled) {
           socket.emit('download cancelled');
           clearInterval(checkStatus);
@@ -277,7 +272,35 @@ io.of('/user').on('connection', (socket) => {
 
       if (file.transcode) {
         if (file.quality === 'best') {
-          transcoder.combine()
+          new Promise((resolve, reject) => {
+            const audioOptions = ['-f', 'bestaudio'];
+            if (PROXY_HOST) {
+              audioOptions.push(`--proxy=${PROXY_HOST}`);
+            }
+
+            const audioDownload = youtubedl(url, audioOptions);
+
+            audioDownload.on('info', (info) => {
+              logger.log('downloading audio track', {
+                downloadId: id,
+                format: info.ext
+              });
+
+              file.totalAudioSize = info.size;
+            });
+
+            audioDownload.on('error', reject);
+
+            audioDownload.on('end', () => {
+              logger.log('audio track finished downloading', {
+                downloadId: id
+              });
+
+              resolve();
+            });
+
+            audioDownload.pipe(fs.createWriteStream(file.audioPath));
+          }).catch(handleTranscodingError).then(() => transcoder.combine())
             .then((output) => {
               fs.rename(output, file.path);
               downloadComplete = true;

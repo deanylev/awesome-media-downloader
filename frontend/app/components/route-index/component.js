@@ -73,7 +73,7 @@ export default Component.extend({
       $('textarea').keyup(function(e) {
         while ($(this).outerHeight() < this.scrollHeight + parseFloat($(this).css('borderTopWidth')) + parseFloat($(this).css('borderBottomWidth'))) {
           $(this).height($(this).height() + 1);
-        };
+        }
       });
     }, 10);
   }),
@@ -192,11 +192,13 @@ export default Component.extend({
               this.set('downloading', true);
 
               let fileStatus = `"${data.title}" (File ${fileNumber}/${totalFiles})`;
-              this.setStatus(`Downloading ${fileStatus}`);
+              this.setStatus(`Downloading ${data.quality === 'best' ? 'video track for ' : ''}${fileStatus}`);
 
               fileNumber++;
 
               socket.on('download progress', (response) => {
+                this.set('progress', (response.progress * 100).toFixed(2));
+
                 switch (response.status) {
                   case 'complete':
                     this.set('progress', 100);
@@ -206,8 +208,9 @@ export default Component.extend({
                     break;
                   case 'transcoding':
                     this.setStatus(`Processing ${fileStatus}`);
-                  default:
-                    this.set('progress', (response.progress * 100).toFixed(2));
+                    break;
+                  case 'downloading audio':
+                    this.setStatus(`Downloading audio track for ${fileStatus}`);
                 }
               });
             } else {

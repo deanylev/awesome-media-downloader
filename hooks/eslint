@@ -1,6 +1,6 @@
 #!/bin/sh
 
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | awk '!/.eslintrc.js/' | grep ".jsx\{0,1\}$")
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM ':!frontend' ':!views' | awk '!/.eslintrc.js/' | grep ".jsx\{0,1\}$")
 
 if [[ "$STAGED_FILES" = "" ]]; then
   exit 0
