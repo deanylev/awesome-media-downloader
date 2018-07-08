@@ -50,5 +50,3 @@ const repeat = [
 ];
 
 repeat.forEach((task) => setInterval(task.func, task.int));
-
-module.exports.clearFiles = clearFiles;

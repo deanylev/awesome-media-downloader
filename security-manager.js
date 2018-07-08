@@ -8,7 +8,8 @@ const auth = require('basic-auth');
 const ALGORITHM = 'aes-256-cbc';
 const {
   ADMIN_USERNAME,
-  ADMIN_PASSWORD
+  ADMIN_PASSWORD,
+  ENCRYPTION_KEY
 } = require('./globals');
 
 // config
@@ -44,13 +45,13 @@ SecurityManager.prototype.basicAuth = function(method, url, callback, log) {
   });
 };
 
-SecurityManager.encryptString = (string, key) => {
-  const cipher = crypto.createCipher(ALGORITHM, key);
+SecurityManager.encryptString = (string) => {
+  const cipher = crypto.createCipher(ALGORITHM, ENCRYPTION_KEY);
   return `${cipher.update(string, 'utf8', 'hex')}${cipher.final('hex')}`;
 };
 
-SecurityManager.decryptString = (string, key) => {
-  const decipher = crypto.createDecipher(ALGORITHM, key);
+SecurityManager.decryptString = (string) => {
+  const decipher = crypto.createDecipher(ALGORITHM, ENCRYPTION_KEY);
   try {
     return `${decipher.update(string, 'hex', 'utf8')}${decipher.final('utf8')}`;
   } catch (err) {

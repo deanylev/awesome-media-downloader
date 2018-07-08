@@ -164,4 +164,4 @@ module.exports.ENVIRONMENT = Object.freeze({
   audioFormats: module.exports.AUDIO_FORMATS
 });
 
-module.exports.ADMIN_SOCKET_KEY = uuidv4();
+module.exports.ENCRYPTION_KEY = uuidv4();

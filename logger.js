@@ -20,12 +20,9 @@ LOGGER.levels.forEach((level) => {
 
     console[level](`${chalk.bold[LOGGER.colours[level]](`[${level.toUpperCase()}]`)} ${this.originator}: ${message}`, data);
 
-    const levelIndex = LOGGER.levels.indexOf(level);
     const originatorIndex = LOGGER.originators.indexOf(this.originator);
     const messageIndex = LOGGER.messages[level].indexOf(message);
-    if (levelIndex === -1) {
-      throw new Error(`Level '${level}' has no defined index.`);
-    } else if (originatorIndex === -1) {
+    if (originatorIndex === -1) {
       throw new Error(`Originator '${this.originator}' has no defined index`);
     } else if (messageIndex === -1) {
       throw new Error(`Message '${message}' has no defined index.`);
@@ -33,7 +30,7 @@ LOGGER.levels.forEach((level) => {
 
     db.query('INSERT INTO logs SET ?', {
       datetime: db.now(),
-      level: levelIndex,
+      level: LOGGER.levels.indexOf(level),
       originator: originatorIndex,
       message: messageIndex,
       data: JSON.stringify(data)

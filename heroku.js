@@ -34,5 +34,7 @@ function setConfigVar(key, value) {
   }
 }
 
-module.exports.restartDynos = restartDynos;
-module.exports.setConfigVar = setConfigVar;
+Object.assign(module.exports, {
+  restartDynos,
+  setConfigVar
+});

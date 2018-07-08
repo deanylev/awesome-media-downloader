@@ -35,8 +35,7 @@ const {
   FINAL_EXT,
   FORMAT_ALIASES,
   FORMAT_GROUPS,
-  LOGGER,
-  ADMIN_SOCKET_KEY
+  LOGGER
 } = require('./globals');
 
 // config
@@ -366,8 +365,8 @@ securityManager.basicAuth('get', '/api/admin', (req, res) => {
 
 securityManager.basicAuth('get', '/api/admin/creds', (req, res) => {
   res.json({
-    username: SecurityManager.encryptString(ADMIN_USERNAME, ADMIN_SOCKET_KEY),
-    password: SecurityManager.encryptString(ADMIN_PASSWORD, ADMIN_SOCKET_KEY)
+    username: SecurityManager.encryptString(ADMIN_USERNAME),
+    password: SecurityManager.encryptString(ADMIN_PASSWORD)
   });
 });
 
@@ -378,7 +377,7 @@ io.of('/admin').on('connection', (socket) => {
   });
 
   socket.on('credentials', (username, password) => {
-    if (SecurityManager.decryptString(username, ADMIN_SOCKET_KEY) === ADMIN_USERNAME && SecurityManager.decryptString(password, ADMIN_SOCKET_KEY) === ADMIN_PASSWORD) {
+    if (SecurityManager.decryptString(username) === ADMIN_USERNAME && SecurityManager.decryptString(password) === ADMIN_PASSWORD) {
       setInterval(() => {
         const getCpuUsage = new Promise((resolve, reject) => {
           os.cpuUsage(resolve);

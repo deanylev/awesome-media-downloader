@@ -80,8 +80,10 @@ function dump() {
   });
 }
 
-module.exports.createDefaults = createDefaults;
-module.exports.query = query;
-module.exports.now = now;
-module.exports.keepAlive = keepAlive;
-module.exports.dump = dump;
+Object.assign(module.exports, {
+  createDefaults,
+  query,
+  now,
+  keepAlive,
+  dump
+});
