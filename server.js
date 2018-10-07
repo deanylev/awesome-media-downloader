@@ -148,7 +148,9 @@ io.of('/user').on('connection', (socket) => {
     download.on('info', (info) => {
       socket.on('disconnect', cancelDownload);
 
-      file.title = file.fileName = emojiStrip(info.title).replace(/[^\x20-\x7E]/g, '');
+      file.title = file.fileName = emojiStrip(info.title)
+        .replace(/,/g, '')
+        .replace(/[^\x20-\x7E]/g, '');
       file.totalSize = info.size;
 
       const format = FORMAT_ALIASES[file.format] || file.format;
