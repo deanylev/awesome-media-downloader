@@ -303,7 +303,7 @@ io.of('/user').on('connection', (socket) => {
             audioDownload.pipe(fs.createWriteStream(file.audioPath));
           }).catch(handleTranscodingError).then(() => transcoder.combine())
             .then((output) => {
-              fs.rename(output, file.path);
+              fs.renameSync(output, file.path);
               downloadComplete = true;
             });
         } else {
@@ -316,14 +316,14 @@ io.of('/user').on('connection', (socket) => {
                 return transcoder.extractAudio();
               })
               .then((output) => {
-                fs.rename(output, file.path);
+                fs.renameSync(output, file.path);
                 downloadComplete = true;
               })
               .catch(handleTranscodingError);
           } else {
             transcoder.convert()
               .then((output) => {
-                fs.rename(output, file.path);
+                fs.renameSync(output, file.path);
                 downloadComplete = true;
               })
               .catch(handleTranscodingError);
@@ -332,7 +332,7 @@ io.of('/user').on('connection', (socket) => {
 
         socket.on('disconnect', killTranscoder);
       } else {
-        fs.rename(file.tempPath, file.path);
+        fs.renameSync(file.tempPath, file.path);
         downloadComplete = true;
       }
     });
@@ -451,13 +451,13 @@ io.of('/admin').on('connection', (socket) => {
 
       socket.on('db dump delete', (id) => {
         if (id) {
-          fs.unlink(`bak/db/${id}`);
+          fs.unlinkSync(`bak/db/${id}`);
           logger.log('deleted db dump', id);
         } else {
           fs.readdir('bak/db', (err, files) => {
             for (const file of files) {
               if (file !== '.gitkeep') {
-                fs.unlink(`bak/db/${file}`);
+                fs.unlinkSync(`bak/db/${file}`);
               }
             }
           });
