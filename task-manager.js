@@ -6,7 +6,6 @@ const db = require('./database');
 
 // globals
 const {
-  DB_DUMP_INTERVAL,
   FILE_DELETION_INTERVAL,
   FILE_DIR,
   TMP_EXT,
@@ -38,10 +37,6 @@ const repeat = [
   {
     func: db.keepAlive,
     int: 10000
-  },
-  {
-    func: db.dump,
-    int: DB_DUMP_INTERVAL
   },
   {
     func: clearFiles,
