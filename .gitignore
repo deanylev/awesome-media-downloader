@@ -1,8 +1,8 @@
-node_modules
-.DS_Store
+app/*.js
 downloads/*
 !downloads/.gitkeep
-bak/db/*
-!bak/db/.gitkeep
-public/robots.txt
-npm-debug.log
+logs/*
+!logs/.gitkeep
+node_modules
+start.js
+yarn-error.log

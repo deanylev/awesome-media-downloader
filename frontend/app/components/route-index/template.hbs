@@ -1,42 +1,68 @@
-<div class="{{unless darkMode "bg-light"}} main-section">
-  <div class="container">
-    <h1 class="title text-center display-4" {{action "toggleDarkMode" on="click"}}>Awesome Media Downloader</h1>
-    {{#liquid-if initialSocketConnection}}
-      <form>
-        <div class="form-group">
-          {{textarea class="form-control" rows="4" placeholder="Enter URLs (one per line)" value=urls disabled=(or inFlight socketDisconnected)}}
-        </div>
-        {{#liquid-if environment.ffmpeg}}
-          {{#liquid-if environment.allowFormatSelection}}
-            <label>File Format</label>
-            {{#power-select selected=format searchEnabled=false disabled=disableFormat options=formats onchange=(action "setFormat") as |format|}}
-              {{#if (get formatLabels format)}}
-                {{get formatLabels format}}
-              {{else}}
-                {{uppercase format}}
-              {{/if}}
-            {{/power-select}}
-          {{/liquid-if}}
-          {{#liquid-if environment.allowQualitySelection}}
-            <label>File Quality</label>
-            {{#power-select selected=quality searchEnabled=false disabled=disableQuality options=qualities onchange=(action "setQuality") as |quality|}}
-              {{get qualityLabels quality}}
-            {{/power-select}}
-          {{/liquid-if}}
-        {{/liquid-if}}
-        {{#spin-button class="btn btn-dark btn-lg btn-block" buttonStyle="zoom-out" disabled=(or inFlight socketDisconnected noUrls) action=(action "downloadFile")}}Download{{/spin-button}}
-        {{#liquid-if downloading}}
-          {{#spin-button id="cancel-button" class="btn btn-danger btn-lg btn-block" buttonStyle="zoom-out" action=(action "cancelDownload")}}Cancel{{/spin-button}}
-        {{/liquid-if}}
-        <h4 class="status font-weight-light text-{{statusClass}}">{{status}}</h4>
-      </form>
-      <div class="progress">
-        <div class="progress-bar progress-bar-striped progress-bar-animated {{if downloadError "bg-danger" "bg-dark"}}" style={{progressWidth}}>
-          <span title="{{displayedProgress}}">{{displayedProgress}}</span>
-        </div>
+<div class="RouteIndex">
+  <div class="card">
+    <div class="top">
+      <div class="heading">
+        <div>awesome</div>
+        <div>media</div>
+        <div>downloader</div>
       </div>
-    {{else}}
-      <p class="text-center text-default">Loading...</p>
-    {{/liquid-if}}
+      <div class="form">
+        <TextareaAutosize @disabled={{this.inFlight}} @placeholder="Enter URLs (one per line)" @value={{this.urls}} />
+        <LaddaButton @action={{this.download}} @buttonStyle="zoom-out" @class="primary" @disabled={{this.disabled}}>Download</LaddaButton>
+      </div>
+    </div>
+    {{#if this.videos}}
+      <div class="subHeading">downloads ({{this.videos.length}})</div>
+      <button class="warning" disabled={{this.inFlight}} {{on "click" this.clearAll}}>Clear All</button>
+      <div class="tableContainer">
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>URL</th>
+              <th>Title</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each this.videos as |video|}}
+              <tr>
+                <td class="image">
+                  {{#if video.thumbnail}}
+                    <img src={{video.thumbnail}}>
+                  {{else}}
+                    <div>
+                      😳
+                    </div>
+                  {{/if}}
+                </td>
+                <td>{{video.url}}</td>
+                <td>{{video.title}}</td>
+                <td>{{video.displayedStatus}}</td>
+                <td>
+                  {{#if video.downloading}}
+                    <LaddaButton @action={{fn this.cancel video}} @buttonStyle="zoom-out" @class="danger" @disabled={{video.notInFlight}}>Cancel</LaddaButton>
+                  {{else if video.notProcessing}}
+                    <button class="warning" disabled={{video.inFlight}} {{on "click" (fn this.clear video)}}>Clear</button>
+                  {{/if}}
+                </td>
+              </tr>
+              {{#if video.inFlight}}
+                <tr>
+                  <td colspan="5">
+                    <div class="progress">
+                      <div style={{make-style "width" video.displayedProgress}}>
+                        {{video.displayedProgress}}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              {{/if}}
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
   </div>
 </div>
