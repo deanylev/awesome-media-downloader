@@ -18,12 +18,9 @@ export enum LogLevel {
   WARN = 'warn'
 }
 
-export const LogLevelOrder = [
-  LogLevel.INFO,
-  LogLevel.WARN,
-  LogLevel.ERROR,
-  LogLevel.FATAL
-];
+export enum Task {
+  LOG_CLEANUP = 'log-cleanup'
+}
 
 export enum VideoStatus {
   CANCELLED = 'cancelled',

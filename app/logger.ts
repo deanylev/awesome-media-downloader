@@ -8,13 +8,19 @@ import chalk from 'chalk';
 // our libraries
 import { logger as loggerConfig } from './config';
 import { LOG_FILE_DIR } from './constants';
-import { LogLevel, LogLevelOrder } from './enums';
+import { LogLevel } from './enums';
 
 type Data = unknown[];
 type MetadataData = Record<string, unknown>;
 type Metadata = null | MetadataData | (() => MetadataData);
 
 export default class Logger {
+  private static logLevelOrder = [
+    LogLevel.INFO,
+    LogLevel.WARN,
+    LogLevel.ERROR,
+    LogLevel.FATAL
+  ];
   private metadata: Metadata;
   private prefix: string;
   private static writeQueue = Promise.resolve();
@@ -27,6 +33,16 @@ export default class Logger {
   constructor(prefix: string, metadata: Metadata = null) {
     this.prefix = prefix;
     this.metadata = metadata;
+  }
+
+  static async deleteLog(filename: string) {
+    try {
+      const filePath = `${LOG_FILE_DIR}/${filename}`;
+      await fs.promises.unlink(filePath);
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
   private getConsoleLevel(level: LogLevel) {
@@ -52,6 +68,18 @@ export default class Logger {
       case LogLevel.FATAL:
         return 'magenta';
     }
+  }
+
+  static getDateOfLogFile(filename: string) {
+    const year = parseInt(filename.substr(0, 4), 10);
+    const month = parseInt(filename.substr(4, 2), 10) - 1;
+    const day = parseInt(filename.substr(6, 2), 10);
+    return new Date(year, month, day);
+  }
+
+  static async getLogFiles() {
+    const files = await fs.promises.readdir(LOG_FILE_DIR);
+    return files.filter((filename) => /^20\d{6}\.log$/.test(filename));
   }
 
   private static getLogString(level: LogLevel, file: boolean, prefix: string) {
@@ -82,8 +110,9 @@ export default class Logger {
         return;
       }
 
-      const logToConsole = LogLevelOrder.indexOf(level) >= LogLevelOrder.indexOf(loggerConfig.consoleLevel);
-      const logToFile = LogLevelOrder.indexOf(level) >= LogLevelOrder.indexOf(loggerConfig.fileLevel);
+      const { logLevelOrder } = Logger;
+      const logToConsole = logLevelOrder.indexOf(level) >= logLevelOrder.indexOf(loggerConfig.consoleLevel);
+      const logToFile = logLevelOrder.indexOf(level) >= logLevelOrder.indexOf(loggerConfig.fileLevel);
 
       const metadata = typeof this.metadata === 'function' ? this.metadata() : this.metadata;
       if (metadata) {
