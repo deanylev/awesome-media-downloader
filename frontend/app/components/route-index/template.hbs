@@ -7,7 +7,7 @@
         <div>downloader</div>
       </div>
       <div class="form">
-        <TextareaAutosize @disabled={{this.inFlight}} @placeholder="Enter URLs (one per line)" @value={{this.urls}} />
+        <Textarea @disabled={{this.inFlight}} @placeholder="Enter URLs (one per line)" @rows={{6}} @value={{this.urls}} {{auto-resize}}/>
         <LaddaButton @action={{this.download}} @buttonStyle="zoom-out" @class="primary" @disabled={{this.disabled}}>Download</LaddaButton>
       </div>
     </div>

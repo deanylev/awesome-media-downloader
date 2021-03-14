@@ -236,7 +236,7 @@ class HttpServer {
 
       if (isYoutube) {
         const videoDownload = ytdl(trimmedUrl, {
-          filter: (format: VideoFormat) => {
+          filter: (format) => {
             return !format.width || format.width <= MAX_VIDEO_WIDTH;
           },
           quality: 'highestvideo'
