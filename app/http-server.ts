@@ -16,6 +16,7 @@ import Logger from './logger';
 import express from 'express';
 import { after } from 'lodash';
 import { getType } from 'mime';
+import removeAccents from 'remove-accents';
 import { v4 } from 'uuid';
 import youtubedl from 'youtube-dl';
 import ytdl, { validateURL, videoFormat as VideoFormat, videoInfo as VideoInfo } from 'ytdl-core';
@@ -192,24 +193,35 @@ class HttpServer {
 
   private defineRoutes() {
     this.app.get('/download/:videoId', async (req, res) => {
-      const { videoId } = req.params;
-      const video = this.videos.get(videoId);
-      if (!video || video.status !== VideoStatus.COMPLETE) {
-        res.sendStatus(404);
-        return;
+      try {
+        const { videoId } = req.params;
+        const video = this.videos.get(videoId);
+        if (!video || video.status !== VideoStatus.COMPLETE) {
+          res.sendStatus(404);
+          return;
+        }
+
+        video.clearCancelTimeout();
+
+        const { extension, isYoutube, title } = video;
+        const path = `${DOWNLOAD_DIR}/${videoId}${isYoutube ? '.mkv' : ''}`;
+        const stats = await fs.promises.stat(path);
+        const safeTitle = removeAccents(title)
+          // pretty arbitrary, just stolen from here:
+          // https://github.com/deanylev/genius-quote-finder/blob/bfc9b5a8ac889c50f566b7ff05cd78eed092fb5d/start.ts#L138
+          .replace(/[^0-9A-Za-z-_,.{}$[\]@()|&?!;/\\%#:<>+*^='"`~\s]/g, '')
+          .trim();
+        const filename = `${safeTitle}.${isYoutube ? 'mkv' : extension}`;
+        res.setHeader('Content-Length', stats.size);
+        res.setHeader('Content-Type', getType(filename) ?? 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        fs.createReadStream(path).pipe(res);
+      } catch (error) {
+        res.locals.logger.error('error while serving file', {
+          error
+        });
       }
-
-      video.clearCancelTimeout();
-
-      const { extension, isYoutube, title } = video;
-      const path = `${DOWNLOAD_DIR}/${videoId}${isYoutube ? '.mkv' : ''}`;
-      const stats = await fs.promises.stat(path);
-      const filename = `${title}.${isYoutube ? 'mkv' : extension}`;
-      res.setHeader('Content-Length', stats.size);
-      res.setHeader('Content-Type', getType(filename) ?? 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-      fs.createReadStream(path).pipe(res);
     });
 
     this.apiV1Router.post('/download', (req, res) => {
