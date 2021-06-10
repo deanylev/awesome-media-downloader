@@ -12,13 +12,15 @@ const HTTP_REGEX = /^https?:\/\//;
 class Video {
   id: string;
   @tracked progress = 0;
+  resolution: string;
   @tracked status = VideoStatus.DOWNLOADING;
   thumbnail: string;
   title: string;
   url: string;
 
-  constructor(id: string, url: string, thumbnail: string, title: string, status?: VideoStatus) {
+  constructor(id: string, url: string, thumbnail: string, title: string, resolution: string, status?: VideoStatus) {
     this.id = id;
+    this.resolution = resolution;
     this.thumbnail = thumbnail;
     this.title = title;
     this.url = url;
@@ -72,6 +74,7 @@ export default class RouteIndex extends Component {
   @service declare api: ApiService;
 
   @tracked inFlight = false;
+  selectedResolution = '1080';
   @tracked urls = '';
   @tracked videos: Video[] = [];
 
@@ -111,8 +114,8 @@ export default class RouteIndex extends Component {
 
     for (const url of urls) {
       try {
-        const { id, thumbnail, title } = await this.api.startDownload(url);
-        const video = new Video(id, url, thumbnail, title);
+        const { id, resolution, thumbnail, title } = await this.api.startDownload(url, this.selectedResolution);
+        const video = new Video(id, url, thumbnail, title, resolution);
         this.videos.pushObject(video);
 
         while (true) {
@@ -135,10 +138,15 @@ export default class RouteIndex extends Component {
           }
         }
       } catch (error) {
-        this.videos.pushObject(new Video('', url, '', '', error === 400 ? VideoStatus.INVALID : VideoStatus.ERROR));
+        this.videos.pushObject(new Video('', url, '', '', '', error === 400 ? VideoStatus.INVALID : VideoStatus.ERROR));
       }
     }
 
     this.inFlight = false;
+  }
+
+  @action
+  handleResolutionChange(event: InputEvent) {
+    this.selectedResolution = (event.target as HTMLSelectElement).value;
   }
 }

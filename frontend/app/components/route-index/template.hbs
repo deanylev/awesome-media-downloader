@@ -8,6 +8,15 @@
       </div>
       <div class="form">
         <Textarea @disabled={{this.inFlight}} @placeholder="Enter URLs (one per line)" @rows={{6}} @value={{this.urls}} {{auto-resize}}/>
+        <div class="resolution">
+          <label>Preferred Resolution:</label>
+          <select disabled={{this.inFlight}} {{on "change" this.handleResolutionChange}}>
+            <option value="480">480p (SD)</option>
+            <option value="720">720p (HD)</option>
+            <option selected value="1080">1080p (Full HD)</option>
+            <option value="2160">2160p (4K)</option>
+          </select>
+        </div>
         <LaddaButton @action={{this.download}} @buttonStyle="zoom-out" @class="primary" @disabled={{this.disabled}}>Download</LaddaButton>
       </div>
     </div>
@@ -21,6 +30,7 @@
               <th></th>
               <th>URL</th>
               <th>Title</th>
+              <th>Resolution</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -39,6 +49,7 @@
                 </td>
                 <td>{{video.url}}</td>
                 <td>{{video.title}}</td>
+                <td>{{video.resolution}}</td>
                 <td>{{video.displayedStatus}}</td>
                 <td>
                   {{#if video.downloading}}
@@ -50,7 +61,7 @@
               </tr>
               {{#if video.inFlight}}
                 <tr>
-                  <td colspan="5">
+                  <td colspan="6">
                     <div class="progress">
                       <div style={{make-style "width" video.displayedProgress}}>
                         {{video.displayedProgress}}

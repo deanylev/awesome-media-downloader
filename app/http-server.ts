@@ -27,7 +27,12 @@ const CLEANUP_INTERVAL_MS = 1000 * 60 * 10; // 10 minutes
 const HTTP_REGEX = /^https?:\/\//;
 const MAX_URL_LENGTH = 2000;
 const MAX_VIDEO_AGE = 1000 * 60 * 60 * 2; // 2 hours
-const MAX_VIDEO_WIDTH = 1920;
+const RESOLUTIONS = [
+  '480',
+  '720',
+  '1080',
+  '2160'
+];
 
 class Video {
   private cancelTimeout: null | NodeJS.Timeout = null;
@@ -225,8 +230,11 @@ class HttpServer {
     });
 
     this.apiV1Router.post('/download', (req, res) => {
-      const { url } = req.body;
-      if (typeof url !== 'string' || url.length > MAX_URL_LENGTH || !HTTP_REGEX.test(url)) {
+      const { resolution, url } = req.body;
+      if (
+        typeof url !== 'string' || url.length > MAX_URL_LENGTH || !HTTP_REGEX.test(url)
+        || typeof resolution !== 'string' || !RESOLUTIONS.includes(resolution)
+      ) {
         res.sendStatus(400);
         return;
       }
@@ -234,6 +242,11 @@ class HttpServer {
       const trimmedUrl = url.trim();
       const id = v4();
       const isYoutube = validateURL(trimmedUrl);
+
+      type ResolutionDimension = string | number | undefined;
+      const formatResolution = (width: ResolutionDimension, height: ResolutionDimension) => {
+        return width && height && `${width}x${height}` || 'Unknown';
+      };
 
       res.locals.logger.info('download', {
         id,
@@ -249,7 +262,7 @@ class HttpServer {
       if (isYoutube) {
         const videoDownload = ytdl(trimmedUrl, {
           filter: (format) => {
-            return !format.width || format.width <= MAX_VIDEO_WIDTH;
+            return !format.height || format.height <= parseInt(resolution, 10);
           },
           quality: 'highestvideo'
         });
@@ -259,6 +272,7 @@ class HttpServer {
           this.videos.set(id, video);
           res.json({
             id,
+            resolution: formatResolution(format.width, format.height),
             thumbnail: videoDetails.thumbnails[0].url,
             title: videoDetails.title
           });
@@ -325,11 +339,12 @@ class HttpServer {
           maxBuffer: Infinity as unknown as string // types enforce string values for some reason...
         });
 
-        download.on('info', (info:  { ext: string, size: number, thumbnail: string, title: string }) => {
+        download.on('info', (info: { ext: string, height: number, size: number, thumbnail: string, title: string, width: number }) => {
           const video = new Video(id, download, info.title, info.ext, false);
           this.videos.set(id, video);
           res.json({
             id,
+            resolution: formatResolution(info.width, info.height),
             thumbnail: info.thumbnail,
             title: info.title
           });
