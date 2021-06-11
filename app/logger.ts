@@ -99,6 +99,7 @@ export default class Logger {
 
   static internalError(error: Error) {
     // XXX not actually fatal, but a fundamental failure
+    // eslint-disable-next-line no-console
     console.error(Logger.getLogString(LogLevel.FATAL, false, 'INTERNAL'), 'INTERNAL ERROR', {
       error
     });
@@ -131,6 +132,7 @@ export default class Logger {
 
   private logToConsole(level: LogLevel, ...data: Data) {
     const consoleLevel = this.getConsoleLevel(level);
+    // eslint-disable-next-line no-console
     console[consoleLevel](this.getLogString(level, false), ...data);
   }
 

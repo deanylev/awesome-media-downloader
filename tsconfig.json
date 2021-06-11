@@ -7,5 +7,6 @@
     "strict": true,
     "target": "es2019"
   },
-  "files": ["start.ts"]
+  "files": ["start.ts"],
+  "include": ["app/tasks/*.ts"]
 }

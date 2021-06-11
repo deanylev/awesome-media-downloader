@@ -117,7 +117,7 @@ class Video {
       if (this.isYoutube) {
         await Promise.all([
           fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}.audio`),
-          fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}.video`),
+          fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}.video`)
         ]);
       } else {
         await fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}`);
@@ -143,7 +143,6 @@ class Video {
     this.cancelTimeout = setTimeout(() => this.cancel(CancelReason.TIMEOUT), CANCEL_TIMEOUT_MS);
   }
 }
-
 
 class HttpServer {
   private apiV1Router = express.Router();
