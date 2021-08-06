@@ -6,6 +6,7 @@ import { tracked } from '@glimmer/tracking';
 import ApiService from 'awesome-media-downloader/services/api';
 import { VideoStatus } from 'awesome-media-downloader/lib/enums';
 import sleep from 'awesome-media-downloader/lib/util/sleep';
+import { saveAs } from 'file-saver';
 
 const HTTP_REGEX = /^https?:\/\//;
 
@@ -125,7 +126,7 @@ export default class RouteIndex extends Component {
             video.status = status;
 
             if (status === VideoStatus.COMPLETE) {
-              location.href = `/download/${id}`;
+              saveAs(`/download/${id}`);
               break;
             } else if ([VideoStatus.CANCELLED, VideoStatus.ERROR, VideoStatus.INVALID].includes(status)) {
               break;
