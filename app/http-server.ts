@@ -24,6 +24,10 @@ import ytdl, { validateURL, videoFormat as VideoFormat, videoInfo as VideoInfo }
 // constants
 const CANCEL_TIMEOUT_MS = 10000;
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 10; // 10 minutes
+const FORMATS = [
+  'mp3',
+  'original'
+];
 const HTTP_REGEX = /^https?:\/\//;
 const MAX_URL_LENGTH = 2000;
 const MAX_VIDEO_AGE = 1000 * 60 * 60 * 2; // 2 hours
@@ -41,6 +45,7 @@ class Video {
   downloadAudio: null | Readable = null;
   extension: string;
   id: string;
+  isMp3: boolean;
   isYoutube: boolean;
   logger: Logger;
   progress = 0;
@@ -57,12 +62,13 @@ class Video {
     return (this.progress + this.progressAudio) / 2;
   }
 
-  constructor(id: string, download: Readable, title: string, extension: string, isYoutube: boolean) {
+  constructor(id: string, download: Readable, title: string, extension: string, isYoutube: boolean, isMp3: boolean) {
     this.download = download;
     this.title = title;
     this.extension = extension;
     this.id = id;
     this.isYoutube = isYoutube;
+    this.isMp3 = isMp3;
 
     this.logger = new Logger('video', {
       id
@@ -79,18 +85,22 @@ class Video {
     const path = `${DOWNLOAD_DIR}/${this.id}`;
 
     try {
-      if (this.isYoutube) {
-        this.status = VideoStatus.PROCESSING;
-        this.logger.info('transcoding');
-        await promisify(exec)(`ffmpeg -i ${path}.video -i ${path}.audio -c copy ${path}.mkv`);
-        this.logger.info('transcoded');
-      } else {
+      if (!this.isYoutube) {
         // https://github.com/przemyslawpluta/node-youtube-dl/issues/309
         const { stdout } = await promisify(exec)(`file ${path}`);
         if (stdout.trim().endsWith('XML 1.0 document text, ASCII text')) {
           this.status = VideoStatus.ERROR;
           return;
         }
+      }
+
+      if (this.isYoutube || this.isMp3 && this.extension !== 'mp3') {
+        this.status = VideoStatus.PROCESSING;
+        this.logger.info('transcoding');
+        const extension = this.isYoutube ? '.main' : '';
+        const ffmpegCommand = this.isMp3 ? `-i ${path}${extension} ${path}.mp3` : `-i ${path}${extension} -i ${path}.audio -c copy ${path}.mkv`;
+        await promisify(exec)(`ffmpeg ${ffmpegCommand}`);
+        this.logger.info('transcoded');
       }
     } catch (error) {
       this.logger.error('error during completion', {
@@ -117,7 +127,7 @@ class Video {
       if (this.isYoutube) {
         await Promise.all([
           fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}.audio`),
-          fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}.video`)
+          fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}.main`)
         ]);
       } else {
         await fs.promises.unlink(`${DOWNLOAD_DIR}/${this.id}`);
@@ -207,15 +217,21 @@ class HttpServer {
 
         video.clearCancelTimeout();
 
-        const { extension, isYoutube, title } = video;
-        const path = `${DOWNLOAD_DIR}/${videoId}${isYoutube ? '.mkv' : ''}`;
+        const { extension, isMp3, isYoutube, title } = video;
+        let pathExtension = '';
+        if (isMp3) {
+          pathExtension = 'mp3';
+        } else if (isYoutube) {
+          pathExtension = '.mkv';
+        }
+        const path = `${DOWNLOAD_DIR}/${videoId}${pathExtension}`;
         const stats = await fs.promises.stat(path);
         const safeTitle = removeAccents(title)
           // pretty arbitrary, just stolen from here:
           // https://github.com/deanylev/genius-quote-finder/blob/bfc9b5a8ac889c50f566b7ff05cd78eed092fb5d/start.ts#L138
           .replace(/[^0-9A-Za-z-_,.{}$[\]@()|&?!;/\\%#:<>+*^='"`~\s]/g, '')
           .trim();
-        const filename = `${safeTitle}.${isYoutube ? 'mkv' : extension}`;
+        const filename = `${safeTitle}.${isMp3 ? isYoutube ? 'mkv' : 'mp3' : extension}`;
         res.setHeader('Content-Length', stats.size);
         res.setHeader('Content-Type', getType(filename) ?? 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -229,10 +245,11 @@ class HttpServer {
     });
 
     this.apiV1Router.post('/download', (req, res) => {
-      const { resolution, url } = req.body;
+      const { format, resolution, url } = req.body;
       if (
         typeof url !== 'string' || url.length > MAX_URL_LENGTH || !HTTP_REGEX.test(url)
         || typeof resolution !== 'string' || !RESOLUTIONS.includes(resolution)
+        || typeof format !== 'string' || !FORMATS.includes(format)
       ) {
         res.sendStatus(400);
         return;
@@ -241,6 +258,7 @@ class HttpServer {
       const trimmedUrl = url.trim();
       const id = v4();
       const isYoutube = validateURL(trimmedUrl);
+      const isMp3 = format === 'mp3';
 
       type ResolutionDimension = string | number | undefined;
       const formatResolution = (width: ResolutionDimension, height: ResolutionDimension) => {
@@ -250,7 +268,9 @@ class HttpServer {
       res.locals.logger.info('download', {
         id,
         url: trimmedUrl,
-        isYoutube
+        isYoutube,
+        resolution,
+        format
       });
 
       /**
@@ -259,60 +279,62 @@ class HttpServer {
        */
 
       if (isYoutube) {
-        const videoDownload = ytdl(trimmedUrl, {
+        const download = ytdl(trimmedUrl, isMp3 ? {
+          filter: 'audioonly'
+        } : {
           filter: (format) => {
             return !format.height || format.height <= parseInt(resolution, 10);
           },
           quality: 'highestvideo'
         });
 
-        videoDownload.on('info', ({ videoDetails }: VideoInfo, format: VideoFormat) => {
-          const video = new Video(id, videoDownload, videoDetails.title, format.container, true);
+        download.on('info', ({ videoDetails }: VideoInfo, format: VideoFormat) => {
+          const video = new Video(id, download, videoDetails.title, format.container, true, isMp3);
           this.videos.set(id, video);
           res.json({
             id,
-            resolution: formatResolution(format.width, format.height),
+            resolution: isMp3 ? null : formatResolution(format.width, format.height),
             thumbnail: videoDetails.thumbnails[0].url,
             title: videoDetails.title
           });
 
-          const audioDownload = ytdl(trimmedUrl, {
-            ...isYoutube && {
+          if (!isMp3) {
+            const audioDownload = ytdl(trimmedUrl, {
               quality: 'highestaudio'
-            }
-          });
-          video.downloadAudio = audioDownload;
+            });
+            video.downloadAudio = audioDownload;
 
-          audioDownload.on('progress', (chunkLength, downloadedBytes, totalBytes) => {
-            if (video) {
-              video.progressAudio = downloadedBytes / totalBytes;
-            }
-          });
-
-          audioDownload.on('error', (error) => {
-            res.locals.logger.error('audio download error', {
-              error
+            audioDownload.on('progress', (chunkLength, downloadedBytes, totalBytes) => {
+              if (video) {
+                video.progressAudio = downloadedBytes / totalBytes;
+              }
             });
 
-            video?.cancel(CancelReason.ERROR_AUDIO);
-          });
+            audioDownload.on('error', (error) => {
+              res.locals.logger.error('audio download error', {
+                error
+              });
 
-          audioDownload.on('end', () => {
-            res.locals.logger.info('audio end');
-            video?.complete();
-          });
+              video?.cancel(CancelReason.ERROR_AUDIO);
+            });
 
-          audioDownload.pipe(fs.createWriteStream(`${DOWNLOAD_DIR}/${id}.audio`));
+            audioDownload.on('end', () => {
+              res.locals.logger.info('audio end');
+              video?.complete();
+            });
+
+            audioDownload.pipe(fs.createWriteStream(`${DOWNLOAD_DIR}/${id}.audio`));
+          }
         });
 
-        videoDownload.on('progress', (chunkLength, downloadedBytes, totalBytes) => {
+        download.on('progress', (chunkLength, downloadedBytes, totalBytes) => {
           const video = this.videos.get(id);
           if (video) {
             video.progress = downloadedBytes / totalBytes;
           }
         });
 
-        videoDownload.on('error', (error) => {
+        download.on('error', (error) => {
           res.locals.logger.error('video download error', {
             error
           });
@@ -325,25 +347,28 @@ class HttpServer {
           video?.cancel(CancelReason.ERROR_VIDEO);
         });
 
-        videoDownload.on('end', () => {
+        download.on('end', () => {
           res.locals.logger.info('video download end');
           const video = this.videos.get(id);
           video?.complete();
         });
 
-        videoDownload.pipe(fs.createWriteStream(`${DOWNLOAD_DIR}/${id}.video`));
+        download.pipe(fs.createWriteStream(`${DOWNLOAD_DIR}/${id}.main`));
       } else {
-        const download = youtubedl(trimmedUrl, [], {
+        const download = youtubedl(trimmedUrl, [
+          '--audio-format', 'mp3',
+          '-f', 'bestaudio'
+        ], {
           cwd: __dirname,
           maxBuffer: Infinity as unknown as string // types enforce string values for some reason...
         });
 
         download.on('info', (info: { ext: string, height: number, size: number, thumbnail: string, title: string, width: number }) => {
-          const video = new Video(id, download, info.title, info.ext, false);
+          const video = new Video(id, download, info.title, info.ext, false, isMp3);
           this.videos.set(id, video);
           res.json({
             id,
-            resolution: formatResolution(info.width, info.height),
+            resolution: isMp3 ? null : formatResolution(info.width, info.height),
             thumbnail: info.thumbnail,
             title: info.title
           });

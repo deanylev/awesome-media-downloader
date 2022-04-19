@@ -11,6 +11,7 @@ import { saveAs } from 'file-saver';
 const HTTP_REGEX = /^https?:\/\//;
 
 class Video {
+  format: string;
   id: string;
   @tracked progress = 0;
   resolution: string;
@@ -19,9 +20,10 @@ class Video {
   title: string;
   url: string;
 
-  constructor(id: string, url: string, thumbnail: string, title: string, resolution: string, status?: VideoStatus) {
+  constructor(id: string, url: string, thumbnail: string, title: string, resolution: string, format: string, status?: VideoStatus) {
     this.id = id;
     this.resolution = resolution;
+    this.format = format;
     this.thumbnail = thumbnail;
     this.title = title;
     this.url = url;
@@ -75,6 +77,7 @@ export default class RouteIndex extends Component {
   @service declare api: ApiService;
 
   @tracked inFlight = false;
+  @tracked selectedFormat = 'original';
   selectedResolution = '1080';
   @tracked urls = '';
   @tracked videos: Video[] = [];
@@ -115,8 +118,8 @@ export default class RouteIndex extends Component {
 
     for (const url of urls) {
       try {
-        const { id, resolution, thumbnail, title } = await this.api.startDownload(url, this.selectedResolution);
-        const video = new Video(id, url, thumbnail, title, resolution);
+        const { id, resolution, thumbnail, title } = await this.api.startDownload(url, this.selectedResolution, this.selectedFormat);
+        const video = new Video(id, url, thumbnail, title, resolution, this.getSelectedFormatLabel());
         this.videos.pushObject(video);
 
         while (true) {
@@ -139,11 +142,27 @@ export default class RouteIndex extends Component {
           }
         }
       } catch (error) {
-        this.videos.pushObject(new Video('', url, '', '', '', error === 400 ? VideoStatus.INVALID : VideoStatus.ERROR));
+        this.videos.pushObject(new Video('', url, '', '', '', this.getSelectedFormatLabel(), error === 400 ? VideoStatus.INVALID : VideoStatus.ERROR));
       }
     }
 
     this.inFlight = false;
+  }
+
+  getSelectedFormatLabel() {
+    switch (this.selectedFormat) {
+      case 'mp3':
+        return 'MP3';
+      case 'original':
+        return 'Original';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  @action
+  handleFormatChange(event: InputEvent) {
+    this.selectedFormat = (event.target as HTMLSelectElement).value;
   }
 
   @action

@@ -8,14 +8,25 @@
       </div>
       <div class="form">
         <Textarea @disabled={{this.inFlight}} @placeholder="Enter URLs (one per line)" @rows={{6}} @value={{this.urls}} {{auto-resize}}/>
-        <div class="resolution">
-          <label>Preferred Resolution:</label>
-          <select disabled={{this.inFlight}} {{on "change" this.handleResolutionChange}}>
-            <option value="480">480p (SD)</option>
-            <option value="720">720p (HD)</option>
-            <option selected value="1080">1080p (Full HD)</option>
-            <option value="2160">2160p (4K)</option>
-          </select>
+        <div class="controls">
+          <div>
+            <label>Format:</label>
+            <select disabled={{this.inFlight}} {{on "change" this.handleFormatChange}}>
+              <option value="original">Original</option>
+              <option value="mp3">MP3</option>
+            </select>
+          </div>
+          {{#if (eq this.selectedFormat "original")}}
+            <div>
+              <label>Preferred Resolution:</label>
+              <select disabled={{this.inFlight}} {{on "change" this.handleResolutionChange}}>
+                <option value="480">480p (SD)</option>
+                <option value="720">720p (HD)</option>
+                <option selected value="1080">1080p (Full HD)</option>
+                <option value="2160">2160p (4K)</option>
+              </select>
+            </div>
+          {{/if}}
         </div>
         <LaddaButton @action={{this.download}} @buttonStyle="zoom-out" @class="primary" @disabled={{this.disabled}}>Download</LaddaButton>
       </div>
@@ -31,6 +42,7 @@
               <th>URL</th>
               <th>Title</th>
               <th>Resolution</th>
+              <th>Format</th>
               <th>Status</th>
               <th></th>
             </tr>
@@ -50,6 +62,7 @@
                 <td>{{video.url}}</td>
                 <td>{{video.title}}</td>
                 <td>{{video.resolution}}</td>
+                <td>{{video.format}}</td>
                 <td>{{video.displayedStatus}}</td>
                 <td>
                   {{#if video.downloading}}
@@ -61,7 +74,7 @@
               </tr>
               {{#if video.inFlight}}
                 <tr>
-                  <td colspan="6">
+                  <td colspan="7">
                     <div class="progress">
                       <div style={{make-style "width" video.displayedProgress}}>
                         {{video.displayedProgress}}
