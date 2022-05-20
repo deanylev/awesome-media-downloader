@@ -1694,11 +1694,6 @@ mimic-response@^3.1.0:
   resolved "https://registry.yarnpkg.com/mimic-response/-/mimic-response-3.1.0.tgz#2d1d59af9c1b129815accc2c46a022a5ce1fa3c9"
   integrity sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==
 
-miniget@^4.0.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/miniget/-/miniget-4.2.0.tgz#0004e95536b192d95a7d09f4435d67b9285481d0"
-  integrity sha512-IzTOaNgBw/qEpzkPTE7X2cUVXQfSKbG8w52Emi93zb+Zya2ZFrbmavpixzebuDJD9Ku4ecbaFlC7Y1cEESzQtQ==
-
 miniget@^4.2.2:
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/miniget/-/miniget-4.2.2.tgz#db20320f265efdc4c1826a0be431d56753074475"
@@ -2655,13 +2650,13 @@ youtube-dl@^3.5.0:
     streamify "~1.0.0"
     universalify "~2.0.0"
 
-ytdl-core@^4.10.1:
-  version "4.10.1"
-  resolved "https://registry.yarnpkg.com/ytdl-core/-/ytdl-core-4.10.1.tgz#6648d65faca787919181b2cee1be470b2ef9fdcb"
-  integrity sha512-idBhW+e7HCzs5fR5cqp7Ci+mJhEch41YAaWabYlneQFCL6IGf6Hycv99yVx01Zl1Ci0t/70faOelMSrXaQTE/A==
+ytdl-core@^4.11.0:
+  version "4.11.0"
+  resolved "https://registry.yarnpkg.com/ytdl-core/-/ytdl-core-4.11.0.tgz#79a3ea94d9d662b4b3acecdb1372ed3f1a9ea9db"
+  integrity sha512-Q3hCLiUA9AOGQXzPvno14GN+HgF9wsO1ZBHlj0COTcyxjIyFpWvMfii0UC4/cAbVaIjEdbWB71GdcGuc4J1Lmw==
   dependencies:
     m3u8stream "^0.8.6"
-    miniget "^4.0.0"
+    miniget "^4.2.2"
     sax "^1.1.3"
 
 zero-fill@^2.2.3:
