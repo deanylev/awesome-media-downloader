@@ -38,9 +38,8 @@ export default class ApiService extends Service {
     return this.doRequest('GET', `poll/${videoId}`);
   }
 
-  startDownload(url: string, resolution: string, format: string): Promise<{ id: string, resolution: string, thumbnail: string, title: string }> {
+  startDownload(url: string, resolution: string): Promise<{ id: string, resolution: string, thumbnail: string, title: string }> {
     return this.doRequest('POST', 'download', {
-      format,
       resolution,
       url
     });

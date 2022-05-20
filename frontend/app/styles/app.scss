@@ -123,23 +123,19 @@ button {
           width: calc(100% - 100px);
         }
 
-        > .controls {
+        > .resolution {
+          align-items: center;
+          display: flex;
+          flex-wrap: wrap;
+          padding-top: 10px;
           width: 100%;
 
-          > div {
-            align-items: center;
-            display: flex;
-            flex-wrap: wrap;
-            padding-top: 10px;
-            width: 100%;
+          > label {
+            margin-right: 5px;
+          }
 
-            > label {
-              margin-right: 5px;
-            }
-
-            > select {
-              margin: 5px 0;
-            }
+          > select {
+            margin: 5px 0;
           }
         }
 
