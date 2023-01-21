@@ -388,28 +388,20 @@ class HttpServer {
       }
 
       video.resetCancelTimeout();
-      try {
-        const { averageProgress, status } = video;
-        if (status === VideoStatus.CANCELLED) {
-          res.json({
-            progress: 0,
-            status
-          });
-          return;
-        }
 
+      const { averageProgress, status } = video;
+      if (status === VideoStatus.CANCELLED) {
         res.json({
-          progress: averageProgress,
+          progress: 0,
           status
         });
-      } catch (error) {
-        // should ideally never happen
-        res.locals.logger.error('error while `stat`ing video', {
-          error,
-          videoId
-        });
-        res.sendStatus(404);
+        return;
       }
+
+      res.json({
+        progress: averageProgress,
+        status
+      });
     });
 
     this.apiV1Router.put('/cancel/:videoId', async (req, res) => {
