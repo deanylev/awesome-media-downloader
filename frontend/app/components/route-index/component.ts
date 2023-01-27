@@ -74,6 +74,7 @@ class Video {
 export default class RouteIndex extends Component {
   @service declare api: ApiService;
 
+  @tracked convertMp4 = false;
   @tracked inFlight = false;
   selectedResolution = '1080';
   @tracked urls = '';
@@ -99,6 +100,11 @@ export default class RouteIndex extends Component {
   }
 
   @action
+  convertMp4DidChange(event: Event) {
+    this.convertMp4 = (event.target as HTMLInputElement).checked;
+  }
+
+  @action
   async download() {
     if (this.disabled) {
       return;
@@ -115,7 +121,7 @@ export default class RouteIndex extends Component {
 
     for (const url of urls) {
       try {
-        const { id, resolution, thumbnail, title } = await this.api.startDownload(url, this.selectedResolution);
+        const { id, resolution, thumbnail, title } = await this.api.startDownload(url, this.selectedResolution, this.convertMp4);
         const video = new Video(id, url, thumbnail, title, resolution);
         this.videos.pushObject(video);
 

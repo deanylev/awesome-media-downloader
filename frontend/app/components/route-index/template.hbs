@@ -17,6 +17,12 @@
             <option value="2160">2160p (4K)</option>
           </select>
         </div>
+        <div class="convert">
+          <label>
+            Convert to MP4?
+            <input type="checkbox" {{on "change" this.convertMp4DidChange}}>
+          </label>
+        </div>
         <LaddaButton @action={{this.download}} @buttonStyle="zoom-out" @class="primary" @disabled={{this.disabled}}>Download</LaddaButton>
       </div>
     </div>
