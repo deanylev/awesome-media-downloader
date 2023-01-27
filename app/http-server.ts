@@ -37,6 +37,7 @@ const RESOLUTIONS = [
 class Video {
   private cancelTimeout: null | NodeJS.Timeout = null;
   complete: () => void;
+  convertMp4: boolean;
   private download: Readable;
   downloadAudio: null | Readable = null;
   extension: string;
@@ -57,12 +58,17 @@ class Video {
     return (this.progress + this.progressAudio) / 2;
   }
 
-  constructor(id: string, download: Readable, title: string, extension: string, isYoutube: boolean) {
+  get outputExtension() {
+    return this.convertMp4 ? 'mp4' : 'mkv';
+  }
+
+  constructor(id: string, download: Readable, title: string, extension: string, isYoutube: boolean, convertMp4 = false) {
     this.download = download;
     this.title = title;
     this.extension = extension;
     this.id = id;
     this.isYoutube = isYoutube;
+    this.convertMp4 = convertMp4;
 
     this.logger = new Logger('video', {
       id
@@ -82,7 +88,10 @@ class Video {
       if (this.isYoutube) {
         this.status = VideoStatus.PROCESSING;
         this.logger.info('transcoding');
-        await promisify(exec)(`ffmpeg -i ${path}.video -i ${path}.audio -c copy ${path}.mkv`);
+        const ffmpegOptions = this.convertMp4
+          ? `-c:v libx264 -c:a aac`
+          : `-c copy`
+        await promisify(exec)(`ffmpeg -i ${path}.video -i ${path}.audio ${ffmpegOptions} ${path}.${this.outputExtension}`);
         this.logger.info('transcoded');
       } else {
         // https://github.com/przemyslawpluta/node-youtube-dl/issues/309
@@ -208,14 +217,14 @@ class HttpServer {
         video.clearCancelTimeout();
 
         const { extension, isYoutube, title } = video;
-        const path = `${DOWNLOAD_DIR}/${videoId}${isYoutube ? '.mkv' : ''}`;
+        const path = `${DOWNLOAD_DIR}/${videoId}${isYoutube ? `.${video.outputExtension}` : ''}`;
         const stats = await fs.promises.stat(path);
         const safeTitle = removeAccents(title)
           // pretty arbitrary, just stolen from here:
           // https://github.com/deanylev/genius-quote-finder/blob/bfc9b5a8ac889c50f566b7ff05cd78eed092fb5d/start.ts#L138
           .replace(/[^0-9A-Za-z-_,.{}$[\]@()|&?!;/\\%#:<>+*^='"`~\s]/g, '')
           .trim();
-        const filename = `${safeTitle}.${isYoutube ? 'mkv' : extension}`;
+        const filename = `${safeTitle}.${isYoutube ? video.outputExtension : extension}`;
         res.setHeader('Content-Length', stats.size);
         res.setHeader('Content-Type', getType(filename) ?? 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
@@ -229,10 +238,11 @@ class HttpServer {
     });
 
     this.apiV1Router.post('/download', (req, res) => {
-      const { resolution, url } = req.body;
+      const { convert_mp4: convertMp4, resolution, url } = req.body;
       if (
         typeof url !== 'string' || url.length > MAX_URL_LENGTH || !HTTP_REGEX.test(url)
         || typeof resolution !== 'string' || !RESOLUTIONS.includes(resolution)
+        || typeof convertMp4 !== 'boolean'
       ) {
         res.sendStatus(400);
         return;
@@ -267,7 +277,7 @@ class HttpServer {
         });
 
         videoDownload.on('info', ({ videoDetails }: VideoInfo, format: VideoFormat) => {
-          const video = new Video(id, videoDownload, videoDetails.title, format.container, true);
+          const video = new Video(id, videoDownload, videoDetails.title, format.container, true, convertMp4);
           this.videos.set(id, video);
           res.json({
             id,
