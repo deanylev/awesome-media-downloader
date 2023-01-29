@@ -26,7 +26,7 @@ const CANCEL_TIMEOUT_MS = 10000;
 const CLEANUP_INTERVAL_MS = 1000 * 60 * 10; // 10 minutes
 const HTTP_REGEX = /^https?:\/\//;
 const MAX_URL_LENGTH = 2000;
-const MAX_VIDEO_AGE = 1000 * 60 * 60 * 2; // 2 hours
+const MAX_VIDEO_AGE = 1000 * 60 * 60 * 24; // 24 hours
 const RESOLUTIONS = [
   '480',
   '720',
